@@ -646,18 +646,6 @@ exports.getChangePassword = async (req, res) => {
 
 exports.postProfileDetails = async (req, res) => {
 
-  if(user.authProvider === "google"){
-
-  req.flash(
-    "error",
-
-    "Google accounts cannot edit profile details"
-  );
-
-  return res.redirect(
-    "/user-profile"
-  );
-}
 
   try {
 
@@ -688,7 +676,7 @@ exports.postProfileDetails = async (req, res) => {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const phoneRegex =
-      /^[0-9]{10}$/;
+       /^[6-9]\d{9}$/;
 
 
 
@@ -757,7 +745,7 @@ exports.postProfileDetails = async (req, res) => {
 
       req.flash(
         "error",
-        "Phone number must be 10 digits"
+        "Enter valid 10 digit phone number"
       );
 
       return res.redirect(
@@ -778,8 +766,21 @@ exports.postProfileDetails = async (req, res) => {
 
       return res.redirect("/login");
     }
+ 
+  // GOOGLE USER CHECK
 
+  if(user.authProvider === "google"){
 
+  req.flash(
+    "error",
+
+    "Google accounts cannot edit profile details"
+  );
+
+  return res.redirect(
+    "/user-profile"
+  );
+  }
 
     // DUPLICATE EMAIL CHECK
 
@@ -861,18 +862,6 @@ exports.postProfileDetails = async (req, res) => {
 
 exports.postUpdatePassword = async (req, res) => {
 
-  if(user.authProvider === "google"){
-
-  req.flash(
-    "error",
-
-    "Google accounts cannot change password"
-  );
-
-  return res.redirect(
-    "/user-profile"
-  );
-}
 
   try {
 
@@ -971,6 +960,20 @@ exports.postUpdatePassword = async (req, res) => {
       return res.redirect("/login");
     }
 
+// GOOGLE USER CHECK
+
+     if(user.authProvider === "google"){
+
+  req.flash(
+    "error",
+
+    "Google accounts cannot change password"
+  );
+
+  return res.redirect(
+    "/user-profile"
+  );
+}
 
 
     // HASH PASSWORD

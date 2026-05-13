@@ -10,7 +10,7 @@ exports.getAdminLogin=(req, res) => {
 
     res.render("pages/guest/admin-login", { 
         title: 'Velora - Admin Login', 
-        isLoggedIn: false 
+        isLoggedIn: false
     });
 };
 
@@ -26,7 +26,7 @@ exports.postAdminLogin = async (req, res) => {
         {
           title: 'Admin Login',
           error: ['Invalid email or password'],
-          isLoggedIn: false
+          isLoggedIn: false,
         }
       );
     }
@@ -90,7 +90,8 @@ const activities = [
     res.render('pages/admin/dashboard/dashboard', { 
         title: 'Velora - Admin Dashboard', 
         isLoggedIn: true,
-        activities
+        activities,
+        isAdmin: true
     });
   }
 
@@ -170,6 +171,8 @@ exports.getAdminUsers = async (req, res) => {
           "Velora - Admin Users",
 
         isLoggedIn: true,
+        
+        isAdmin: true,
 
         users,
 
@@ -199,7 +202,8 @@ exports.getAdminUsers = async (req, res) => {
 exports.getAdminCreateUser = (req, res) => {
     res.render('pages/admin/user-management/create-user', { 
         title: 'Velora - Admin Create User', 
-        isLoggedIn: true
+        isLoggedIn: true,
+        isAdmin: true
     });
 };
 
@@ -315,7 +319,7 @@ exports.postAdminCreateUser = async (req, res) => {
 
       req.flash(
         "error",
-        "Phone number must be 10 digits"
+        "Enter valid 10 digit phone number"
       );
 
       return res.redirect(
@@ -454,6 +458,7 @@ try{
    res.render('pages/admin/user-management/edit-user', { 
         title: 'Velora - Admin Edit User', 
         isLoggedIn: true,
+        isAdmin: true,
         user
     });
 }
@@ -488,12 +493,11 @@ exports.postAdminEditUser = async (req, res) => {
     const trimmedEmail =
       email?.trim();
 
-    const trimmedPhone =
-      phone?.trim();
-
     const trimmedPassword =
-      password?.trim();
+  password? password.trim(): "";
 
+    const trimmedPhone =
+    phone? String(phone).trim(): "";
 
 
     // REGEX
@@ -505,12 +509,85 @@ exports.postAdminEditUser = async (req, res) => {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const phoneRegex =
-      /^[0-9]{10}$/;
+       /^[6-9]\d{9}$/;
 
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
 
 
+      // FIND CURRENT USER
+
+    const currentUser =
+      await User.findById(
+        req.params.id
+      );
+
+    if (!currentUser) {
+
+      req.flash(
+        "error",
+        "User not found"
+      );
+
+      return res.redirect(
+        "/admin-users"
+      );
+    }
+
+    // GOOGLE ACCOUNT PROTECTION
+
+if (
+  currentUser.authProvider ===
+  "google"
+) {
+
+  // PHONE VALIDATION
+
+  if (
+    trimmedPhone &&
+    !phoneRegex.test(trimmedPhone)
+  ) {
+
+    req.flash(
+      "error",
+      "Enter valid 10 digit phone number"
+    );
+
+    return res.redirect(
+      `/admin-edit-user/${req.params.id}`
+    );
+
+  }
+
+
+
+  await User.findByIdAndUpdate(
+
+    req.params.id,
+
+    {
+      phone: trimmedPhone,
+      status
+    }
+
+  );
+
+
+
+  req.flash(
+
+    "success",
+
+    "Google account updated successfully"
+  );
+
+
+
+  return res.redirect(
+    "/admin-users"
+  );
+
+}
 
     // REQUIRED VALIDATION
 
@@ -577,7 +654,7 @@ exports.postAdminEditUser = async (req, res) => {
 
       req.flash(
         "error",
-        "Phone number must be 10 digits"
+        "Enter valid 10 digit phone number"
       );
 
       return res.redirect(
@@ -608,58 +685,6 @@ exports.postAdminEditUser = async (req, res) => {
       );
     }
 
-
-
-    // FIND CURRENT USER
-
-    const currentUser =
-      await User.findById(
-        req.params.id
-      );
-
-    if (!currentUser) {
-
-      req.flash(
-        "error",
-        "User not found"
-      );
-
-      return res.redirect(
-        "/admin-users"
-      );
-    }
-
-    // GOOGLE ACCOUNT PROTECTION
-
-if (
-  currentUser.authProvider ===
-  "google"
-) {
-
-  // ONLY ALLOW STATUS CHANGE
-
-  await User.findByIdAndUpdate(
-
-    req.params.id,
-
-    {
-      status
-    }
-
-  );
-
-  req.flash(
-
-    "success",
-
-    "Google account status updated"
-  );
-
-  return res.redirect(
-    "/admin-users"
-  );
-
-}
 
     // DUPLICATE EMAIL CHECK
 

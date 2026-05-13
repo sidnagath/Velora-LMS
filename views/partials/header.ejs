@@ -12,12 +12,12 @@
 </head>
 <body>
     <!-- Navbar -->
-    <% if (!title.includes('User - Profile')) { %>
+   <% if (typeof isAdmin === "undefined" || !isAdmin) { %>
     <nav class="w-full py-4 px-8 bg-[#F8F9FA] flex justify-between items-center top-0 z-50">
         <div class="flex items-center space-x-12">
             <a href="/" class="text-2xl font-bold text-[#0B5ED7]">Velora</a>
             <div class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-                <a href="#" class="<%= title.includes('Master') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Home</a>
+                <a href="/home" class="<%= title.includes('Master') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Home</a>
                 <a href="#" class="hover:text-[#0B5ED7] pb-1">Courses</a>
                 <% if (isLoggedIn) { %>
                     <a href="#" class="hover:text-[#0B5ED7] pb-1">Wishlist</a>
@@ -51,18 +51,20 @@
                     </svg>
                 </button>
                 <!-- Avatar -->
+<% if(typeof user !== "undefined") { %>
+
 <a
   href="/user-profile"
 
   class="h-8 w-8 rounded-full overflow-hidden border border-gray-300 flex items-center justify-center"
 >
 
-  <% if(user && user.avatar) { %>
+  <% if(user.avatar) { %>
 
     <img
       src="<%= user.avatar %>"
 
-      alt="<%= user? user.name:"" %>"
+      alt="<%= user.name %>"
 
       class="h-full w-full object-cover"
     >
@@ -86,6 +88,8 @@
   <% } %>
 
 </a>
+
+<% } %>
                <% } %>
 
 

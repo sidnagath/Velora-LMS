@@ -196,8 +196,8 @@
                 </svg>
               </div>
             </div>
-            <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Premium USers</p>
-            <h2 class="text-3xl font-extrabold text-gray-900 mt-1">0</h2>
+            <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Google Users</p>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%=users.filter(user=>user.authProvider==="google").length%></h2>
           </div>
         </div>
 
