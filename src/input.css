@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer components {
+  .btn-primary {
+    @apply bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-medium py-3 px-6 rounded-md transition-colors w-full text-center block;
+  }
+  .input-field {
+    @apply w-full bg-[#F3F4F6] border-none rounded-md px-4 py-3 text-gray-700 focus:ring-2 focus:ring-[#0B5ED7] outline-none;
+  }
+}

@@ -1,0 +1,46 @@
+# NODE MODULES
+node_modules/
+
+# ENV FILES
+.env
+
+# LOG FILES
+logs
+*.log
+npm-debug.log*
+
+# OS FILES
+.DS_Store
+Thumbs.db
+
+# VS CODE
+.vscode/
+
+# UPLOADS
+public/uploads/
+
+# TEMP FILES
+tmp/
+temp/
+
+# CACHE
+.cache/
+
+# BUILD FILES
+dist/
+build/
+
+# COVERAGE
+coverage/
+
+# SESSION FILES
+sessions/
+
+# PACKAGE LOCK (optional)
+# package-lock.json
+
+# IDE FILES
+.idea/
+
+# MISC
+*.swp
