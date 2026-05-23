@@ -7,32 +7,37 @@ const {noCache} = require('../middleware/noCache');
 const {isUserGuest}=require('../middleware/userGuestMiddleware');
 const upload = require("../config/multer");
 
-router.get("/",userController.getHome);
-router.get("/home",userController.getHome);
+
 router.get("/login",noCache,isUserGuest,userController.getLogin);
 router.post("/login", userController.postLogin);
 
-router.get("/auth/google",passport.authenticate("google",{scope: ["profile", "email"], prompt: "select_account"}));
-router.get("/auth/google/callback",passport.authenticate("google",{failureRedirect: "/login"}),userController.googleAuthCallback);
+router.get("/auth/google",noCache,passport.authenticate("google",{scope: ["profile", "email"], prompt: "select_account"}));
+router.get("/auth/google/callback",noCache,passport.authenticate("google",{failureRedirect: "/login", failureFlash: true}),userController.googleAuthCallback);
 
 
-router.get("/signup", noCache, userController.getSignup);
+router.get("/signup", noCache,userController.getSignup);
 router.post("/signup", userController.postSignup);
 
-router.get("/account-created", userController.getAccountCreated);
+router.get("/verify-signupotp",noCache,userController.getVerifySignupOtp);
+router.post("/verify-signupotp",userController.postVerifySignupOtp);
 
-router.get("/forgot-password", userController.getForgotPassword);
+
+router.post("/resend-signupotp", userController.resendSignupOtp);
+
+router.get("/account-created",noCache,userController.getAccountCreated);
+
+router.get("/forgot-password",noCache,userController.getForgotPassword);
 router.post("/forgot-password", userController.postForgotPassword);
 
-router.get("/verify-otp", userController.getVerifyOtp);
+router.get("/verify-otp",noCache,userController.getVerifyOtp);
 router.post("/verify-otp", userController.postVerifyOtp);
 
-router.get("/reset-password", userController.getResetPassword);
+router.get("/reset-password",noCache,userController.getResetPassword);
 router.post("/reset-password", userController.postResetPassword);
 
 router.post("/resend-otp", userController.resendOtp);
 
-router.get("/password-updated", userController.getPasswordUpdated);
+router.get("/password-updated",noCache,userController.getPasswordUpdated);
 
 router.get("/user-dashboard", noCache, isUser,userController.getDashboard);
 
@@ -43,6 +48,11 @@ router.post("/user-profile/update-avatar",isUser,upload.single("avatar"),userCon
 router.get("/user-profile/edit",noCache,isUser,userController.getEditProfile);
 
 router.post("/user-profile/edit",isUser,userController.postProfileDetails);
+
+
+router.get("/verify-email-change-otp",noCache,isUser,userController.getVerifyEmailChangeOtp);
+
+router.post("/verify-email-change-otp",isUser,userController.postVerifyEmailChangeOtp);
 
 router.get("/user-profile/change-password",noCache,isUser,userController.getChangePassword);
 

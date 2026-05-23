@@ -1,0 +1,318 @@
+<%- include('../../partials/header') %>
+
+<main class="flex-grow bg-[#F8F9FA] pb-20">
+    <!-- Header Section -->
+    <section class="pt-12 pb-8 px-8 max-w-7xl mx-auto">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">Explore Courses</h1>
+        <p class="text-gray-600 text-lg max-w-2xl mb-10 leading-relaxed">
+            Learn coding from top courses. Join our Digital Sanctuary and master the skills of tomorrow in a focused, premium environment.
+        </p>
+        
+        <!-- Search Bar -->
+        <div class="relative max-w-full">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input type="text" class="block w-full pl-12 pr-4 py-4 bg-gray-100 border-none rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-[#0B5ED7] focus:bg-white transition-colors outline-none" placeholder="Search courses...">
+        </div>
+    </section>
+
+    <!-- Content Section -->
+    <section class="px-8 max-w-7xl mx-auto flex flex-row gap-8 items-start w-full">
+        <!-- Sidebar Filters (Left) -->
+        <aside class="w-64 flex-shrink-0 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Filters</h3>
+                <p class="text-xs text-gray-400 font-semibold tracking-wider uppercase mt-1">Refine your journey</p>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-8">
+                <div class="flex items-center text-[#0B5ED7] font-semibold mb-4 space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <span class="text-sm font-bold tracking-wide">Category</span>
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-bold text-[#0B5ED7]">HTML</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">CSS</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">JavaScript</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">React</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Python</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Node.js</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Django</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Level -->
+            <div class="mb-8">
+                <div class="flex items-center text-gray-700 font-semibold mb-4 space-x-2">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <span class="text-sm font-bold tracking-wide">Level</span>
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="level" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Beginner</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="level" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Intermediate</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="level" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Advanced</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Price -->
+            <div>
+                <div class="flex items-center text-gray-700 font-semibold mb-4 space-x-2">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span class="text-sm font-bold tracking-wide">Price</span>
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Free</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
+                        <span class="ml-3 text-sm font-medium text-gray-700 hover:text-[#0B5ED7]">Paid</span>
+                    </label>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Course Grid Area -->
+        <div class="flex-grow w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               <% courses.forEach(course => { %>
+
+<div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full group">
+
+  <!-- THUMBNAIL -->
+
+  <div class="h-48 relative overflow-hidden">
+
+    <img
+      src="<%= course.thumbnail %>"
+      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+    >
+
+    <!-- LEVEL -->
+
+    <span class="
+      absolute top-4 left-4
+      text-white text-[10px]
+      font-bold px-3 py-1.5
+      rounded-full z-10 tracking-wider
+
+      <%= course.level === 'Beginner'
+      ? 'bg-[#0B5ED7]'
+      : course.level === 'Intermediate'
+      ? 'bg-[#9061F9]'
+      : 'bg-[#854D0E]' %>
+    ">
+
+      <%= course.level.toUpperCase() %>
+
+    </span>
+
+  </div>
+
+
+  <!-- CONTENT -->
+
+  <div class="p-6 flex flex-col flex-grow">
+
+    <!-- RATING -->
+
+    <div class="flex items-center text-sm font-bold mb-3">
+
+      <span class="text-amber-500 mr-1.5">★</span>
+
+      <span class="text-gray-900 font-extrabold text-sm">
+        <%= course.rating || '4.8' %>
+      </span>
+
+      <span class="text-gray-400 font-medium text-xs ml-1.5">
+
+        (<%= course.reviewsCount || 0 %> reviews)
+
+      </span>
+
+    </div>
+
+
+    <!-- TITLE -->
+
+    <a href="/courses/<%= course._id %>">
+
+      <h3 class="font-bold text-lg text-gray-900 mb-6 hover:text-[#0B5ED7] transition-colors line-clamp-2 leading-snug">
+
+        <%= course.title %>
+
+      </h3>
+
+    </a>
+
+
+    <!-- FOOTER -->
+
+    <div class="mt-auto flex justify-between items-center pt-2">
+
+      <span class="font-extrabold text-[#0B5ED7] text-xl">
+
+        <%= course.basePrice === 0
+        ? 'Free'
+        : '$' + course.basePrice%>
+
+      </span>
+
+      <a
+        href="/login"
+        class="bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#6D28D9] font-bold py-2 px-5 rounded-full transition-colors text-sm"
+      >
+
+        Login to Enroll
+
+      </a>
+
+    </div>
+
+  </div>
+
+</div>
+
+<% }) %>
+
+                <!-- Card 4 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full group">
+                    <div class="h-48 bg-[#DBEAFE] relative overflow-hidden flex items-center justify-center p-4">
+                        <span class="absolute top-4 left-4 bg-[#0B5ED7] text-white text-[10px] font-bold px-3 py-1.5 rounded-full z-10 tracking-wider">BEGINNER</span>
+                        <!-- Custom Forms & Inputs Mockup SVG -->
+                        <svg class="w-full h-full max-h-36 opacity-90 group-hover:scale-105 transition-transform duration-500" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="10" y="10" width="180" height="100" rx="8" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+                            <rect x="25" y="25" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+                            <rect x="30" y="31" width="30" height="6" rx="3" fill="#E5E7EB"/>
+                            <rect x="105" y="25" width="70" height="18" rx="4" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+                            <rect x="110" y="31" width="45" height="6" rx="3" fill="#E5E7EB"/>
+                            
+                            <rect x="25" y="53" width="150" height="18" rx="4" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.5"/>
+                            <circle cx="35" cy="62" r="5" fill="#3B82F6"/>
+                            <rect x="47" y="59" width="80" height="6" rx="3" fill="#93C5FD"/>
+                            
+                            <rect x="25" y="81" width="150" height="18" rx="4" fill="#3B82F6"/>
+                            <rect x="75" y="87" width="50" height="6" rx="3" fill="#FFFFFF"/>
+                        </svg>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex items-center text-sm font-bold mb-3">
+                            <span class="text-amber-500 mr-1.5">★</span>
+                            <span class="text-gray-900 font-extrabold text-sm">4.5</span>
+                            <span class="text-gray-400 font-medium text-xs ml-1.5">(200 reviews)</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-900 mb-6 hover:text-[#0B5ED7] transition-colors line-clamp-2 leading-snug">HTML Forms & Inputs</h3>
+                        <div class="mt-auto flex justify-between items-center pt-2">
+                            <span class="font-extrabold text-[#0B5ED7] text-xl">Free</span>
+                            <a href="/login" class="bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#6D28D9] font-bold py-2 px-5 rounded-full transition-colors text-sm">Login to Enroll</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full group">
+                    <div class="h-48 bg-[#F3F4F6] relative overflow-hidden flex items-center justify-center p-4">
+                        <span class="absolute top-4 left-4 bg-[#9061F9] text-white text-[10px] font-bold px-3 py-1.5 rounded-full z-10 tracking-wider">INTERMEDIATE</span>
+                        <!-- Custom Responsive Layout Grid Mockup SVG -->
+                        <svg class="w-full h-full max-h-36 opacity-90 group-hover:scale-105 transition-transform duration-500" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="10" y="10" width="180" height="100" rx="8" fill="#1F2937" stroke="#4B5563" stroke-width="1.5"/>
+                            <rect x="20" y="20" width="45" height="35" rx="4" fill="#374151" stroke="#9061F9" stroke-width="1"/>
+                            <rect x="25" y="25" width="20" height="4" rx="2" fill="#9061F9" fill-opacity="0.5"/>
+                            <rect x="20" y="65" width="45" height="35" rx="4" fill="#374151" stroke="#4B5563" stroke-width="1"/>
+                            
+                            <rect x="75" y="20" width="105" height="35" rx="4" fill="#374151" stroke="#4B5563" stroke-width="1"/>
+                            <rect x="80" y="28" width="50" height="4" rx="2" fill="#E5E7EB" fill-opacity="0.3"/>
+                            <rect x="80" y="38" width="70" height="4" rx="2" fill="#E5E7EB" fill-opacity="0.15"/>
+                            
+                            <rect x="75" y="65" width="50" height="35" rx="4" fill="#374151" stroke="#9061F9" stroke-width="1.5"/>
+                            <rect x="135" y="65" width="45" height="35" rx="4" fill="#374151" stroke="#4B5563" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex items-center text-sm font-bold mb-3">
+                            <span class="text-amber-500 mr-1.5">★</span>
+                            <span class="text-gray-900 font-extrabold text-sm">4.7</span>
+                            <span class="text-gray-400 font-medium text-xs ml-1.5">(320 reviews)</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-900 mb-6 hover:text-[#0B5ED7] transition-colors line-clamp-2 leading-snug">Responsive HTML Layouts</h3>
+                        <div class="mt-auto flex justify-between items-center pt-2">
+                            <span class="font-extrabold text-[#0B5ED7] text-xl">$59.00</span>
+                            <a href="/login" class="bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#6D28D9] font-bold py-2 px-5 rounded-full transition-colors text-sm">Login to Enroll</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6 -->
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full group">
+                    <div class="h-48 bg-[#FEF3C7] relative overflow-hidden flex items-center justify-center">
+                        <span class="absolute top-4 left-4 bg-[#854D0E] text-white text-[10px] font-bold px-3 py-1.5 rounded-full z-10 tracking-wider">ADVANCED</span>
+                        <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Advanced Accessibilty HTML" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    </div>
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex items-center text-sm font-bold mb-3">
+                            <span class="text-amber-500 mr-1.5">★</span>
+                            <span class="text-gray-900 font-extrabold text-sm">4.9</span>
+                            <span class="text-gray-400 font-medium text-xs ml-1.5">(140 reviews)</span>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-900 mb-6 hover:text-[#0B5ED7] transition-colors line-clamp-2 leading-snug">Advanced Accessibilty HTML</h3>
+                        <div class="mt-auto flex justify-between items-center pt-2">
+                            <span class="font-extrabold text-[#0B5ED7] text-xl">$125.00</span>
+                            <a href="/login" class="bg-[#EDE9FE] hover:bg-[#DDD6FE] text-[#6D28D9] font-bold py-2 px-5 rounded-full transition-colors text-sm">Login to Enroll</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-12 flex justify-center items-center space-x-2">
+                <button class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button class="w-10 h-10 rounded-full bg-[#0B5ED7] text-white font-bold shadow-md shadow-blue-500/20 flex items-center justify-center">1</button>
+                <button class="w-10 h-10 rounded-full text-gray-700 font-semibold hover:bg-gray-100 flex items-center justify-center transition-colors">2</button>
+                <button class="w-10 h-10 rounded-full text-gray-700 font-semibold hover:bg-gray-100 flex items-center justify-center transition-colors">3</button>
+                <span class="text-gray-400 font-bold px-2">...</span>
+                <button class="w-10 h-10 rounded-full text-gray-700 font-semibold hover:bg-gray-100 flex items-center justify-center transition-colors">12</button>
+                <button class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+        </div>
+    </section>
+</main>
+
+<%- include('../../partials/footer') %>

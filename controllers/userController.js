@@ -1,4 +1,7 @@
 const User=require("../models/userModel");
+const Course=require("../models/courseModel");
+const Module=require("../models/moduleModel");
+const Lesson=require("../models/lessonModel");
 const bcrypt=require("bcrypt");
 const nodemailer = require("nodemailer");
 
@@ -10,6 +13,22 @@ function generateOTP() {
 
 //Guest Home
 exports.getHome=(req, res) => {
+
+  if (req.session.admin) {
+
+    return res.redirect(
+      "/admin-dashboard"
+    );
+
+  }
+
+  if (req.session.user) {
+
+    return res.redirect(
+      "/user-dashboard"
+    );
+
+  }
     res.render('pages/guest/home', { 
         title: 'Velora - Master Coding With Focus', 
         isLoggedIn: false 
@@ -24,6 +43,10 @@ exports.getLogin=(req,res)=>{
     return res.redirect("/user-dashboard");
   }
 
+  if (req.session.admin) {
+  return res.redirect("/admin-dashboard");
+}
+
   res.render("pages/guest/login",{ 
         title: 'Velora - Login', 
         isLoggedIn: false,
@@ -31,6 +54,7 @@ exports.getLogin=(req,res)=>{
 };
 
 exports.postLogin=async(req,res)=>{
+
   const{email,password}=req.body;
 
   const user=await User.findOne({email});
@@ -49,7 +73,7 @@ exports.postLogin=async(req,res)=>{
 
  if (user.status === "inactive") {
 
-  req.flash("error", "Your account is inactive");
+  req.flash("error", "Account is inactive");
 
   return res.redirect("/login");
 }
@@ -67,6 +91,15 @@ exports.postLogin=async(req,res)=>{
 //SignUp
 
 exports.getSignup=(req,res)=>{
+    
+  if (req.session.user) {
+    return res.redirect("/user-dashboard");
+  }
+
+  if (req.session.admin) {
+  return res.redirect("/admin-dashboard");
+}
+
   res.render("pages/guest/signup",{ 
         title: 'Velora - Sign Up', 
         isLoggedIn: false 
@@ -76,7 +109,7 @@ exports.getSignup=(req,res)=>{
 exports.postSignup=async(req,res)=>{
 
 
-const{name,email,password}=req.body;
+const{name,email,password,confirmPassword}=req.body;
 
   // REGEX
 
@@ -92,7 +125,7 @@ const passwordRegex =
 
 // EMPTY VALIDATION
 
-if (!name || !email || !password) {
+if (!name || !email || !password ||! confirmPassword) {
 
   req.flash(
     "error",
@@ -128,6 +161,23 @@ if (!emailRegex.test(email)) {
   return res.redirect("/signup");
 }
 
+// PASSWORD MATCH VALIDATION
+
+if (
+  password !==
+  confirmPassword
+) {
+
+  req.flash(
+    "error",
+    "Passwords do not match"
+  );
+
+  return res.redirect(
+    "/signup"
+  );
+
+}
 
 // PASSWORD VALIDATION
 
@@ -149,16 +199,170 @@ if (!passwordRegex.test(password)) {
     return res.redirect("/signup");
   }
 
-  const hashedPassword=await bcrypt.hash(password,10);
 
-  await User.create({
+
+  const otp=generateOTP();
+
+  //STORE TEMP SIGNUP DATA
+
+  req.session.signupData={
     name,
     email,
-    password:hashedPassword
+    password
+  }
+
+  //STORE OTP
+
+  req.session.signupOTP=otp;
+
+  req.session.signupOTPExpires= Date.now() +60 *1000;
+
+  //SEND EMAIL
+
+  const transporter=await createTransporter();
+
+  const info= await transporter.sendMail({
+     from:
+    '"Velora" <no-reply@velora.com>',
+
+    to: email,
+
+    subject:
+    "Signup OTP",
+
+    text:
+    `Your OTP is ${otp}`
+
   });
 
- req.flash("success","Signup successful");
- res.redirect("/account-created");
+
+  console.log(
+  "Preview URL:",
+  nodemailer.getTestMessageUrl(info)
+);
+
+ res.redirect("/verify-signupotp");
+};
+
+
+exports.getVerifySignupOtp = (req, res) => {
+  res.render("pages/guest/verify-signupotp", {
+      title: 'Velora - Verify Signup OTP',
+      isLoggedIn: false
+  });
+};
+
+exports.postVerifySignupOtp = async (req, res) =>{
+
+  const {otp}=req.body;
+
+  // EXPIRY CHECK
+
+  if (
+    Date.now() >
+    req.session.signupOTPExpires
+  ) {
+
+    req.flash(
+      "error",
+      "OTP expired"
+    );
+
+    return res.redirect(
+      "/verify-signupotp"
+    );
+
+  }
+
+
+
+  // OTP CHECK
+
+  if (
+    otp !==
+    req.session.signupOTP
+  ) {
+
+    req.flash(
+      "error",
+      "Invalid OTP"
+    );
+
+    return res.redirect(
+      "/verify-signupotp"
+    );
+
+  }
+
+
+
+  // GET TEMP DATA
+
+  const {
+    name,
+    email,
+    password
+  } =
+  req.session.signupData;
+
+
+
+  // HASH PASSWORD
+
+  const hashedPassword =
+    await bcrypt.hash(
+      password,
+      10
+    );
+
+
+
+  // CREATE USER
+
+  await User.create({
+
+    name,
+
+    email,
+
+    password:
+    hashedPassword
+
+  });
+
+
+
+  // CLEANUP
+
+  delete req.session.signupData;
+
+  delete req.session.signupOTP;
+
+  delete req.session.signupOTPExpires;
+
+  res.redirect("/login");
+
+}
+
+exports.resendSignupOtp = async (req, res) => {
+
+  const otp = generateOTP();
+
+  req.session.signupOTP = otp;
+  req.session.signupOTPExpires= Date.now() + 60 * 1000;
+
+  const transporter = await createTransporter();
+
+  const info = await transporter.sendMail({
+    from: '"Velora" <no-reply@velora.com>',
+    to: req.session.signupData.email,
+    subject: "Resend OTP",
+    text: `Your OTP is ${otp}`
+  });
+
+  console.log("Preview URL:",nodemailer.getTestMessageUrl(info));
+
+  res.redirect("/verify-signupotp");
 };
 
 
@@ -807,6 +1011,89 @@ exports.postProfileDetails = async (req, res) => {
       );
     }
 
+    // EMAIL CHANGED
+
+if (
+  trimmedEmail !==
+  user.email
+) {
+
+  // GENERATE OTP
+
+  const otp =
+    generateOTP();
+
+
+
+  // STORE PENDING DATA
+
+  req.session.pendingProfileUpdate = {
+
+    name: trimmedName,
+
+    email: trimmedEmail,
+
+    phone: trimmedPhone
+
+  };
+
+
+
+  // STORE OTP
+
+  req.session.emailChangeOTP =
+    otp;
+
+  req.session.emailChangeOTPExpires =
+    Date.now() + 60 * 1000;
+
+
+
+  // SEND OTP
+
+  const transporter =
+    await createTransporter();
+
+
+
+  const info =
+    await transporter.sendMail({
+
+      from:
+      '"Velora" <no-reply@velora.com>',
+
+      to:
+      trimmedEmail,
+
+      subject:
+      "Verify Email Change",
+
+      text:
+      `Your OTP is ${otp}`
+
+    });
+
+
+
+  console.log(
+    "Preview URL:",
+    nodemailer.getTestMessageUrl(info)
+  );
+
+
+
+  req.flash(
+    "success",
+    "OTP sent to new email"
+  );
+
+
+
+  return res.redirect(
+    "/verify-email-change-otp"
+  );
+
+}
 
 
     // UPDATE DATA
@@ -853,6 +1140,141 @@ exports.postProfileDetails = async (req, res) => {
     );
 
   }
+
+};
+
+exports.getVerifyEmailChangeOtp =
+(req, res) => {
+
+  res.render(
+
+    "pages/user/profile/verify-email-change-otp",
+
+    {
+
+      title:
+      "Verify Email Change",
+
+      isLoggedIn: true
+
+    }
+
+  );
+
+};
+
+
+exports.postVerifyEmailChangeOtp =
+async (req, res) => {
+
+  const { otp } =
+    req.body;
+
+
+
+  // EXPIRY CHECK
+
+  if (
+    Date.now() >
+    req.session.emailChangeOTPExpires
+  ) {
+
+    req.flash(
+      "error",
+      "OTP expired"
+    );
+
+    return res.redirect(
+      "/verify-email-change-otp"
+    );
+
+  }
+
+
+
+  // OTP CHECK
+
+  if (
+    otp !==
+    req.session.emailChangeOTP
+  ) {
+
+    req.flash(
+      "error",
+      "Invalid OTP"
+    );
+
+    return res.redirect(
+      "/verify-email-change-otp"
+    );
+
+  }
+
+
+
+  // FIND USER
+
+  const user =
+    await User.findById(
+      req.session.user.id
+    );
+
+
+
+  // GET PENDING DATA
+
+  const pendingData =
+    req.session.pendingProfileUpdate;
+
+
+
+  // UPDATE USER
+
+  user.name =
+    pendingData.name;
+
+  user.email =
+    pendingData.email;
+
+  user.phone =
+    pendingData.phone;
+
+
+
+  await user.save();
+
+
+
+  // UPDATE SESSION
+
+  req.session.user.name =
+    user.name;
+
+  req.session.user.email =
+    user.email;
+
+
+
+  // CLEANUP
+
+  delete req.session.pendingProfileUpdate;
+
+  delete req.session.emailChangeOTP;
+
+  delete req.session.emailChangeOTPExpires;
+
+
+
+  req.flash(
+    "success",
+    "Email updated successfully"
+  );
+
+
+
+  res.redirect(
+    "/user-profile"
+  );
 
 };
 
@@ -1021,23 +1443,115 @@ exports.postUpdatePassword = async (req, res) => {
 };
 
 //User-Profile-Logout
-  exports.getUserLogout=((req, res) => {
+exports.getUserLogout =
+(req, res) => {
 
-  req.logout(function(err){
+  delete req.session.user;
 
-    if(err){
+  req.logout?.(() => {});
 
-      console.log(err);
-    }
+  res.setHeader(
 
-    req.session.destroy(() => {
+    "Cache-Control",
 
-      res.clearCookie("connect.sid");
+    "no-store, no-cache, must-revalidate, private"
+  );
 
-      res.redirect("/login");
+  res.redirect("/login");
+
+};
+
+
+// ─── Courses Listing ─────────────────────────────────────────────────────────
+exports.getCourses = async (req, res) => {
+  try {
+    const { category, level, price, search, page = 1 } = req.query;
+    const LIMIT = 6;
+    const skip = (parseInt(page) - 1) * LIMIT;
+
+    const filter = { status: 'published', isDeleted: false };
+    if (category)          filter.category    = category;
+    if (level)             filter.level       = level;
+    if (price === 'free')  filter.pricingType = 'free';
+    if (price === 'paid')  filter.pricingType = 'paid';
+    if (search)            filter.title       = { $regex: search, $options: 'i' };
+
+    const [courses, totalCourses] = await Promise.all([
+      Course.find(filter).skip(skip).limit(LIMIT).lean(),
+      Course.countDocuments(filter)
+    ]);
+
+    const totalPages = Math.ceil(totalCourses / LIMIT);
+
+    const isLoggedIn = !!(req.session && req.session.user);
+    const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
+
+    res.render('pages/guest/courses', {
+      title: 'Velora - Explore Courses',
+      isLoggedIn,
+      user,
+      courses,
+      totalPages,
+      currentPage:      parseInt(page),
+      selectedCategory: category || '',
+      selectedLevel:    level    || '',
+      selectedPrice:    price    || '',
+      search:           search   || ''
     });
+  } catch (err) {
+    console.log(err);
+    res.redirect('/');
+  }
+};
 
-  });
+// ─── Course Detail ────────────────────────────────────────────────────────────
+exports.getCourseDetail = async (req, res) => {
+  try {
+    const course = await Course.findOne({
+      _id:       req.params.id,
+      status:    'published',
+      isDeleted: false
+    }).lean();
 
-});
+    if (!course) return res.redirect('/courses');
+
+    const modules = await Module.find({ courseId: course._id })
+      .sort({ order: 1 }).lean();
+
+    const modulesWithLessons = await Promise.all(
+      modules.map(async (mod) => {
+        const lessons = await Lesson.find({ moduleId: mod._id })
+          .sort({ order: 1 }).lean();
+        return { ...mod, lessons };
+      })
+    );
+
+    const totalLessons = modulesWithLessons.reduce(
+      (sum, m) => sum + m.lessons.length, 0
+    );
+
+    const relatedCourses = await Course.find({
+      category:  course.category,
+      _id:       { $ne: course._id },
+      status:    'published',
+      isDeleted: false
+    }).limit(4).lean();
+
+    const isLoggedIn = !!(req.session && req.session.user);
+    const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
+
+    res.render('pages/guest/course-detail', {
+      title:              `Velora - ${course.title}`,
+      isLoggedIn,
+      user,
+      course,
+      modulesWithLessons,
+      totalLessons,
+      relatedCourses
+    });
+  } catch (err) {
+    console.log(err);
+    res.redirect('/courses');
+  }
+};
 

@@ -1,0 +1,108 @@
+  <%- include('../../partials/header') %>
+
+<main class="flex-grow flex items-center justify-center py-16 px-4">
+    <div class="w-full max-w-md">
+        <!-- Verify Signup OTP Card -->
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10 text-center flex flex-col items-center">
+            
+            <!-- Icon -->
+            <div class="w-16 h-16 bg-[#EEF2FF] rounded-full flex items-center justify-center mb-6">
+                <div class="w-10 h-10 bg-[#0B5ED7] rounded-full flex items-center justify-center text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Header Text -->
+            <h2 class="text-2xl font-bold text-gray-900 mb-3 tracking-tight">Verify OTP</h2>
+            <p class="text-gray-500 text-sm mb-8 px-4 leading-relaxed">
+                Enter the verification code sent to your email
+            </p>
+            
+                <% if (error.length> 0) { %>
+                <p class="!text-red-600 font-medium mb-4">
+                <%= error[0] %>
+                </p>
+                <% } %>
+
+            <form action="/verify-signupotp" method="POST" class="w-full text-left space-y-6">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
+                    <div class="relative">
+                        <input type="text" name="otp" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••" maxlength="6">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary w-full text-center block mb-6">Verify Code</button>
+            </form>
+
+           <div class="text-center mt-4 space-y-3">
+
+    <!-- Timer -->
+    <p class="text-sm text-gray-500">
+        Resend OTP in 
+        <span id="timer" class="font-semibold text-[#0B5ED7]">
+            60
+        </span>
+        seconds
+    </p>
+
+    <!-- Resend Button -->
+    <form action="/resend-signupotp" method="POST">
+        <button 
+            id="resendBtn"
+            type="submit"
+            disabled
+            class="text-sm font-medium text-gray-400 cursor-not-allowed"
+        >
+            Resend OTP
+        </button>
+    </form>
+
+</div>
+            
+        </div>
+        
+        <p class="text-center text-xs text-gray-400 uppercase tracking-widest mt-8">Secure authentication for Velora</p>
+    </div>
+</main>
+
+<script>
+
+    let time = 60;
+
+    const timer = document.getElementById("timer");
+    const resendBtn = document.getElementById("resendBtn");
+
+    const interval = setInterval(() => {
+
+        time--;
+
+        timer.textContent = time;
+
+        if (time <= 0) {
+
+            clearInterval(interval);
+
+            timer.textContent = "0";
+
+            resendBtn.disabled = false;
+
+            resendBtn.classList.remove(
+                "text-gray-400",
+                "cursor-not-allowed"
+            );
+
+            resendBtn.classList.add(
+                "text-[#0B5ED7]",
+                "hover:underline"
+            );
+
+        }
+
+    }, 1000);
+
+</script>
+
+  <%- include('../../partials/footer') %>

@@ -1,0 +1,233 @@
+<%- include('../../partials/header') %>
+
+<main class="flex-grow bg-[#F8F9FA] pb-20">
+    <!-- Hero Header -->
+    <section class="py-12 px-8 max-w-7xl mx-auto w-full">
+        <div class="flex flex-col lg:flex-row gap-12">
+            <!-- Left Info -->
+            <div class="flex-grow max-w-3xl">
+                <div class="flex items-center space-x-4 mb-4">
+                    <span class="bg-[#9061F9] text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 tracking-wider">BEGINNER</span>
+                    <div class="flex items-center text-sm font-bold">
+                        <span class="text-[#0B5ED7] mr-1.5">★</span>
+                        <span class="text-[#0B5ED7] font-extrabold text-sm">4.6</span>
+                        <span class="text-gray-400 font-medium text-xs ml-1.5">(300 reviews)</span>
+                    </div>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight leading-tight">Semantic HTML Guide</h1>
+                <p class="text-gray-600 text-lg mb-8 leading-relaxed">
+                    Learn how to write meaningful and accessible HTML using semantic elements to build high-quality, professional web experiences.
+                </p>
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=Marcus+Thorne&background=0D8ABC&color=fff&rounded=true" alt="Dr. Marcus Thorne" class="w-12 h-12 rounded-full mr-4 border border-gray-200">
+                    <div>
+                        <h4 class="font-bold text-gray-900">Dr. Marcus Thorne</h4>
+                        <p class="text-xs text-gray-400 font-semibold">Lead Web Architect at Velora</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- We will leave right space empty in header, the sidebar will pull up over it in the next section -->
+            <div class="hidden lg:block w-96 flex-shrink-0"></div>
+        </div>
+    </section>
+
+    <!-- Content & Sidebar -->
+    <section class="max-w-7xl mx-auto px-8 pt-6 flex flex-col lg:flex-row gap-12 relative items-start w-full">
+        <!-- Main Content -->
+        <div class="flex-grow max-w-3xl w-full">
+            <!-- Alert Box -->
+            <div class="bg-[#EDE9FE] rounded-2xl p-5 mb-10 flex items-start border border-[#DDD6FE]">
+                <div class="bg-[#9061F9] text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs mt-0.5 mr-3 flex-shrink-0">i</div>
+                <p class="text-gray-700 text-sm leading-relaxed font-medium">Create an account to start learning this course and track your progress.</p>
+            </div>
+
+            <!-- What you will learn -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">What you will learn</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-start shadow-sm">
+                        <svg class="w-5 h-5 text-[#0B5ED7] mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-gray-600 text-sm font-semibold leading-relaxed">Understand semantic HTML structure for modern web apps.</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-start shadow-sm">
+                        <svg class="w-5 h-5 text-[#0B5ED7] mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-gray-600 text-sm font-semibold leading-relaxed">Build accessible web pages that work for everyone.</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-start shadow-sm">
+                        <svg class="w-5 h-5 text-[#0B5ED7] mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-gray-600 text-sm font-semibold leading-relaxed">Improve SEO ranking with proper hierarchical tags.</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-start shadow-sm">
+                        <svg class="w-5 h-5 text-[#0B5ED7] mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-gray-600 text-sm font-semibold leading-relaxed">Write clean and meaningful markup for better dev collaboration.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Curriculum -->
+            <div class="mb-12">
+                <div class="flex justify-between items-end mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Course Curriculum</h2>
+                    <span class="text-gray-400 text-xs font-semibold">12 Lessons • 4h 30m</span>
+                </div>
+                
+                <div class="space-y-3">
+                    <!-- Module 1 -->
+                    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                        <div class="bg-gray-50 px-6 py-4 flex justify-between items-center cursor-pointer">
+                            <h3 class="font-bold text-gray-800 text-sm">Module 1: Foundations of Semantic Web</h3>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="px-6 py-2 divide-y divide-gray-50">
+                            <div class="py-4 flex justify-between items-center text-sm">
+                                <div class="flex items-center text-gray-600 font-semibold">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    The "Why" Behind Semantic HTML
+                                </div>
+                                <span class="text-gray-400 text-xs font-semibold">15:00</span>
+                            </div>
+                            <div class="py-4 flex justify-between items-center text-sm">
+                                <div class="flex items-center text-gray-600 font-semibold">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    Structure vs. Content
+                                </div>
+                                <span class="text-gray-400 text-xs font-semibold">22:15</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module 2 -->
+                    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                        <div class="bg-gray-50 px-6 py-4 flex justify-between items-center cursor-pointer">
+                            <h3 class="font-bold text-gray-800 text-sm">Module 2: Layout Elements & Landmark Roles</h3>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                        <div class="px-6 py-5">
+                            <p class="text-xs text-gray-400 flex items-center justify-center font-bold">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                Login to access full content
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Courses -->
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Related Courses</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Related Course 1 -->
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                        <div class="h-32 bg-gray-900 relative overflow-hidden flex items-center justify-center">
+                            <!-- Chibi anime CSS character illustration -->
+                            <img src="/uploads/css_mastery.png" alt="CSS Mastery" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-pink-600 mb-1 block">DESIGN</span>
+                            <h3 class="font-bold text-gray-900 text-sm mb-2 line-clamp-1">CSS Mastery: From Flex to Grid</h3>
+                            <div class="flex items-center justify-between text-xs font-bold pt-1">
+                                <div class="flex items-center text-[#0B5ED7]">
+                                    <span class="mr-1">★</span>
+                                    <span>4.9</span>
+                                </div>
+                                <span class="text-gray-400 font-medium">$39.99</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Related Course 2 -->
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                        <div class="h-32 bg-[#0B3C3B] relative overflow-hidden flex items-center justify-center p-4">
+                            <!-- Custom flat vector orange t-shirt Accessibility SVG mockup -->
+                            <svg class="w-full h-full max-h-24 opacity-90" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20 20 L35 10 L45 15 L55 15 L65 10 L80 20 L75 35 L68 32 L68 70 L32 70 L32 32 L25 35 Z" fill="#F97316" stroke="#FB923C" stroke-width="1"/>
+                                <circle cx="50" cy="42" r="12" fill="#FFFFFF" fill-opacity="0.15" stroke="#FFFFFF" stroke-width="0.8"/>
+                                <path d="M50 30 L50 54 M38 42 L62 42" stroke="#FFFFFF" stroke-width="0.8" stroke-dasharray="2,2"/>
+                                <circle cx="50" cy="42" r="6" fill="#F97316"/>
+                                <path d="M50 36 A6 6 0 0 1 56 42" stroke="#FFFFFF" stroke-width="1"/>
+                            </svg>
+                        </div>
+                        <div class="p-5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1 block">DEVELOPMENT</span>
+                            <h3 class="font-bold text-gray-900 text-sm mb-2 line-clamp-1">Web Accessibility Principles</h3>
+                            <div class="flex items-center justify-between text-xs font-bold pt-1">
+                                <div class="flex items-center text-[#0B5ED7]">
+                                    <span class="mr-1">★</span>
+                                    <span>4.7</span>
+                                </div>
+                                <span class="text-gray-400 font-medium">$54.99</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar (Sticky) -->
+        <aside class="w-full lg:w-96 lg:-mt-48 flex-shrink-0 z-10 sticky top-24">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <!-- Video Preview -->
+                <div class="h-56 bg-gray-950 relative group cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Video Preview" class="w-full h-full object-cover opacity-50 group-hover:opacity-40 transition-opacity">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover:scale-110 transition-transform border border-white/30">
+                            <svg class="w-6 h-6 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center mix-blend-overlay bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+                
+                <!-- Sidebar Info -->
+                <div class="p-8">
+                    <div class="flex items-baseline mb-6 space-x-2">
+                        <h2 class="text-4xl font-extrabold text-gray-900">Free</h2>
+                        <span class="text-gray-400 line-through text-sm font-medium">$49.99</span>
+                    </div>
+
+                    <a href="/login" class="block w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white text-center font-bold py-3.5 px-4 rounded-xl transition-colors mb-3 shadow-md shadow-blue-500/20 text-sm">
+                        Login to Enroll
+                    </a>
+                    <button class="block w-full bg-[#C4B5FD] hover:bg-[#B5A4FC] text-[#6D28D9] text-center font-bold py-3.5 px-4 rounded-xl transition-colors mb-8 text-sm">
+                        Add to Wishlist
+                    </button>
+
+                    <div class="mb-8">
+                        <h4 class="font-bold text-gray-900 text-xs uppercase tracking-wider mb-4">This course includes:</h4>
+                        <ul class="space-y-3.5">
+                            <li class="flex items-center text-sm text-gray-600 font-semibold">
+                                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                4.5 hours on-demand video
+                            </li>
+                            <li class="flex items-center text-sm text-gray-600 font-semibold">
+                                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                12 downloadable resources
+                            </li>
+                            <li class="flex items-center text-sm text-gray-600 font-semibold">
+                                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                Access on mobile and TV
+                            </li>
+                            <li class="flex items-center text-sm text-gray-600 font-semibold">
+                                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                Certificate of completion
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="flex items-center justify-around pt-6 border-t border-gray-100 w-full">
+                        <button class="flex items-center text-xs font-bold text-[#0B5ED7] hover:text-[#0A58CA] transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
+                            Share
+                        </button>
+                        <div class="h-4 w-px bg-gray-200"></div>
+                        <button class="flex items-center text-xs font-bold text-[#0B5ED7] hover:text-[#0A58CA] transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path></svg>
+                            Gift Course
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<%- include('../../partials/footer') %>
