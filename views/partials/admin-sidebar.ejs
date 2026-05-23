@@ -1,0 +1,64 @@
+<aside class="w-64 bg-white border-r flex flex-col hidden md:flex min-h-screen">
+  <div class="p-6 pb-8">
+    <h1 class="text-2xl font-bold text-blue-600 tracking-tight">Velora Admin</h1>
+  </div>
+
+  <div class="px-6 flex items-center space-x-3 mb-8">
+    <img src="https://i.pravatar.cc/150?u=admin" alt="Velora Admin" class="w-10 h-10 rounded-full border">
+    <div>
+      <p class="text-sm font-semibold text-gray-900">Velora Admin</p>
+      <p class="text-xs text-gray-500">System Controller</p>
+    </div>
+  </div>
+
+  <nav class="flex-1 space-y-1 text-sm font-medium">
+    <a href="/admin-dashboard" class="flex items-center px-6 py-3 transition-colors <%= activePage === 'dashboard' ? 'text-blue-600 bg-blue-50 relative group rounded-r-full mr-4' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' %>">
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+      </svg>
+      Dashboard
+      <% if (activePage === 'dashboard') { %>
+        <span class="absolute inset-y-0 right-0 w-1 bg-blue-600 rounded-l-md hidden"></span>
+      <% } %>
+    </a>
+    <a href="/admin-courses" class="flex items-center px-6 py-3 transition-colors <%= activePage === 'courses' ? 'text-blue-600 bg-blue-50 relative group rounded-r-full mr-4' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' %>">
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+      </svg>
+      Courses
+    </a>
+    <a href="/admin-users" class="flex items-center px-6 py-3 transition-colors <%= activePage === 'users' ? 'text-blue-600 bg-blue-50 relative group rounded-r-full mr-4' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' %>">
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+      </svg>
+      Users
+    </a>
+    <a href="#" class="flex items-center px-6 py-3 transition-colors <%= activePage === 'orders' ? 'text-blue-600 bg-blue-50 relative group rounded-r-full mr-4' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' %>">
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+      </svg>
+      Orders
+    </a>
+    <a href="#" class="flex items-center px-6 py-3 transition-colors <%= activePage === 'coupons' ? 'text-blue-600 bg-blue-50 relative group rounded-r-full mr-4' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' %>">
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+      </svg>
+      Coupons
+    </a>
+    <a href="#" class="flex items-center px-6 py-3 transition-colors <%= activePage === 'reports' ? 'text-blue-600 bg-blue-50 relative group rounded-r-full mr-4' : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50' %>">
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+      </svg>
+      Reports
+    </a>
+    
+    <div class="mt-8">
+      <a href="/admin-logout" class="flex items-center px-6 py-3 text-red-600 hover:bg-red-50 transition-colors">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        Logout
+      </a>
+    </div>
+  </nav>
+</aside>
