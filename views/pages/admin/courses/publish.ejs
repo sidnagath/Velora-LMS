@@ -1,0 +1,294 @@
+<%- include('../../../partials/header') %>
+
+<main class="flex min-h-screen bg-gray-50 font-sans">
+
+  <%- include('../../../partials/admin-sidebar', { activePage: 'courses' }) %>
+
+  <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+    
+    <%- include('../../../partials/admin-header', { searchPlaceholder: 'Search courses' }) %>
+
+    <div class="p-8 max-w-5xl mx-auto w-full pb-20">
+      <!-- HEADER -->
+      <div class="mb-8 text-center md:text-left">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Publish</h1>
+        <p class="text-gray-500 mt-2 text-sm">Organize your course into logical modules and lessons.</p>
+      </div>
+
+      <!-- PROGRESS STEPPER -->
+      <div class="mb-12">
+        <div class="flex items-center justify-between relative">
+          <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 z-0"></div>
+          <div class="absolute top-1/2 left-0 w-full h-0.5 bg-blue-600 -translate-y-1/2 z-0"></div>
+          
+          <!-- Steps 1-4 (Done) -->
+          <div class="relative z-10 flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">1. Basic Info</span>
+          </div>
+
+          <div class="relative z-10 flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">2. Curriculum</span>
+          </div>
+
+          <div class="relative z-10 flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">3. Lessons</span>
+          </div>
+
+          <div class="relative z-10 flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">4. Resources</span>
+          </div>
+
+          <!-- Step 5 (Active) -->
+          <div class="relative z-10 flex flex-col items-center">
+            <div class="w-10 h-10 rounded-full bg-white border-4 border-blue-600 shadow-md flex items-center justify-center text-blue-600 font-bold">5</div>
+            <span class="absolute top-12 text-xs font-bold text-blue-600 whitespace-nowrap">5. Publish</span>
+          </div>
+        </div>
+      </div>
+
+      <form action="/admin-courses/<%= course._id %>/publish" method="POST" class="space-y-8">
+        
+        <!-- COURSE PREVIEW CARD -->
+        <div class="relative rounded-3xl overflow-hidden bg-blue-900 min-h-[16rem] flex flex-col md:flex-row md:items-center p-8 md:p-12 shadow-2xl">
+          <% if (course.thumbnail) { %>
+            <img src="<%= course.thumbnail %>" class="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" alt="Course Preview">
+          <% } else { %>
+            <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2070" class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay" alt="Course Preview">
+          <% } %>
+          <div class="absolute inset-0 bg-gradient-to-r from-blue-950/90 to-transparent"></div>
+          
+          <div class="relative z-10 flex-1">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-purple-500/20 text-purple-200 border border-purple-500/30 mb-4 backdrop-blur-md">
+              <span class="w-1.5 h-1.5 bg-purple-400 rounded-full mr-2 animate-pulse"></span>
+              Ready to Launch
+            </span>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-4 line-clamp-2"><%= course.title %></h2>
+            
+            <% 
+              let totalMin = lessons.length * 15;
+              let hr = Math.floor(totalMin / 60);
+              let mn = totalMin % 60;
+              let durStr = hr > 0 ? `${hr}h ${mn}m Total` : `${mn}m Total`;
+            %>
+            <div class="flex flex-wrap items-center gap-6 text-blue-100 text-sm font-medium mt-4">
+              <span class="flex items-center">
+                <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                <%= lessons.length %> Lesson<%= lessons.length !== 1 ? 's' : '' %>
+              </span>
+              <span class="flex items-center">
+                <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <%= durStr %>
+              </span>
+              <span class="flex items-center">
+                <img src="https://ui-avatars.com/api/?name=<%= encodeURIComponent(course.instructor || 'Marcus Sterling') %>&background=0284c7&color=fff" class="w-6 h-6 rounded-full mr-2 border border-white/20">
+                Instructor: <%= course.instructor || 'Marcus Sterling' %>
+              </span>
+            </div>
+          </div>
+
+          <div class="relative z-10 mt-6 md:mt-0 flex items-center justify-start md:justify-center">
+            <div class="w-24 h-24 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 flex flex-col items-center justify-center p-2">
+              <span class="text-3xl font-black text-white">95%</span>
+              <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Score</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- COURSE PRICING -->
+        <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+          <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-gray-900">Course Pricing</h2>
+            <div class="inline-flex p-1 bg-gray-100 rounded-xl" id="pricingToggleGroup">
+              <input type="hidden" name="pricingType" id="pricingTypeInput" value="<%= course.pricingType || 'paid' %>">
+              <button type="button" onclick="setPricingType('free')" id="pricingBtnFree" class="px-6 py-2 rounded-lg text-sm font-bold transition-all <%= course.pricingType === 'free' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900' %>">Free</button>
+              <button type="button" onclick="setPricingType('paid')" id="pricingBtnPaid" class="px-6 py-2 rounded-lg text-sm font-bold transition-all <%= course.pricingType !== 'free' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900' %>">Paid</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="priceFieldsContainer">
+            <div>
+              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Currency</label>
+              <select name="currency" class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none cursor-pointer">
+                <option value="INR" <%= course.currency === 'INR' ? 'selected' : '' %>>INR</option>
+                <option value="USD" <%= course.currency === 'USD' ? 'selected' : '' %>>USD</option>
+                <option value="EUR" <%= course.currency === 'EUR' ? 'selected' : '' %>>EUR</option>
+                <option value="GBP" <%= course.currency === 'GBP' ? 'selected' : '' %>>GBP</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Base Price</label>
+              <div class="relative">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-gray-400" id="currencySymbol">₹</span>
+                <input type="number" name="basePrice" id="basePriceInput" value="<%= course.basePrice || '149.00' %>" min="0" step="0.01" class="w-full pl-10 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Discount Price (Optional)</label>
+              <div class="relative">
+                <span class="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-gray-400" id="discountCurrencySymbol">₹</span>
+                <input type="number" name="discountPrice" id="discountPriceInput" value="<%= course.discountPrice || '' %>" min="0" step="0.01" placeholder="0.00" class="w-full pl-10 pr-6 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- COURSE ACCESS -->
+          <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-900 mb-8">Course Access</h2>
+            <div class="space-y-6">
+              
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg></div>
+                  <span class="font-bold text-gray-700">Lifetime Access</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="lifetimeAccess" <%= course.lifetimeAccess !== false ? 'checked' : '' %> class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></div>
+                  <span class="font-bold text-gray-700">Downloadable Resources</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="downloadableResources" <%= course.downloadableResources !== false ? 'checked' : '' %> class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg></div>
+                  <span class="font-bold text-gray-700">Completion Certificate</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="completionCertificate" <%= course.completionCertificate !== false ? 'checked' : '' %> class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- VISIBILITY & LAUNCH -->
+          <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+                    <% if (error.length> 0) { %>
+                    <p class="!text-red-600 font-medium mb-4">
+                    <%= error[0] %>
+                    </p>
+                    <% } %>
+
+            <h2 class="text-xl font-bold text-gray-900 mb-8">Visibility & Launch</h2>
+            <div class="space-y-6">
+              <div>
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Publish Status</label>
+                <div class="relative">
+                  <select name="publishStatus" id="publishStatusSelect" onchange="toggleScheduledDate()" class="w-full px-6 py-4 rounded-2xl border border-gray-100 bg-gray-50/50 text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none appearance-none cursor-pointer">
+                    <option value="Published (Live Now)" <%= course.status === 'published' ? 'selected' : '' %>>Published (Live Now)</option>
+                    <option value="Draft/Private" <%= course.status !== 'published' ? 'selected' : '' %>>Draft / Private</option>
+                  </select>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div id="scheduledDateBlock" class="p-6 border border-gray-100 border-dashed rounded-2xl bg-gray-50/30 flex items-center space-x-4 opacity-50 transition-all">
+                <div class="p-2 bg-gray-100 text-gray-400 rounded-lg"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                <div>
+                  <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Scheduled Date</p>
+                  <p class="text-xs font-bold text-gray-400">Currently live immediately on publish</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-100">
+          <a href="/admin-courses/<%= course._id %>/resources" class="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back to Resources
+          </a>
+          <div class="flex items-center space-x-4">
+            <a href="/admin-courses" class="px-8 py-3.5 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">Save Draft</a>
+            <button type="submit" class="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center shadow-lg shadow-blue-200">
+              Publish Course
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Dynamic free/paid pricing interface toggler
+  function setPricingType(type) {
+    const typeInput = document.getElementById('pricingTypeInput');
+    const btnFree = document.getElementById('pricingBtnFree');
+    const btnPaid = document.getElementById('pricingBtnPaid');
+    const priceFields = document.getElementById('priceFieldsContainer');
+    
+    typeInput.value = type;
+
+    if (type === 'free') {
+      btnFree.className = 'px-6 py-2 rounded-lg text-sm font-bold bg-white text-blue-600 shadow-sm';
+      btnPaid.className = 'px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900';
+      
+      // Hide and disable price fields smoothly
+      priceFields.style.opacity = '0.4';
+      document.getElementById('basePriceInput').disabled = true;
+      document.getElementById('discountPriceInput').disabled = true;
+    } else {
+      btnFree.className = 'px-6 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-900';
+      btnPaid.className = 'px-6 py-2 rounded-lg text-sm font-bold bg-white text-blue-600 shadow-sm';
+      
+      // Restore price fields
+      priceFields.style.opacity = '1';
+      document.getElementById('basePriceInput').disabled = false;
+      document.getElementById('discountPriceInput').disabled = false;
+    }
+  }
+
+  // Currency select dynamic symbol update
+  const currencySelect = document.querySelector('select[name="currency"]');
+  currencySelect.addEventListener('change', function() {
+    const symbols = {
+      'INR': '₹',
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£'
+    };
+    const symbol = symbols[this.value] || '$';
+    document.getElementById('currencySymbol').innerText = symbol;
+    document.getElementById('discountCurrencySymbol').innerText = symbol;
+  });
+
+  // Run initial state setup
+  window.addEventListener('DOMContentLoaded', () => {
+    const typeInput = document.getElementById('pricingTypeInput').value;
+    setPricingType(typeInput);
+    
+    // Trigger currency select initial symbol
+    currencySelect.dispatchEvent(new Event('change'));
+  });
+</script>
+
+<%- include('../../../partials/footer') %>
