@@ -29,6 +29,8 @@ const userRoutes =require("./routes/userRoutes");
 
 const adminRoutes =require("./routes/adminRoutes");
 
+const guestRoutes =require("./routes/guestRoutes");
+
 
 // VIEW ENGINE
 
@@ -115,11 +117,37 @@ app.use((req, res, next) => {
 
 // ROUTES
 
+app.use("/", guestRoutes);
+
 app.use("/", userRoutes);
 
 app.use("/", adminRoutes);
 
+app.use((err, req, res, next) => {
 
+  console.log(err);
+
+
+
+  req.flash(
+
+    "error",
+
+    err.message ||
+
+    "Something went wrong"
+
+  );
+
+
+
+  return res.redirect(
+
+    req.get("Referrer") || "/"
+
+  );
+
+});
 
 // SERVER
 

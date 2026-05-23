@@ -22,33 +22,146 @@ const storage = multer.diskStorage({
 
 
 
-const fileFilter = (req, file, cb) => {
+const fileFilter =
+(req, file, cb) => {
 
-  const allowedTypes = /jpg|jpeg|png|webp/;
+  // ALLOWED IMAGE MIME TYPES
 
-  const ext =
-    allowedTypes.test(
-      path.extname(file.originalname).toLowerCase()
+  const allowedImageTypes = [
+
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+
+  ];
+
+
+
+  // ALLOWED VIDEO MIME TYPES
+
+  const allowedVideoTypes = [
+
+    "video/mp4",
+    "video/quicktime"
+
+  ];
+
+
+
+  // =========================
+  // THUMBNAIL / AVATAR
+  // =========================
+
+  if (
+
+    file.fieldname === "thumbnail" ||
+
+    file.fieldname === "avatar"
+
+  ) {
+
+    if (
+
+      allowedImageTypes.includes(
+        file.mimetype
+      )
+
+    ) {
+
+      return cb(null, true);
+
+    }
+
+
+
+    return cb(
+      new Error(
+        "Only image files allowed"
+      )
     );
 
-  const mime =
-    allowedTypes.test(file.mimetype);
+  }
 
-  if (ext && mime) {
 
-    cb(null, true);
+
+  // =========================
+  // TRAILER VIDEO
+  // =========================
+
+  if (
+    file.fieldname === "trailer" || file.fieldname === "video"
+  ) {
+
+    if (
+
+      allowedVideoTypes.includes(
+        file.mimetype
+      )
+
+    ) {
+
+      return cb(null, true);
+
+    }
+
+
+
+    return cb(
+      new Error(
+        "Only MP4 or MOV videos allowed"
+      )
+    );
 
   }
 
-  else {
 
-    cb(new Error("Only images allowed"));
 
+  // =========================
+  // COURSE MATERIALS
+  // =========================
+
+  if (file.fieldname === "resourceFile") {
+    const allowedMimeTypes = [
+      "application/pdf",
+      "application/zip",
+      "application/x-zip-compressed",
+      "application/octet-stream",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "video/mp4",
+      "video/quicktime"
+    ];
+
+    if (
+      allowedMimeTypes.includes(file.mimetype) ||
+      file.mimetype.startsWith("image/") ||
+      file.mimetype.startsWith("text/")
+    ) {
+      return cb(null, true);
+    }
+
+    return cb(
+      new Error(
+        "Invalid file type for resources. Allowed: PDF, ZIP, DOCX, TXT, Images, Videos"
+      )
+    );
   }
+
+  // =========================
+  // DEFAULT BLOCK
+  // =========================
+
+  cb(
+    new Error(
+      "Invalid file type"
+    )
+  );
 
 };
-
-
 
 const upload = multer({
 
@@ -57,7 +170,5 @@ const upload = multer({
   fileFilter
 
 });
-
-
 
 module.exports = upload;

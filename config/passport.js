@@ -42,6 +42,18 @@ async (
         email
       });
 
+// BLOCK INACTIVE USERS
+if (user && user.status === "inactive") {
+  return done(
+    null,
+    false,
+    {
+      message:
+      "Account is inactive"
+    }
+  );
+}
+
     // SIGNUP IF NEW
 
     if(!user){
