@@ -20,11 +20,11 @@
                 Enter the verification code sent to your email
             </p>
             
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %>
+               <% if(errors?.general){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.general %>
+               </p>
+               <% } %>
 
             <form action="/verify-signupotp" method="POST" class="w-full text-left space-y-6">
                 <div>
@@ -34,31 +34,47 @@
                     </div>
                 </div>
 
+                <% if(errors?.otp){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.otp %>
+               </p>
+               <% } %>
+
                 <button type="submit" class="btn-primary w-full text-center block mb-6">Verify Code</button>
             </form>
 
-           <div class="text-center mt-4 space-y-3">
+<div class="text-center mt-4 space-y-3">
 
-    <!-- Timer -->
-    <p class="text-sm text-gray-500">
-        Resend OTP in 
-        <span id="timer" class="font-semibold text-[#0B5ED7]">
-            60
-        </span>
-        seconds
-    </p>
+  <!-- TIMER TEXT -->
 
-    <!-- Resend Button -->
-    <form action="/resend-signupotp" method="POST">
-        <button 
-            id="resendBtn"
-            type="submit"
-            disabled
-            class="text-sm font-medium text-gray-400 cursor-not-allowed"
-        >
-            Resend OTP
-        </button>
-    </form>
+  <p
+    id="timerText"
+    class="text-sm text-gray-500"
+  >
+    Resend OTP in
+    <span id="otpTimer">01:00</span>
+    seconds
+  </p>
+
+  <!-- RESEND FORM -->
+
+  <form
+    action="/resend-signupotp"
+    method="POST"
+  >
+
+    <button
+      id="resendBtn"
+      type="submit"
+      disabled
+      class="text-sm font-medium text-gray-400 cursor-not-allowed"
+    >
+
+      Resend OTP
+
+    </button>
+
+  </form>
 
 </div>
             
@@ -70,38 +86,126 @@
 
 <script>
 
-    let time = 60;
+  const TIMER_KEY =
+    "signupOtpExpiry";
 
-    const timer = document.getElementById("timer");
-    const resendBtn = document.getElementById("resendBtn");
+  // INITIAL TIMER
 
-    const interval = setInterval(() => {
+  if (
+    !localStorage.getItem(
+      TIMER_KEY
+    )
+  ) {
 
-        time--;
+    localStorage.setItem(
+      TIMER_KEY,
+      Date.now() + 60 * 1000
+    );
 
-        timer.textContent = time;
+  }
 
-        if (time <= 0) {
+  const timerElement =
+    document.getElementById(
+      "otpTimer"
+    );
 
-            clearInterval(interval);
+  const resendBtn =
+    document.getElementById(
+      "resendBtn"
+    );
 
-            timer.textContent = "0";
+  const timerText =
+    document.getElementById(
+      "timerText"
+    );
 
-            resendBtn.disabled = false;
+  function updateTimer() {
 
-            resendBtn.classList.remove(
-                "text-gray-400",
-                "cursor-not-allowed"
-            );
+    const expiryTime =
+      parseInt(
+        localStorage.getItem(
+          TIMER_KEY
+        )
+      );
 
-            resendBtn.classList.add(
-                "text-[#0B5ED7]",
-                "hover:underline"
-            );
+    const remaining =
+      Math.floor(
+        (expiryTime - Date.now())
+        / 1000
+      );
 
-        }
+    // TIMER FINISHED
 
-    }, 1000);
+    if (remaining <= 0) {
+
+      timerElement.innerText =
+        "00:00";
+
+      resendBtn.disabled =
+        false;
+
+      resendBtn.classList.remove(
+        "text-gray-400",
+        "cursor-not-allowed"
+      );
+
+      resendBtn.classList.add(
+        "text-blue-600"
+      );
+
+      timerText.innerHTML =
+        "Didn't receive the OTP?";
+
+      return;
+
+    }
+
+    // TIMER RUNNING
+
+    resendBtn.disabled =
+      true;
+
+    const minutes =
+      String(
+        Math.floor(
+          remaining / 60
+        )
+      ).padStart(2, "0");
+
+    const seconds =
+      String(
+        remaining % 60
+      ).padStart(2, "0");
+
+    timerElement.innerText =
+      `${minutes}:${seconds}`;
+
+  }
+
+  // INITIAL CALL
+
+  updateTimer();
+
+  // LOOP
+
+  setInterval(
+    updateTimer,
+    1000
+  );
+
+  // RESET TIMER ON RESEND
+
+  resendBtn.addEventListener(
+    "click",
+    () => {
+
+      localStorage.setItem(
+        TIMER_KEY,
+        Date.now() + 60 * 1000
+      );
+
+    }
+  );
 
 </script>
 

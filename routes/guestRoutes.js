@@ -1,6 +1,7 @@
 const express=require("express");
 const router=express.Router();
 const guestController=require("../controllers/guestController");
+const userController=require("../controllers/userController");
 const {isUser}=require("../middleware/userMiddleware");
 const {noCache} = require('../middleware/noCache');
 const {isUserGuest}=require('../middleware/userGuestMiddleware');

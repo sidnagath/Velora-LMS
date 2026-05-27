@@ -255,11 +255,11 @@
 
               Showing
 
-              <%= users.length ? ((currentPage - 1) * 5) + 1 : 0 %>
+              <%= users.length ? ((currentPage - 1) * limit) + 1 : 0 %>
 
                 to
 
-                <%= ((currentPage - 1) * 5) + users.length %>
+                <%= ((currentPage - 1) * limit) + users.length %>
 
                   of
 
@@ -272,58 +272,72 @@
 
 
             <!-- RIGHT -->
-            <div class="flex items-center space-x-2">
+<div class="flex items-center space-x-2">
 
-              <!-- PREV -->
-              <% if(currentPage> 1) { %>
+  <!-- PREVIOUS -->
 
-                <a href="/admin-users?page=<%= currentPage - 1 %>&search=<%= search %>"
-                  class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors">
+  <% if(currentPage > 1){ %>
 
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                  </svg>
+    <a
+      href="/admin-users?page=<%= currentPage - 1 %>&search=<%= search %>"
 
-                </a>
+      class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
 
-                <% } %>
+      Previous
 
+    </a>
 
+  <% } %>
 
-                  <!-- PAGE NUMBERS -->
-                  <% for(let i=1; i <=totalPages; i++) { %>
+  <!-- PAGE NUMBERS -->
 
-                    <a href="/admin-users?page=<%= i %>&search=<%= search %>" class="
-          w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition-colors border
+  <% for(
 
-          <%= currentPage === i
-            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-            : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200'
-          %>
-        ">
-                      <%= i %>
-                    </a>
+    let i = Math.max(1, currentPage - 1);
 
-                    <% } %>
+    i <= Math.min(totalPages, currentPage + 1);
 
+    i++
 
+  ){ %>
 
-                      <!-- NEXT -->
-                      <% if(currentPage < totalPages) { %>
+    <a
 
-                        <a href="/admin-users?page=<%= currentPage + 1 %>&search=<%= search %>"
-                          class="w-8 h-8 flex items-center justify-center rounded-full bg-white text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors">
+      href="/admin-users?page=<%= i %>&search=<%= search %>"
 
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                            </path>
-                          </svg>
+      class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
 
-                        </a>
+      <%= currentPage === i
 
-                        <% } %>
+      ? 'bg-blue-600 text-white shadow-sm'
 
-            </div>
+      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+
+      %>">
+
+      <%= i %>
+
+    </a>
+
+  <% } %>
+
+  <!-- NEXT -->
+
+  <% if(currentPage < totalPages){ %>
+
+    <a
+
+      href="/admin-users?page=<%= currentPage + 1 %>&search=<%= search %>"
+
+      class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
+
+      Next
+
+    </a>
+
+  <% } %>
+
+</div>
 
           </div>
 

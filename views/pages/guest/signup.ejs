@@ -11,14 +11,12 @@
 
         <!-- Signup Card -->
         <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10">
-
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %>
-
-         
+             
+            <% if(errors?.general){ %>
+            <div class="mb-4 text-red-500 text-sm font-medium">
+            <%= errors.general %>
+            </div>
+            <% } %>
 
             <form id="signupForm" action="/signup" method="POST" class="space-y-5">
                 <div>
@@ -29,9 +27,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                         </div>
-                        <input type="text" name="name" class="input-field pl-11" placeholder="Alex Rivera">
+                        <input type="text" name="name" value="<%= formData?.name || '' %>" class="input-field pl-11" placeholder="Alex Rivera">
                     </div>
                 </div>
+
+                <% if(errors?.name){ %>
+                <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+                <%= errors.name %>
+                </p>
+                <% } %>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Email Address</label>
@@ -41,9 +45,15 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <input type="email" name="email" class="input-field pl-11" placeholder="alex@example.com">
+                        <input type="email" name="email" value="<%= formData?.email || '' %>" class="input-field pl-11" placeholder="alex@example.com">
                     </div>
                 </div>
+
+               <% if(errors?.email){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.email %>
+               </p>
+               <% } %>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Password</label>
@@ -53,7 +63,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <input type="password" name="password" class="input-field pl-11 pr-11" placeholder="••••••••">
+                        <input type="password" name="password" value="<%= formData?.password || '' %>" class="input-field pl-11 pr-11" placeholder="••••••••">
                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer toggle-password">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -63,6 +73,11 @@
                     </div>
                 </div>
 
+               <% if(errors?.password){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.password %>
+               </p>
+               <% } %>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Confirm Password</label>
@@ -72,7 +87,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                         </div>
-                        <input type="password" name="confirmPassword" class="input-field pl-11 pr-11" placeholder="••••••••">
+                        <input type="password" name="confirmPassword" value="<%= formData?.confirmPassword || '' %>" class="input-field pl-11 pr-11" placeholder="••••••••">
                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer toggle-password">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -81,6 +96,11 @@
                         </div>
                     </div>
                 </div>
+               <% if(errors?.confirmPassword){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.confirmPassword %>
+               </p>
+               <% } %>
                                                     
             <button type="submit" class="btn-primary mt-6">Create Account</button>
     </form>

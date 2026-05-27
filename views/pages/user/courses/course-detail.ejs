@@ -1,4 +1,4 @@
-<%- include('../../partials/header') %>
+<%- include('../../../partials/header') %>
 
 <style>
   /* ── Course Detail Layout ── */
@@ -261,7 +261,7 @@
       <!-- 2. Alert -->
       <div class="cd-alert">
         <div class="cd-alert-icon">i</div>
-        <p>Create an account to start learning this course and track your progress.</p>
+        <p>Continue learning and track your course progress from your dashboard.</p>
       </div>
 
       <!-- 3. What you'll learn -->
@@ -338,7 +338,7 @@
         <div class="cd-related-grid">
           <% if (relatedCourses && relatedCourses.length > 0) { %>
             <% relatedCourses.forEach(function(rc) { %>
-              <div class="cd-rc-card" onclick="window.location.href='/courses/<%= rc._id %>'">
+              <div class="cd-rc-card" onclick="window.location.href='/user-courses/<%= rc._id %>'">
                 <div class="cd-rc-thumb">
                   <img src="<%= rc.thumbnail || '/placeholder.png' %>" alt="<%= rc.title %>">
                 </div>
@@ -389,12 +389,12 @@
           </div>
 
           <!-- Enroll / Cart Button -->
-  
-            <a href="/login" class="cd-btn-enroll">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-              Login to Enroll
+          
+            <a href="#" class="cd-btn-enroll">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              Add to Cart
             </a>
-         
+      
 
           <!-- Wishlist Button -->
           <button class="cd-btn-wishlist">
@@ -441,4 +441,4 @@
   </div>
 </main>
 
-<%- include('../../partials/footer') %>
+<%- include('../../../partials/footer') %>

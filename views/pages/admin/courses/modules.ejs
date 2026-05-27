@@ -58,7 +58,19 @@
 
       <!-- MODULE LIST SECTION -->
       <div class="space-y-6 mb-12">
+<% if(errors?.general){ %>
+
+<p class="text-sm text-red-500 mb-4">
+
+  <%= errors.general %>
+
+</p>
+
+<% } %>
+
+
         <!-- Module Card -->
+         <% if(modules.length > 0){ %>
          <% modules.forEach(module => { %>
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all hover:shadow-md">
           <div class="p-6 bg-gray-50/50 flex items-center justify-between border-b border-gray-100">
@@ -84,29 +96,7 @@
           </div>
           
           <div class="p-6 space-y-3 bg-white">
-            <!-- Lessons -->
-            <!-- <div class="flex items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-xl group hover:bg-white hover:border-blue-100 transition-all">
-              <span class="font-semibold text-gray-700">What is Semantic HTML</span>
-              <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                <button class="p-1.5 text-gray-400 hover:text-red-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-              </div>
-            </div> -->
-            <!-- <div class="flex items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-xl group hover:bg-white hover:border-blue-100 transition-all">
-              <span class="font-semibold text-gray-700">Why Semantic HTML Matters</span>
-              <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                <button class="p-1.5 text-gray-400 hover:text-red-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-              </div>
-            </div>
-            <div class="flex items-center justify-between p-4 bg-gray-50/50 border border-gray-100 rounded-xl group hover:bg-white hover:border-blue-100 transition-all">
-              <span class="font-semibold text-gray-700">Semantic vs Non Semantic Tags</span>
-              <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
-                <button class="p-1.5 text-gray-400 hover:text-red-600 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-              </div>
-            </div> -->
-
+          
 
             <%
 
@@ -234,6 +224,7 @@ const moduleLessons =
           </div>
         </div>
         <% }) %>
+        <% } %>
 
         <!-- Add Module Card Placeholder -->
         <div class="bg-white rounded-2xl border-2 border-dashed border-gray-100 p-12 flex flex-col items-center justify-center text-center group hover:border-blue-200 hover:bg-blue-50/20 transition-all cursor-pointer">
@@ -251,7 +242,7 @@ const moduleLessons =
 
       <!-- FOOTER ACTIONS -->
       <div class="flex items-center justify-between pt-8 border-t border-gray-100">
-        <a href="/admin-courses/<%= course._id %>/basic-info" class="flex items-center text-gray-500 font-bold hover:text-gray-800 transition-colors">
+        <a href="/admin-courses/<%= course._id %>/edit" class="flex items-center text-gray-500 font-bold hover:text-gray-800 transition-colors">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
           Back to Basic Info
         </a>

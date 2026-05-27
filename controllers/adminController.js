@@ -6,73 +6,286 @@ const Module = require("../models/moduleModel");
 const Lesson = require("../models/lessonModel");
 const Resource = require("../models/resourceModel");
 
-exports.getAdminLogin=(req, res) => {
-  
+exports.getAdminLogin = (req, res) => {
+
   if (req.session.user) {
-    return res.redirect("/user-dashboard");
+
+    return res.redirect(
+      "/user-dashboard"
+    );
+
   }
 
   if (req.session.admin) {
-  return res.redirect("/admin-dashboard");
-}
 
-    res.render("pages/guest/admin-login", { 
-        title: 'Velora - Admin Login', 
-        isLoggedIn: false
-    });
+    return res.redirect(
+      "/admin-dashboard"
+    );
+
+  }
+
+  res.render(
+    "pages/guest/admin-login",
+    {
+      title:
+        "Velora - Admin Login",
+
+      isLoggedIn: false,
+
+      errors: {},
+
+      formData: {}
+
+    }
+  );
+
 };
 
 
-exports.postAdminLogin = async (req, res) => {
+exports.getAdminLogin = (req, res) => {
+
+  if (req.session.user) {
+
+    return res.redirect(
+      "/user-dashboard"
+    );
+
+  }
+
+  if (req.session.admin) {
+
+    return res.redirect(
+      "/admin-dashboard"
+    );
+
+  }
+
+  res.render(
+    "pages/guest/admin-login",
+    {
+      title:
+        "Velora - Admin Login",
+
+      isLoggedIn: false,
+
+      errors: {},
+
+      formData: {}
+
+    }
+  );
+
+};
+
+exports.postAdminLogin =
+async (req, res) => {
+
   try {
-    const { email, password } = req.body;
-    const admin = await Admin.findOne({ email });
+
+    const {
+      email,
+      password
+    } = req.body;
+
+    const trimmedEmail =
+      email?.trim();
+
+    const trimmedPassword =
+      password?.trim();
+
+    let errors = {};
+
+    // REQUIRED VALIDATION
+
+    if (!trimmedEmail) {
+
+      errors.email =
+        "Email is required";
+
+    }
+
+    if (!trimmedPassword) {
+
+      errors.password =
+        "Password is required";
+
+    }
+
+    // IF REQUIRED ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/admin-login",
+        {
+          title:
+            "Velora - Admin Login",
+
+          isLoggedIn: false,
+
+          errors,
+
+          formData: {
+            email:
+              trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // FIND ADMIN
+
+    const admin =
+      await Admin.findOne({
+        email:
+          trimmedEmail
+      });
 
     if (!admin) {
+
       return res.render(
         "pages/guest/admin-login",
         {
-          title: 'Admin Login',
-          error: ['Invalid email or password'],
+          title:
+            "Velora - Admin Login",
+
           isLoggedIn: false,
+
+          errors: {
+
+            email:
+              "Invalid email or password"
+
+          },
+
+          formData: {
+            email:
+              trimmedEmail
+          }
         }
       );
+
     }
+
+    // PASSWORD CHECK
 
     const isMatch =
-      await bcrypt.compare(password, admin.password);
+      await bcrypt.compare(
+        trimmedPassword,
+        admin.password
+      );
 
     if (!isMatch) {
+
       return res.render(
         "pages/guest/admin-login",
         {
-          title: 'Admin Login',
-          error: ['Invalid email or password'],
-          isLoggedIn: false
+          title:
+            "Velora - Admin Login",
+
+          isLoggedIn: false,
+
+          errors: {
+
+            password:
+              "Invalid email or password"
+
+          },
+
+          formData: {
+            email:
+              trimmedEmail
+          }
         }
       );
+
     }
 
+    // SESSION
+
     req.session.admin = {
-      id: admin._id,
-      email: admin.email
+
+      id:
+        admin._id,
+
+      email:
+        admin.email
+
     };
 
+    req.session.save(
+      (err) => {
 
-    req.session.save(err => {
-      if (err) {
-        console.log(err);
-        return res.redirect("/admin-login");
+        if (err) {
+
+          console.log(err);
+
+          return res.render(
+            "pages/guest/admin-login",
+            {
+              title:
+                "Velora - Admin Login",
+
+              isLoggedIn: false,
+
+              errors: {
+
+                general:
+                  "Session error"
+
+              },
+
+              formData: {
+                email:
+                  trimmedEmail
+              }
+            }
+          );
+
+        }
+
+        return res.redirect(
+          "/admin-dashboard"
+        );
+
       }
-      return res.redirect("/admin-dashboard");
-    });
+    );
+
   }
 
   catch (err) {
+
     console.log(err);
-    res.redirect('/admin-login');
+
+    return res.render(
+      "pages/guest/admin-login",
+      {
+        title:
+          "Velora - Admin Login",
+
+        isLoggedIn: false,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+          email:
+            req.body.email
+        }
+      }
+    );
+
   }
-}
+
+};
+
 
 exports.getAdminDashboard= (req, res) => {
 
@@ -114,7 +327,7 @@ exports.getAdminUsers = async (req, res) => {
     const page =
       parseInt(req.query.page) || 1;
 
-    const limit = 5;
+    const limit = 6;
 
     const skip =
       (page - 1) * limit;
@@ -170,28 +383,30 @@ exports.getAdminUsers = async (req, res) => {
       Math.ceil(totalUsers / limit);
 
     res.render(
-      "pages/admin/user-management/users",
-      {
+  "pages/admin/user-management/users",
+  {
 
-        title:
-          "Velora - Admin Users",
+    title:
+      "Velora - Admin Users",
 
-        isLoggedIn: true,
-        
-        isAdmin: true,
+    isLoggedIn: true,
 
-        users,
+    isAdmin: true,
 
-        currentPage: page,
+    users,
 
-        totalPages,
-        
-        totalUsers,
+    currentPage: page,
 
-        search
+    totalPages,
 
-      }
-    );
+    totalUsers,
+
+    limit,
+
+    search
+
+  }
+);
 
   }
 
@@ -205,15 +420,32 @@ exports.getAdminUsers = async (req, res) => {
 
 };
 
-exports.getAdminCreateUser = (req, res) => {
-    res.render('pages/admin/user-management/create-user', { 
-        title: 'Velora - Admin Create User', 
-        isLoggedIn: true,
-        isAdmin: true
-    });
+exports.getAdminCreateUser = (
+  req,
+  res
+) => {
+
+  res.render(
+    "pages/admin/user-management/create-user",
+    {
+      title:
+        "Velora - Admin Create User",
+
+      isLoggedIn: true,
+
+      isAdmin: true,
+
+      errors: {},
+
+      formData: {}
+
+    }
+  );
+
 };
 
-exports.postAdminCreateUser = async (req, res) => {
+exports.postAdminCreateUser =
+async (req, res) => {
 
   try {
 
@@ -222,12 +454,11 @@ exports.postAdminCreateUser = async (req, res) => {
       email,
       phone,
       password,
+      confirmPassword,
       status
     } = req.body;
 
-
-
-    // TRIM VALUES
+    // TRIM
 
     const trimmedName =
       name?.trim();
@@ -241,7 +472,8 @@ exports.postAdminCreateUser = async (req, res) => {
     const trimmedPassword =
       password?.trim();
 
-
+    const trimmedConfirmPassword =
+      confirmPassword?.trim();
 
     // REGEX
 
@@ -257,127 +489,157 @@ exports.postAdminCreateUser = async (req, res) => {
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
 
+    // ERRORS
 
+    let errors = {};
 
-    // REQUIRED FIELD VALIDATION
+    // NAME
 
-    if (
-      !trimmedName ||
-      !trimmedEmail ||
-      !trimmedPassword
-    ) {
+    if (!trimmedName) {
 
-      req.flash(
-        "error",
-        "Name, email and password are required"
-      );
+      errors.name =
+        "Name is required";
 
-      return res.redirect(
-        "/admin-create-user"
-      );
     }
 
-
-
-    // NAME VALIDATION
-
-    if (
-      !nameRegex.test(trimmedName)
+    else if (
+      !nameRegex.test(
+        trimmedName
+      )
     ) {
 
-      req.flash(
-        "error",
-        "Name should contain only letters"
-      );
+      errors.name =
+        "Name should contain only letters";
 
-      return res.redirect(
-        "/admin-create-user"
-      );
     }
 
+    // EMAIL
 
+    if (!trimmedEmail) {
 
-    // EMAIL VALIDATION
+      errors.email =
+        "Email is required";
 
-    if (
-      !emailRegex.test(trimmedEmail)
+    }
+
+    else if (
+      !emailRegex.test(
+        trimmedEmail
+      )
     ) {
 
-      req.flash(
-        "error",
-        "Invalid email format"
-      );
+      errors.email =
+        "Invalid email format";
 
-      return res.redirect(
-        "/admin-create-user"
-      );
     }
 
-
-
-    // PHONE VALIDATION
-    // OPTIONAL FIELD
+    // PHONE
 
     if (
       trimmedPhone &&
-      !phoneRegex.test(trimmedPhone)
+      !phoneRegex.test(
+        trimmedPhone
+      )
     ) {
 
-      req.flash(
-        "error",
-        "Enter valid 10 digit phone number"
-      );
+      errors.phone =
+        "Enter valid 10 digit phone number";
 
-      return res.redirect(
-        "/admin-create-user"
-      );
     }
 
+    // PASSWORD
 
+    if (!trimmedPassword) {
 
-    // PASSWORD VALIDATION
+      errors.password =
+        "Password is required";
 
-    if (
+    }
+
+    else if (
       !passwordRegex.test(
         trimmedPassword
       )
     ) {
 
-      req.flash(
-        "error",
+      errors.password =
+        "Password must contain uppercase letter, number and minimum 6 characters";
 
-        "Password must contain uppercase letter, number and minimum 6 characters"
-      );
-
-      return res.redirect(
-        "/admin-create-user"
-      );
     }
 
+    // CONFIRM PASSWORD
 
+    if (
+      !trimmedConfirmPassword
+    ) {
 
-    // DUPLICATE EMAIL CHECK
+      errors.confirmPassword =
+        "Confirm Password is required";
+
+    }
+
+    else if (
+      trimmedPassword !==
+      trimmedConfirmPassword
+    ) {
+
+      errors.confirmPassword =
+        "Passwords do not match";
+
+    }
+
+    // DUPLICATE EMAIL
 
     const existingUser =
       await User.findOne({
 
-        email: trimmedEmail
+        email:
+          trimmedEmail
 
       });
 
     if (existingUser) {
 
-      req.flash(
-        "error",
-        "Email already exists"
-      );
+      errors.email =
+        "Email already exists";
 
-      return res.redirect(
-        "/admin-create-user"
-      );
     }
 
+    // IF ERRORS
 
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/admin/user-management/create-user",
+        {
+          title:
+            "Velora - Create User",
+
+          admin:
+            req.session.admin,
+
+          errors,
+
+          formData: {
+
+            name:
+              trimmedName,
+
+            email:
+              trimmedEmail,
+
+            phone:
+              trimmedPhone,
+
+            status
+
+          }
+        }
+      );
+
+    }
 
     // HASH PASSWORD
 
@@ -386,8 +648,6 @@ exports.postAdminCreateUser = async (req, res) => {
         trimmedPassword,
         10
       );
-
-
 
     // IMAGE
 
@@ -398,36 +658,30 @@ exports.postAdminCreateUser = async (req, res) => {
       avatar =
         "/uploads/" +
         req.file.filename;
+
     }
-
-
 
     // CREATE USER
 
     await User.create({
 
-      name: trimmedName,
+      name:
+        trimmedName,
 
-      email: trimmedEmail,
+      email:
+        trimmedEmail,
 
-      phone: trimmedPhone,
+      phone:
+        trimmedPhone,
 
-      password: hashedPassword,
+      password:
+        hashedPassword,
 
       status,
 
       avatar
 
     });
-
-
-
-    req.flash(
-      "success",
-      "User created successfully"
-    );
-
-
 
     res.redirect(
       "/admin-users"
@@ -439,45 +693,101 @@ exports.postAdminCreateUser = async (req, res) => {
 
     console.log(err);
 
-    req.flash(
-      "error",
-      "Something went wrong"
+    return res.render(
+      "pages/admin/user-management/create-user",
+      {
+        title:
+          "Velora - Create User",
+
+        admin:
+          req.session.admin,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          name:
+            req.body.name,
+
+          email:
+            req.body.email,
+
+          phone:
+            req.body.phone,
+
+          status:
+            req.body.status
+
+        }
+      }
     );
+
+  }
+
+};
+
+
+
+exports.getAdminEditUser =
+async (req, res) => {
+
+  try {
+
+    const user =
+      await User.findById(
+        req.params.id
+      );
+
+    if (!user) {
+
+      return res.redirect(
+        "/admin-users"
+      );
+
+    }
+
+    res.render(
+      "pages/admin/user-management/edit-user",
+      {
+        title:
+          "Velora - Admin Edit User",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        user,
+
+        errors: {},
+
+        formData: {}
+
+      }
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
 
     res.redirect(
-      "/admin-create-user"
+      "/admin-users"
     );
 
   }
 
 };
 
-exports.getAdminEditUser = async(req, res) => {
-
-try{
-
-  const user=await User.findById(req.params.id);
-  if(!user){
-    return res.redirect("/admin-users");
-  }
-  
-   res.render('pages/admin/user-management/edit-user', { 
-        title: 'Velora - Admin Edit User', 
-        isLoggedIn: true,
-        isAdmin: true,
-        user
-    });
-}
-
-catch(err){
-   console.log(err);
-   res.redirect("/admin-users");
-  }
-   
-};
 
 
-exports.postAdminEditUser = async (req, res) => {
+exports.postAdminEditUser =
+async (req, res) => {
 
   try {
 
@@ -489,9 +799,7 @@ exports.postAdminEditUser = async (req, res) => {
       password
     } = req.body;
 
-
-
-    // TRIM VALUES
+    // TRIM
 
     const trimmedName =
       name?.trim();
@@ -500,11 +808,14 @@ exports.postAdminEditUser = async (req, res) => {
       email?.trim();
 
     const trimmedPassword =
-  password? password.trim(): "";
+      password
+      ? password.trim()
+      : "";
 
     const trimmedPhone =
-    phone? String(phone).trim(): "";
-
+      phone
+      ? String(phone).trim()
+      : "";
 
     // REGEX
 
@@ -515,13 +826,12 @@ exports.postAdminEditUser = async (req, res) => {
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const phoneRegex =
-       /^[6-9]\d{9}$/;
+      /^[6-9]\d{9}$/;
 
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
 
-
-      // FIND CURRENT USER
+    // FIND USER
 
     const currentUser =
       await User.findById(
@@ -530,148 +840,144 @@ exports.postAdminEditUser = async (req, res) => {
 
     if (!currentUser) {
 
-      req.flash(
-        "error",
-        "User not found"
+      return res.redirect(
+        "/admin-users"
+      );
+
+    }
+
+    // ERRORS
+
+    let errors = {};
+
+    // GOOGLE ACCOUNT
+
+    if (
+      currentUser.authProvider ===
+      "google"
+    ) {
+
+      if (
+        trimmedPhone &&
+        !phoneRegex.test(
+          trimmedPhone
+        )
+      ) {
+
+        errors.phone =
+          "Enter valid 10 digit phone number";
+
+      }
+
+      if (
+        Object.keys(errors).length > 0
+      ) {
+
+        return res.render(
+          "pages/admin/user-management/edit-user",
+          {
+            title:
+              "Velora - Admin Edit User",
+
+            isLoggedIn: true,
+
+            isAdmin: true,
+
+            user: currentUser,
+
+            errors,
+
+            formData: {
+
+              phone:
+                trimmedPhone,
+
+              status
+
+            }
+          }
+        );
+
+      }
+
+      await User.findByIdAndUpdate(
+
+        req.params.id,
+
+        {
+          phone:
+            trimmedPhone,
+
+          status
+        }
+
       );
 
       return res.redirect(
         "/admin-users"
       );
+
     }
 
-    // GOOGLE ACCOUNT PROTECTION
+    // REQUIRED
 
-if (
-  currentUser.authProvider ===
-  "google"
-) {
+    if (!trimmedName) {
 
-  // PHONE VALIDATION
+      errors.name =
+        "Name is required";
 
-  if (
-    trimmedPhone &&
-    !phoneRegex.test(trimmedPhone)
-  ) {
-
-    req.flash(
-      "error",
-      "Enter valid 10 digit phone number"
-    );
-
-    return res.redirect(
-      `/admin-edit-user/${req.params.id}`
-    );
-
-  }
-
-
-
-  await User.findByIdAndUpdate(
-
-    req.params.id,
-
-    {
-      phone: trimmedPhone,
-      status
     }
 
-  );
+    if (!trimmedEmail) {
 
+      errors.email =
+        "Email is required";
 
+    }
 
-  req.flash(
-
-    "success",
-
-    "Google account updated successfully"
-  );
-
-
-
-  return res.redirect(
-    "/admin-users"
-  );
-
-}
-
-    // REQUIRED VALIDATION
+    // NAME
 
     if (
-      !trimmedName ||
-      !trimmedEmail
+      trimmedName &&
+      !nameRegex.test(
+        trimmedName
+      )
     ) {
 
-      req.flash(
-        "error",
-        "Name and email are required"
-      );
+      errors.name =
+        "Name should contain only letters";
 
-      return res.redirect(
-        `/admin-edit-user/${req.params.id}`
-      );
     }
 
-
-
-    // NAME VALIDATION
+    // EMAIL
 
     if (
-      !nameRegex.test(trimmedName)
+      trimmedEmail &&
+      !emailRegex.test(
+        trimmedEmail
+      )
     ) {
 
-      req.flash(
-        "error",
-        "Name should contain only letters"
-      );
+      errors.email =
+        "Invalid email format";
 
-      return res.redirect(
-        `/admin-edit-user/${req.params.id}`
-      );
     }
 
-
-
-    // EMAIL VALIDATION
-
-    if (
-      !emailRegex.test(trimmedEmail)
-    ) {
-
-      req.flash(
-        "error",
-        "Invalid email format"
-      );
-
-      return res.redirect(
-        `/admin-edit-user/${req.params.id}`
-      );
-    }
-
-
-
-    // PHONE VALIDATION
-    // OPTIONAL FIELD
+    // PHONE
 
     if (
       trimmedPhone &&
-      !phoneRegex.test(trimmedPhone)
+      !phoneRegex.test(
+        trimmedPhone
+      )
     ) {
 
-      req.flash(
-        "error",
-        "Enter valid 10 digit phone number"
-      );
+      errors.phone =
+        "Enter valid 10 digit phone number";
 
-      return res.redirect(
-        `/admin-edit-user/${req.params.id}`
-      );
     }
 
-
-
-    // PASSWORD VALIDATION
-    // ONLY IF PASSWORD EXISTS
+    // PASSWORD
 
     if (
       trimmedPassword &&
@@ -680,60 +986,88 @@ if (
       )
     ) {
 
-      req.flash(
-        "error",
+      errors.password =
+        "Password must contain uppercase letter, number and minimum 6 characters";
 
-        "Password must contain uppercase letter, number and minimum 6 characters"
-      );
-
-      return res.redirect(
-        `/admin-edit-user/${req.params.id}`
-      );
     }
 
-
-    // DUPLICATE EMAIL CHECK
+    // DUPLICATE EMAIL
 
     const existingUser =
       await User.findOne({
 
-        email: trimmedEmail,
+        email:
+          trimmedEmail,
 
         _id: {
-          $ne: req.params.id
+          $ne:
+            req.params.id
         }
 
       });
 
     if (existingUser) {
 
-      req.flash(
-        "error",
-        "Email already exists"
-      );
+      errors.email =
+        "Email already exists";
 
-      return res.redirect(
-        `/admin-edit-user/${req.params.id}`
-      );
     }
 
+    // IF ERRORS
 
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/admin/user-management/edit-user",
+        {
+          title:
+            "Velora - Admin Edit User",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          user: currentUser,
+
+          errors,
+
+          formData: {
+
+            name:
+              trimmedName,
+
+            email:
+              trimmedEmail,
+
+            phone:
+              trimmedPhone,
+
+            status
+
+          }
+        }
+      );
+
+    }
 
     // UPDATE DATA
 
     const updateData = {
 
-      name: trimmedName,
+      name:
+        trimmedName,
 
-      email: trimmedEmail,
+      email:
+        trimmedEmail,
 
-      phone: trimmedPhone,
+      phone:
+        trimmedPhone,
 
       status
 
     };
-
-
 
     // AVATAR
 
@@ -742,9 +1076,8 @@ if (
       updateData.avatar =
         "/uploads/" +
         req.file.filename;
+
     }
-
-
 
     // PASSWORD UPDATE
 
@@ -755,25 +1088,18 @@ if (
           trimmedPassword,
           10
         );
+
     }
-
-
 
     // UPDATE USER
 
     await User.findByIdAndUpdate(
+
       req.params.id,
+
       updateData
+
     );
-
-
-
-    req.flash(
-      "success",
-      "User updated successfully"
-    );
-
-
 
     res.redirect(
       "/admin-users"
@@ -785,19 +1111,44 @@ if (
 
     console.log(err);
 
-    req.flash(
-      "error",
-      "Something went wrong"
-    );
+    return res.render(
+      "pages/admin/user-management/edit-user",
+      {
+        title:
+          "Velora - Admin Edit User",
 
-    res.redirect(
-      "/admin-users"
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          name:
+            req.body.name,
+
+          email:
+            req.body.email,
+
+          phone:
+            req.body.phone,
+
+          status:
+            req.body.status
+
+        }
+      }
     );
 
   }
 
 };
-
 
 exports.deleteUser = async (req, res) => {
 
@@ -833,15 +1184,23 @@ async (req, res) => {
     const search =
       req.query.search?.trim();
 
+    // PAGE
 
+    const page =
+      Number(req.query.page) || 1;
 
-    // FILTER OBJECT
+    // LIMIT
+
+    const LIMIT = 12;
+
+    // SKIP
+
+    const skip =
+      (page - 1) * LIMIT;
+
+    // FILTER
 
     const filter = {};
-
-
-
-    // SEARCH FILTER
 
     if (search) {
 
@@ -887,23 +1246,41 @@ async (req, res) => {
 
     }
 
+    // COURSES + COUNT
 
+    const [
 
-    // GET COURSES
+      courses,
 
-    const courses =
+      totalCourses
 
-      await Course.find(filter)
+    ] = await Promise.all([
+
+      Course.find(filter)
 
       .sort({
 
         updatedAt: -1
 
-      });
+      })
 
+      .skip(skip)
 
+      .limit(LIMIT),
 
-    // RENDER PAGE
+      Course.countDocuments(filter)
+
+    ]);
+
+    // TOTAL PAGES
+
+    const totalPages =
+
+      Math.ceil(
+        totalCourses / LIMIT
+      );
+
+    // RENDER
 
     res.render(
 
@@ -912,7 +1289,7 @@ async (req, res) => {
       {
 
         title:
-        "Velora - Course Management",
+          "Velora - Course Management",
 
         isLoggedIn: true,
 
@@ -920,7 +1297,19 @@ async (req, res) => {
 
         courses,
 
-        search
+        search:
+          search || "",
+
+        currentPage:
+          page,
+
+        totalPages,
+
+        totalCourses,
+
+        LIMIT,
+
+        errors: {}
 
       }
 
@@ -932,49 +1321,270 @@ async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/admin-courses"
+    return res.render(
+
+      "pages/admin/courses/courses",
+
+      {
+
+        title:
+          "Velora - Course Management",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        courses: [],
+
+        search: "",
+
+        currentPage: 1,
+
+        totalPages: 1,
+
+        totalCourses: 0,
+
+        LIMIT: 12,
+
+        errors: {
+
+          general:
+            "Failed to load courses"
+
+        }
+
+      }
+
     );
 
   }
 
 };
 
-exports.getAdminCreateCourse = async (req, res) => {
+exports.getAdminCreateCourse =
+(req, res) => {
 
-   try {
-    // CREATE EMPTY DRAFT
+  res.render(
+
+    "pages/admin/courses/basic-info",
+
+    {
+
+      title:
+        "Velora - Create Course",
+
+      isLoggedIn: true,
+
+      isAdmin: true,
+
+      isEdit: false,
+
+      course: {},
+
+      errors: {},
+
+      formData: {}
+
+    }
+
+  );
+
+};
+
+exports.postAdminCreateCourse =
+async (req, res) => {
+
+  try {
+
+    let {
+      title,
+      description,
+      category,
+      instructor,
+      level
+    } = req.body;
+
+    // TRIM
+
+    title = title?.trim();
+
+    description =
+      description?.trim();
+
+    category =
+      category?.trim();
+
+    instructor =
+      instructor?.trim();
+
+    level =
+      level?.trim();
+
+    // FILES
+
+    const thumbnailFile =
+      req.files?.thumbnail?.[0];
+
+    const trailerFile =
+      req.files?.trailer?.[0];
+
+    // ERRORS
+
+    let errors = {};
+
+    // VALIDATION
+
+    if (!title) {
+
+      errors.title =
+        "Enter course title";
+
+    }
+
+    if (!description) {
+
+      errors.description =
+        "Enter course description";
+
+    }
+
+    if (!category) {
+
+      errors.category =
+        "Select category";
+
+    }
+
+    if (!instructor) {
+
+      errors.instructor =
+        "Enter instructor name";
+
+    }
+
+    if (!level) {
+
+      errors.level =
+        "Select course level";
+
+    }
+
+    if (!thumbnailFile) {
+
+      errors.thumbnail =
+        "Upload thumbnail";
+
+    }
+
+    if (!trailerFile) {
+
+      errors.trailer =
+        "Upload trailer";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/basic-info",
+
+        {
+
+          title:
+            "Velora - Create Course",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          isEdit: false,
+
+          course: {},
+
+          errors,
+
+          formData: {
+
+            title,
+            description,
+            category,
+            instructor,
+            level
+
+          }
+
+        }
+
+      );
+
+    }
+
+    // FILE PATHS
+
+    const thumbnailPath =
+
+      "/uploads/" +
+      thumbnailFile.filename;
+
+    const trailerPath =
+
+      "/uploads/" +
+      trailerFile.filename;
+
+    // CREATE COURSE
+
     const course =
+
       await Course.create({
-        title: "",
-        description: "",
-        category: "",
-        instructor: "",
-        level: "Beginner",
-        thumbnail: "",
-        trailer: "",
+
+        title,
+
+        description,
+
+        category,
+
+        instructor,
+
+        level,
+
+        thumbnail:
+          thumbnailPath,
+
+        trailer:
+          trailerPath,
+
         status: "draft"
+
       });
 
-      
+    // REDIRECT
 
-    // REDIRECT TO BASIC INFO
-    res.redirect(`/admin-courses/${course._id}/basic-info`);
+    res.redirect(
+
+      `/admin-courses/${course._id}/modules`
+
+    );
+
   }
 
   catch (err) {
-    console.log(err);
 
-    req.flash(
-      "error",
-      "Something went wrong"
-    );
+    console.log(err);
 
     res.redirect(
       "/admin-courses"
     );
+
   }
+
 };
+
+
 
 //Delete Course
 
@@ -1063,339 +1673,502 @@ async (req, res) => {
   }
 };
 
-
-
-//Basic Info
-
-exports.getAdminCourseBasicInfo = async (req, res) => {
-
-  try{
-   const course=await Course.findById(req.params.courseId);
-
-   if(!course){
-      req.flash("error","Course not found");
-
-      return  res.redirect("/admin-courses");
-   }
-
-    res.render('pages/admin/courses/basic-info', {
-        title: 'Velora - Course Basic Info',
-        isLoggedIn: true,
-        isAdmin: true,
-        course
-    });
-
-  }
-
-  catch (err) {
-    console.log(err);
-    res.redirect("/admin-courses");
-  }
-};
-
-
-exports.postAdminCourseBasicInfo= async (req, res)=>{
-
-  try{
-  //Get body data
-  let {title,description,category,instructor,level}=req.body;
-
-  //Trim values 
-  title=title?.trim();
-  description=description?.trim();
-  category=category?.trim();
-  instructor=instructor?.trim();
-  level=level?.trim();
-
- //Get files 
-  const thumbnailFile=req.files?.thumbnail?.[0];
-
-  const trailerFile=req.files?.trailer?.[0];
-
-
-  const existingCourse =
-await Course.findById(
-  req.params.courseId
-);
-
-//Title Validation
-if (!title) {
-
-  req.flash(
-    "error",
-    "Enter course title"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-}
-
-//Description Validation
-if (!description) {
-
-  req.flash(
-    "error",
-    "Enter course description"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-
-}
-
-//Category Validation
-if (!category) {
-  req.flash(
-    "error",
-    "Select category"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-
-}
-
-// Instructor Validation
-if (!instructor) {
-
-  req.flash(
-    "error",
-    "Enter instructor name"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-
-}
-
-// Level Validation
-
-if (!level) {
-
-  req.flash(
-    "error",
-    "Select course level"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-
-}
-
-// Thumbnail Validation
-
-if ( !thumbnailFile &&
-  !existingCourse.thumbnail) {
-
-  req.flash(
-    "error",
-    "Upload thumbnail image"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-
-}
-
-
-// Trailer Validation
-
-if ( !trailerFile &&
-  !existingCourse.trailer) {
-
-  req.flash(
-    "error",
-    "Upload trailer video"
-  );
-
-  return res.redirect(
-     `/admin-courses/${req.params.courseId}/basic-info`
-  );
-
-}
-
-
-  //Title Validation
-
-  if(title.length<5){
-  req.flash("error","Title must be minimum 5 characters");
-  return res.redirect( `/admin-courses/${req.params.courseId}/basic-info`);
-  }
-
-  //Instructor Validation
-
-  const instructorRegex = /^[A-Za-z ]{3,30}$/;
-  
-  if(!instructorRegex.test(instructor)){
-  req.flash("error","Instructor name is invalid");
-  return res.redirect( `/admin-courses/${req.params.courseId}/basic-info`);
-  }
-
-  //Level Validation
-
-  const allowedLevels=["Beginner","Intermediate","Advanced"];
-
-  if(!allowedLevels.includes(level)){
-    req.flash("error","Invalid course level");
-  return res.redirect( `/admin-courses/${req.params.courseId}/basic-info`);
-  }
-  
-  //Thumbnail type validation
-
-  const allowedImageTypes=[
-     "image/jpeg",
-      "image/png",
-      "image/webp"
-  ];
-
-  if (thumbnailFile && !allowedImageTypes.includes(thumbnailFile.mimetype)
-){
-    req.flash("error","Thumbnail must be JPG,PNG or WEBP");
-  return res.redirect( `/admin-courses/${req.params.courseId}/basic-info`);
-  }
-
-
-  //Trailer type validation
-
-    const allowedVideoTypes=[
-     "video/mp4",
-      "video/quicktime",
-  ];
-
-  if(trailerFile && !allowedVideoTypes.includes(trailerFile.mimetype)){
-    req.flash("error","Trailer must be MP4 or MOV");
-  return res.redirect( `/admin-courses/${req.params.courseId}/basic-info`);
-  }
-
-
-  //File size validation
-
-    // 5MB
-    const maxThumbnailSize =
-      5 * 1024 * 1024;
-
-    // 100MB
-    const maxTrailerSize =
-      100 * 1024 * 1024;
-
-
-    if (thumbnailFile &&
-      thumbnailFile.size >
-      maxThumbnailSize
-    ) {
-
-      req.flash(
-        "error",
-        "Thumbnail exceeds 5MB"
-      );
-
-      return res.redirect(
-        "/admin-course/create"
-      );
-
-    }
-
-
-    if (trailerFile &&
-      trailerFile.size >
-      maxTrailerSize
-    ) {
-
-      req.flash(
-        "error",
-        "Trailer exceeds 100MB"
-      );
-
-      return res.redirect(
-        "/admin-course/create"
-      );
-
-    }
-
-//create file paths
-
-const thumbnailPath =thumbnailFile? "/uploads/" + thumbnailFile.filename : existingCourse.thumbnail;
-
-const trailerPath = trailerFile ? "/uploads/" + trailerFile.filename : existingCourse.trailer;
-
-      await Course.findByIdAndUpdate(req.params.courseId,{
-       title,
-       description,
-       category,
-       instructor,
-       level:level,
-       thumbnail:thumbnailPath,
-       trailer:trailerPath
-      }
-    );
-   
-
-    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
-
-  }
-
-  catch(err){
-    console.log(err);
-
-    req.flash(
-      "error",
-      "Something went wrong"
-    );
-
-    res.redirect(
-       `/admin-courses/${req.params.courseId}/basic-info`
-    );
-  }
-}
-
-
 //Edit Course
+
 exports.getAdminEditCourse =
 async (req, res) => {
+
   try {
+
     // GET COURSE
+
     const course =
+
       await Course.findById(
         req.params.courseId
       );
 
-    // COURSE NOT FOUND
+    // NOT FOUND
+
     if (!course) {
-      req.flash(
-        "error",
-        "Course not found"
-      );
+
       return res.redirect(
         "/admin-courses"
       );
+
     }
 
-    // RENDER EDIT PAGE
-    res.render("pages/admin/courses/basic-info",
+    // RENDER
+
+    res.render(
+
+      "pages/admin/courses/basic-info",
+
       {
+
         title:
-        "Velora - Edit Course",
+          "Velora - Edit Course",
+
         isLoggedIn: true,
+
         isAdmin: true,
+
         isEdit: true,
-        course
+
+        course,
+
+        errors: {},
+
+        formData: {}
+
       }
 
     );
+
   }
+
   catch (err) {
+
     console.log(err);
-    res.redirect(
-      "/admin-courses"
+
+    return res.render(
+
+      "pages/admin/courses/courses",
+
+      {
+
+        title:
+          "Velora - Course Management",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        courses: [],
+
+        search: "",
+
+        errors: {
+
+          general:
+            "Failed to load course"
+
+        }
+
+      }
+
     );
+
   }
+
 };
+
+
+exports.postAdminEditCourse =
+async (req, res) => {
+
+  try {
+
+    // BODY
+
+    let {
+      title,
+      description,
+      category,
+      instructor,
+      level
+    } = req.body;
+
+    // TRIM
+
+    title =
+      title?.trim();
+
+    description =
+      description?.trim();
+
+    category =
+      category?.trim();
+
+    instructor =
+      instructor?.trim();
+
+    level =
+      level?.trim();
+
+    // FILES
+
+    const thumbnailFile =
+      req.files?.thumbnail?.[0];
+
+    const trailerFile =
+      req.files?.trailer?.[0];
+
+    // EXISTING COURSE
+
+    const existingCourse =
+      await Course.findById(
+        req.params.courseId
+      );
+
+    // ERRORS
+
+    let errors = {};
+
+    // REQUIRED VALIDATION
+
+    if (!title) {
+
+      errors.title =
+        "Enter course title";
+
+    }
+
+    if (!description) {
+
+      errors.description =
+        "Enter course description";
+
+    }
+
+    if (!category) {
+
+      errors.category =
+        "Select category";
+
+    }
+
+    if (!instructor) {
+
+      errors.instructor =
+        "Enter instructor name";
+
+    }
+
+    if (!level) {
+
+      errors.level =
+        "Select course level";
+
+    }
+
+    // THUMBNAIL
+
+    if (
+      !thumbnailFile &&
+      !existingCourse.thumbnail
+    ) {
+
+      errors.thumbnail =
+        "Upload thumbnail image";
+
+    }
+
+    // TRAILER
+
+    if (
+      !trailerFile &&
+      !existingCourse.trailer
+    ) {
+
+      errors.trailer =
+        "Upload trailer video";
+
+    }
+
+    // TITLE LENGTH
+
+    if (
+      title &&
+      title.length < 5
+    ) {
+
+      errors.title =
+        "Title must be minimum 5 characters";
+
+    }
+
+    // INSTRUCTOR
+
+    const instructorRegex =
+      /^[A-Za-z ]{3,30}$/;
+
+    if (
+      instructor &&
+      !instructorRegex.test(
+        instructor
+      )
+    ) {
+
+      errors.instructor =
+        "Instructor name is invalid";
+
+    }
+
+    // LEVEL
+
+    const allowedLevels = [
+
+      "Beginner",
+
+      "Intermediate",
+
+      "Advanced"
+
+    ];
+
+    if (
+      level &&
+      !allowedLevels.includes(level)
+    ) {
+
+      errors.level =
+        "Invalid course level";
+
+    }
+
+    // IMAGE TYPES
+
+    const allowedImageTypes = [
+
+      "image/jpeg",
+
+      "image/png",
+
+      "image/webp"
+
+    ];
+
+    if (
+
+      thumbnailFile &&
+
+      !allowedImageTypes.includes(
+        thumbnailFile.mimetype
+      )
+
+    ) {
+
+      errors.thumbnail =
+        "Thumbnail must be JPG, PNG or WEBP";
+
+    }
+
+    // VIDEO TYPES
+
+    const allowedVideoTypes = [
+
+      "video/mp4",
+
+      "video/quicktime"
+
+    ];
+
+    if (
+
+      trailerFile &&
+
+      !allowedVideoTypes.includes(
+        trailerFile.mimetype
+      )
+
+    ) {
+
+      errors.trailer =
+        "Trailer must be MP4 or MOV";
+
+    }
+
+    // FILE SIZE
+
+    const maxThumbnailSize =
+      5 * 1024 * 1024;
+
+    const maxTrailerSize =
+      100 * 1024 * 1024;
+
+    if (
+
+      thumbnailFile &&
+
+      thumbnailFile.size >
+      maxThumbnailSize
+
+    ) {
+
+      errors.thumbnail =
+        "Thumbnail exceeds 5MB";
+
+    }
+
+    if (
+
+      trailerFile &&
+
+      trailerFile.size >
+      maxTrailerSize
+
+    ) {
+
+      errors.trailer =
+        "Trailer exceeds 100MB";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/basic-info",
+
+        {
+
+          title:
+            "Velora - Course Basic Info",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          isEdit: true,
+
+          errors,
+
+          course:
+            existingCourse,
+
+          formData: {
+
+            title,
+
+            description,
+
+            category,
+
+            instructor,
+
+            level
+
+          }
+
+        }
+
+      );
+
+    }
+
+    // FILE PATHS
+
+    const thumbnailPath =
+
+      thumbnailFile
+
+      ? "/uploads/" +
+        thumbnailFile.filename
+
+      : existingCourse.thumbnail;
+
+    const trailerPath =
+
+      trailerFile
+
+      ? "/uploads/" +
+        trailerFile.filename
+
+      : existingCourse.trailer;
+
+    // CREATE
+const course =
+await Course.findByIdAndUpdate(
+  req.params.courseId,
+  {
+    title,
+    description,
+    category,
+    instructor,
+    level,
+    thumbnail: thumbnailPath,
+    trailer: trailerPath,
+    status: existingCourse.status || "draft"
+  },
+  { new: true }
+);
+
+    res.redirect(
+
+      `/admin-courses/${req.params.courseId}/modules`
+
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    const existingCourse =
+      await Course.findById(
+        req.params.courseId
+      );
+
+    return res.render(
+
+      "pages/admin/courses/basic-info",
+
+      {
+
+        title:
+          "Velora - Course Basic Info",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: true,
+
+        course:
+          existingCourse,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          title:
+            req.body.title,
+
+          description:
+            req.body.description,
+
+          category:
+            req.body.category,
+
+          instructor:
+            req.body.instructor,
+
+          level:
+            req.body.level
+
+        }
+
+      }
+
+    );
+
+  }
+
+};
+
+
+
 
 //Modules
 
@@ -1455,19 +2228,32 @@ async (req, res) => {
   });
 
 
-    res.render(
-      "pages/admin/courses/modules",
-      {
-        title:
-        "Velora - Course Modules",
-        isLoggedIn: true,
-        isAdmin: true,
-        course,
-        modules,
-        lessons
-      }
+res.render(
 
-    );
+  "pages/admin/courses/modules",
+
+  {
+
+    title:
+      "Velora - Course Modules",
+
+    isLoggedIn: true,
+
+    isAdmin: true,
+
+    course,
+
+    modules,
+
+    lessons,
+
+    errors: {},
+
+    formData: {}
+
+  }
+
+);
 
   }
 
@@ -1488,23 +2274,12 @@ async (req, res) => {
 
   try {
 
-    // GET COURSE
-
     const course =
       await Course.findById(
         req.params.courseId
       );
 
-
-
-    // COURSE NOT FOUND
-
     if (!course) {
-
-      req.flash(
-        "error",
-        "Course not found"
-      );
 
       return res.redirect(
         "/admin-courses"
@@ -1512,19 +2287,17 @@ async (req, res) => {
 
     }
 
-
-
-    // RENDER PAGE
-
     res.render(
+
       "pages/admin/courses/add-module",
+
       {
 
         title:
-        "Velora - Add Module",
+          "Velora - Add Module",
 
         activePage:
-        "courses",
+          "courses",
 
         isLoggedIn: true,
 
@@ -1532,7 +2305,11 @@ async (req, res) => {
 
         isEdit: false,
 
-        course
+        course,
+
+        errors: {},
+
+        formData: {}
 
       }
 
@@ -1544,108 +2321,69 @@ async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/admin-courses"
+    return res.render(
+
+      "pages/admin/courses/add-module",
+
+      {
+
+        title:
+          "Velora - Add Module",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: false,
+
+        course: {},
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }
 
 };
 
-exports.postAdminAddModule = async (req, res) => {
-try{
-
-let{title,description}=req.body;
-
-title =title?.trim();
-description =description?.trim();
-
-if(!title){
-  req.flash("error","Enter Module title");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/create`);
-}
-
-if(!description){
-  req.flash("error","Enter Module description");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/create`);
-}
-
-if(title.length<3){
-  req.flash("error","Module title must be at least 3 characters");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/create`);
-}
-
-
- // CHECK COURSE EXISTS
-
-    const course =await Course.findById(req.params.courseId);
-
-    if (!course) {
-      req.flash("error","Course not found");
-      return res.redirect( "/admin-courses");
-    }
-
-
- // MODULE ORDER
-
-    const moduleCount =await Module.countDocuments({
-        courseId:req.params.courseId
-      });
-
-  // CREATE MODULE
-
-    await Module.create({
-      courseId: req.params.courseId,
-      title,
-      description,
-      order: moduleCount + 1
-    });
-
- req.flash("success","Module added successfully");
-
-    // REDIRECT BACK TO MODULES PAGE
-    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
-}
-
-catch (err) {
-    console.log(err);
-    res.redirect("/admin-courses");
-  }
-
-};
-
-
-exports.getAdminEditModule = async (req, res) => {
+exports.postAdminAddModule =
+async (req, res) => {
 
   try {
 
-    // GET COURSE
+    let {
+      title,
+      description
+    } = req.body;
+
+    // TRIM
+
+    title =
+      title?.trim();
+
+    description =
+      description?.trim();
+
+    // COURSE
 
     const course =
       await Course.findById(
         req.params.courseId
       );
 
-
-    //GET MODULE
-    
-    const module=
-    await Module.findOne({
-
-  _id: req.params.moduleId,
-
-  courseId: req.params.courseId
-
-});
-
-    // VALIDATION
-
-    if (!course||!module) {
-
-      req.flash(
-        "error",
-        "Course not found"
-      );
+    if (!course) {
 
       return res.redirect(
         "/admin-courses"
@@ -1653,19 +2391,216 @@ exports.getAdminEditModule = async (req, res) => {
 
     }
 
+    // ERRORS
 
+    let errors = {};
 
-    // RENDER PAGE
+    // TITLE
 
-    res.render(
+    if (!title) {
+
+      errors.title =
+        "Enter module title";
+
+    }
+
+    else if (
+      title.length < 3
+    ) {
+
+      errors.title =
+        "Module title must be at least 3 characters";
+
+    }
+
+    // DESCRIPTION
+
+    if (!description) {
+
+      errors.description =
+        "Enter module description";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/add-module",
+
+        {
+
+          title:
+            "Velora - Add Module",
+
+          activePage:
+            "courses",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          isEdit: false,
+
+          course,
+
+          errors,
+
+          formData: {
+
+            title,
+
+            description
+
+          }
+
+        }
+
+      );
+
+    }
+
+    // MODULE ORDER
+
+    const moduleCount =
+
+      await Module.countDocuments({
+
+        courseId:
+          req.params.courseId
+
+      });
+
+    // CREATE MODULE
+
+    await Module.create({
+
+      courseId:
+        req.params.courseId,
+
+      title,
+
+      description,
+
+      order:
+        moduleCount + 1
+
+    });
+
+    // REDIRECT
+
+    res.redirect(
+
+      `/admin-courses/${req.params.courseId}/modules`
+
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+
       "pages/admin/courses/add-module",
+
       {
 
         title:
-        "Velora - Edit Module",
+          "Velora - Add Module",
 
         activePage:
-        "courses",
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: false,
+
+        course: {},
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          title:
+            req.body.title,
+
+          description:
+            req.body.description
+
+        }
+
+      }
+
+    );
+
+  }
+
+};
+
+
+exports.getAdminEditModule =
+async (req, res) => {
+
+  try {
+
+    // COURSE
+
+    const course =
+
+      await Course.findById(
+        req.params.courseId
+      );
+
+    // MODULE
+
+    const module =
+
+      await Module.findOne({
+
+        _id:
+          req.params.moduleId,
+
+        courseId:
+          req.params.courseId
+
+      });
+
+    // VALIDATION
+
+    if (!course || !module) {
+
+      return res.redirect(
+        "/admin-courses"
+      );
+
+    }
+
+    // RENDER
+
+    res.render(
+
+      "pages/admin/courses/add-module",
+
+      {
+
+        title:
+          "Velora - Edit Module",
+
+        activePage:
+          "courses",
 
         isLoggedIn: true,
 
@@ -1675,7 +2610,11 @@ exports.getAdminEditModule = async (req, res) => {
 
         course,
 
-        module
+        module,
+
+        errors: {},
+
+        formData: {}
 
       }
 
@@ -1687,8 +2626,39 @@ exports.getAdminEditModule = async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/admin-courses"
+    return res.render(
+
+      "pages/admin/courses/add-module",
+
+      {
+
+        title:
+          "Velora - Edit Module",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: true,
+
+        course: {},
+
+        module: {},
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }
@@ -1697,71 +2667,202 @@ exports.getAdminEditModule = async (req, res) => {
 
 
 
-exports.postAdminEditModule = async (req, res) => {
+exports.postAdminEditModule =
+async (req, res) => {
 
-try{
-  //GET FORM DATA
+  try {
 
-  let{title,description}=req.body;
+    // FORM DATA
 
-//TRIM VALUES
-title=title?.trim();
-description=description?.trim();
+    let {
+      title,
+      description
+    } = req.body;
 
-//VALIDATION
+    // TRIM
 
-if(!title){
-  req.flash("error","Enter Module title");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/edit`)
-}
+    title =
+      title?.trim();
 
-if(!description){
-  req.flash("error","Enter Module description");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/edit`)
-}
+    description =
+      description?.trim();
 
+    // COURSE
 
-//TITLE LENGTH
-if(title.length<3){
-  req.flash("error", "Module title must be at least 3 characters");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/edit`)
-}
+    const course =
 
-
-//FIND MODULE
-
-const module=await Module.findOne({
-
-  _id: req.params.moduleId,
-
-  courseId: req.params.courseId
-
-});
-
-if(!module){
-   req.flash(
-        "error",
-        "Module not found"
+      await Course.findById(
+        req.params.courseId
       );
+
+    // MODULE
+
+    const module =
+
+      await Module.findOne({
+
+        _id:
+          req.params.moduleId,
+
+        courseId:
+          req.params.courseId
+
+      });
+
+    // VALIDATION
+
+    if (!course || !module) {
 
       return res.redirect(
         "/admin-courses"
       );
-}
 
-//UPDATE MODULE
+    }
 
-module.title=title;
-module.description=description;
+    // ERRORS
 
-await module.save();
-res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+    let errors = {};
 
-}
-catch(err){
+    // TITLE
+
+    if (!title) {
+
+      errors.title =
+        "Enter module title";
+
+    }
+
+    else if (
+      title.length < 3
+    ) {
+
+      errors.title =
+        "Module title must be at least 3 characters";
+
+    }
+
+    // DESCRIPTION
+
+    if (!description) {
+
+      errors.description =
+        "Enter module description";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/add-module",
+
+        {
+
+          title:
+            "Velora - Edit Module",
+
+          activePage:
+            "courses",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          isEdit: true,
+
+          course,
+
+          module,
+
+          errors,
+
+          formData: {
+
+            title,
+
+            description
+
+          }
+
+        }
+
+      );
+
+    }
+
+    // UPDATE MODULE
+
+    module.title =
+      title;
+
+    module.description =
+      description;
+
+    await module.save();
+
+    // REDIRECT
+
+    res.redirect(
+
+      `/admin-courses/${req.params.courseId}/modules`
+
+    );
+
+  }
+
+  catch (err) {
+
     console.log(err);
-    res.redirect("/admin-courses");
-   }
+
+    return res.render(
+
+      "pages/admin/courses/add-module",
+
+      {
+
+        title:
+          "Velora - Edit Module",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: true,
+
+        course: {},
+
+        module: {},
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          title:
+            req.body.title,
+
+          description:
+            req.body.description
+
+        }
+
+      }
+
+    );
+
+  }
+
 };
 
 
@@ -1790,26 +2891,20 @@ catch(err){
 
 
 
-exports.getAdminAddLesson = async (req, res) => {
+exports.getAdminAddLesson =
+async (req, res) => {
+
   try {
 
-    // GET COURSE
+    // COURSE
 
     const course =
+
       await Course.findById(
         req.params.courseId
       );
 
-
-
-    // COURSE NOT FOUND
-
     if (!course) {
-
-      req.flash(
-        "error",
-        "Course not found"
-      );
 
       return res.redirect(
         "/admin-courses"
@@ -1817,47 +2912,43 @@ exports.getAdminAddLesson = async (req, res) => {
 
     }
 
-
-     // GET MODULE
+    // MODULE
 
     const module =
+
       await Module.findOne({
 
-  _id: req.params.moduleId,
+        _id:
+          req.params.moduleId,
 
-  courseId: req.params.courseId
+        courseId:
+          req.params.courseId
 
-});
-
-
-
-    // MODULE NOT FOUND
+      });
 
     if (!module) {
 
-      req.flash(
-        "error",
-        "Module not found"
-      );
-
       return res.redirect(
+
         `/admin-courses/${req.params.courseId}/modules`
+
       );
 
     }
 
-
-    // RENDER PAGE
+    // RENDER
 
     res.render(
+
       "pages/admin/courses/add-lesson",
+
       {
 
         title:
-        "Velora - Add Lesson",
+          "Velora - Add Lesson",
 
         activePage:
-        "courses",
+          "courses",
 
         isLoggedIn: true,
 
@@ -1869,7 +2960,11 @@ exports.getAdminAddLesson = async (req, res) => {
 
         module,
 
-        lesson:null
+        lesson: null,
+
+        errors: {},
+
+        formData: {}
 
       }
 
@@ -1881,8 +2976,41 @@ exports.getAdminAddLesson = async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/admin-courses"
+    return res.render(
+
+      "pages/admin/courses/add-lesson",
+
+      {
+
+        title:
+          "Velora - Add Lesson",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: false,
+
+        course: {},
+
+        module: {},
+
+        lesson: null,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }
@@ -1890,85 +3018,306 @@ exports.getAdminAddLesson = async (req, res) => {
 };
 
 
-exports.postAdminAddLesson = async (req, res) => {
-try{
+exports.postAdminAddLesson =
+async (req, res) => {
 
-let{title,description}=req.body;
+  try {
 
-title =title?.trim();
-description =description?.trim();
-
-const video=req.file;
-
-if(!title){
-  req.flash("error","Enter Lesson title");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/create`);
-}
-
-if(!description){
-  req.flash("error","Enter Lesson description");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/create`);
-}
-
-if(title.length<3){
-  req.flash("error","Module title must be at least 3 characters");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/create`);
-}
-
-if(!video){
-  req.flash("error","Upload lesson video");
-  return res.redirect(`/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/create`);
-}
-
-
-
-
- // CHECK MODULE EXISTS
-
-    const module =await Module.findOne({
-
-  _id: req.params.moduleId,
-
-  courseId: req.params.courseId
-
-});
-
-    if (!module) {
-      req.flash("error","Module not found");
-      return res.redirect( `/admin-courses`);
-    }
-
-
- // LESSON ORDER
-
-    const lessonCount =await Lesson.countDocuments({
-        moduleId:req.params.moduleId
-      });
-
-  // VIDEO PATH
-    const videoPath = "/uploads/" + video.filename;
-
-
-
-  // CREATE LESSON
-
-    await Lesson.create({
-      moduleId: req.params.moduleId,
+    let {
       title,
       description,
-      video:"/uploads/" + video.filename,
-      order: lessonCount + 1
+      duration
+    } = req.body;
+
+    // TRIM
+
+    title =
+      title?.trim();
+
+    description =
+      description?.trim();
+
+    duration =
+      duration?.trim();
+
+    // VIDEO
+
+    const video =
+      req.file;
+
+    // MODULE
+
+    const module =
+
+      await Module.findOne({
+
+        _id:
+          req.params.moduleId,
+
+        courseId:
+          req.params.courseId
+
+      });
+
+    if (!module) {
+
+      return res.redirect(
+        "/admin-courses"
+      );
+
+    }
+
+    // ERRORS
+
+    let errors = {};
+
+    // TITLE
+
+    if (!title) {
+
+      errors.title =
+        "Enter lesson title";
+
+    }
+
+    else if (
+      title.length < 3
+    ) {
+
+      errors.title =
+        "Lesson title must be at least 3 characters";
+
+    }
+
+    // DESCRIPTION
+
+    if (!description) {
+
+      errors.description =
+        "Enter lesson description";
+
+    }
+
+    // DURATION
+
+    if (!duration) {
+
+      errors.duration =
+        "Enter lesson duration";
+
+    }
+
+    // VIDEO
+
+    if (!video) {
+
+      errors.video =
+        "Upload lesson video";
+
+    }
+
+    // VIDEO TYPE
+
+    const allowedVideoTypes = [
+
+      "video/mp4",
+
+      "video/quicktime"
+
+    ];
+
+    if (
+
+      video &&
+
+      !allowedVideoTypes.includes(
+        video.mimetype
+      )
+
+    ) {
+
+      errors.video =
+        "Video must be MP4 or MOV";
+
+    }
+
+    // VIDEO SIZE
+
+    const maxVideoSize =
+      500 * 1024 * 1024;
+
+    if (
+
+      video &&
+
+      video.size >
+      maxVideoSize
+
+    ) {
+
+      errors.video =
+        "Video exceeds 500MB";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/add-lesson",
+
+        {
+
+          title:
+            "Velora - Add Lesson",
+
+          activePage:
+            "courses",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          isEdit: false,
+
+          course: {
+
+            _id:
+              req.params.courseId
+
+          },
+
+          module,
+
+          lesson: null,
+
+          errors,
+
+          formData: {
+
+            title,
+
+            description,
+
+            duration
+
+          }
+
+        }
+
+      );
+
+    }
+
+    // LESSON ORDER
+
+    const lessonCount =
+
+      await Lesson.countDocuments({
+
+        moduleId:
+          req.params.moduleId
+
+      });
+
+    // CREATE LESSON
+
+    await Lesson.create({
+
+      moduleId:
+        req.params.moduleId,
+
+      title,
+
+      description,
+
+      duration,
+
+      video:
+        "/uploads/" +
+        video.filename,
+
+      order:
+        lessonCount + 1
+
     });
 
- req.flash("success","Lesson added successfully");
+    // REDIRECT
 
-    // REDIRECT BACK TO MODULES PAGE
-    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
-}
+    res.redirect(
 
-catch (err) {
+      `/admin-courses/${req.params.courseId}/modules`
+
+    );
+
+  }
+
+  catch (err) {
+
     console.log(err);
-    res.redirect("/admin-courses");
+
+    return res.render(
+
+      "pages/admin/courses/add-lesson",
+
+      {
+
+        title:
+          "Velora - Add Lesson",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: false,
+
+        course: {
+
+          _id:
+            req.params.courseId
+
+        },
+
+        module: {
+
+          _id:
+            req.params.moduleId
+
+        },
+
+        lesson: null,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          title:
+            req.body.title,
+
+          description:
+            req.body.description,
+
+          duration:
+            req.body.duration
+
+        }
+
+      }
+
+    );
+
   }
 
 };
@@ -1976,61 +3325,74 @@ catch (err) {
 
 exports.getAdminEditLesson =
 async (req, res) => {
+
   try {
 
-    // GET COURSE
+    // COURSE
+
     const course =
+
       await Course.findById(
         req.params.courseId
       );
 
+    // MODULE
 
-    // GET MODULE
     const module =
+
       await Module.findOne({
+
         _id:
-        req.params.moduleId,
+          req.params.moduleId,
+
         courseId:
-        req.params.courseId
+          req.params.courseId
+
       });
 
+    // LESSON
 
-    // GET LESSON
     const lesson =
-      await Lesson.findOne({
-        _id:
-        req.params.lessonId,
-        moduleId:
-        req.params.moduleId
-      });
 
+      await Lesson.findOne({
+
+        _id:
+          req.params.lessonId,
+
+        moduleId:
+          req.params.moduleId
+
+      });
 
     // VALIDATION
+
     if (
       !course ||
       !module ||
       !lesson
     ) {
-      req.flash(
-        "error",
-        "Lesson not found"
-      );
+
       return res.redirect(
+
         `/admin-courses/${req.params.courseId}/modules`
+
       );
+
     }
 
-
-
     // RENDER
-    res.render("pages/admin/courses/add-lesson",
+
+    res.render(
+
+      "pages/admin/courses/add-lesson",
+
       {
 
         title:
-        "Velora - Edit Lesson",
+          "Velora - Edit Lesson",
 
         activePage:
-        "courses",
+          "courses",
 
         isLoggedIn: true,
 
@@ -2042,7 +3404,11 @@ async (req, res) => {
 
         module,
 
-        lesson
+        lesson,
+
+        errors: {},
+
+        formData: {}
 
       }
 
@@ -2054,125 +3420,362 @@ async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/admin-courses"
+    return res.render(
+
+      "pages/admin/courses/add-lesson",
+
+      {
+
+        title:
+          "Velora - Edit Lesson",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: true,
+
+        course: {},
+
+        module: {},
+
+        lesson: {},
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }
 
 };
 
-exports.postAdminEditLesson =async (req, res) => {
+
+exports.postAdminEditLesson =
+async (req, res) => {
+
   try {
-    // GET FORM DATA
+
+    // FORM DATA
+
     let {
       title,
-      description
+      description,
+      duration
     } = req.body;
 
-    // TRIM VALUES
+    // TRIM
+
     title =
       title?.trim();
+
     description =
       description?.trim();
 
-    // GET VIDEO FILE
+    duration =
+      duration?.trim();
+
+    // VIDEO
+
     const video =
       req.file;
 
-    // VALIDATION
-    if (!title) {
-      req.flash(
-        "error",
-        "Enter lesson title"
-      );
-      return res.redirect(
-        `/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/${req.params.lessonId}/edit`
-      );
-    }
+    // COURSE
 
-    if (!description) {
-      req.flash(
-        "error",
-        "Enter lesson description"
-      );
-      return res.redirect(
-        `/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/${req.params.lessonId}/edit`
-      );
-    }
+    const course =
 
-    if (
-      title.length < 3
-    ) {
-      req.flash(
-        "error",
-        "Lesson title must be at least 3 characters"
+      await Course.findById(
+        req.params.courseId
       );
 
-      return res.redirect(
-        `/admin-courses/${req.params.courseId}/modules/${req.params.moduleId}/lessons/${req.params.lessonId}/edit`
-      );
-    }
+    // MODULE
 
+    const module =
 
-    // FIND LESSON
-    const lesson =
-      await Lesson.findOne({
+      await Module.findOne({
+
         _id:
-        req.params.lessonId,
-        moduleId:
-        req.params.moduleId
+          req.params.moduleId,
+
+        courseId:
+          req.params.courseId
+
       });
 
-    // LESSON NOT FOUND
-    if (!lesson) {
-      req.flash(
-        "error",
-        "Lesson not found"
-      );
+    // LESSON
+
+    const lesson =
+
+      await Lesson.findOne({
+
+        _id:
+          req.params.lessonId,
+
+        moduleId:
+          req.params.moduleId
+
+      });
+
+    // VALIDATION
+
+    if (
+      !course ||
+      !module ||
+      !lesson
+    ) {
 
       return res.redirect(
+
         `/admin-courses/${req.params.courseId}/modules`
+
       );
+
     }
 
+    // ERRORS
 
+    let errors = {};
 
-    // UPDATE DATA
+    // TITLE
+
+    if (!title) {
+
+      errors.title =
+        "Enter lesson title";
+
+    }
+
+    else if (
+      title.length < 3
+    ) {
+
+      errors.title =
+        "Lesson title must be at least 3 characters";
+
+    }
+
+    // DESCRIPTION
+
+    if (!description) {
+
+      errors.description =
+        "Enter lesson description";
+
+    }
+
+    // DURATION
+
+    if (!duration) {
+
+      errors.duration =
+        "Enter lesson duration";
+
+    }
+
+    // VIDEO TYPE
+
+    if (video) {
+
+      const allowedVideoTypes = [
+
+        "video/mp4",
+
+        "video/quicktime"
+
+      ];
+
+      if (
+
+        !allowedVideoTypes.includes(
+          video.mimetype
+        )
+
+      ) {
+
+        errors.video =
+          "Video must be MP4 or MOV";
+
+      }
+
+      // VIDEO SIZE
+
+      const maxVideoSize =
+        500 * 1024 * 1024;
+
+      if (
+        video.size >
+        maxVideoSize
+      ) {
+
+        errors.video =
+          "Video exceeds 500MB";
+
+      }
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/add-lesson",
+
+        {
+
+          title:
+            "Velora - Edit Lesson",
+
+          activePage:
+            "courses",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          isEdit: true,
+
+          course,
+
+          module,
+
+          lesson,
+
+          errors,
+
+          formData: {
+
+            title,
+
+            description,
+
+            duration
+
+          }
+
+        }
+
+      );
+
+    }
+
+    // UPDATE
+
     lesson.title =
       title;
 
     lesson.description =
       description;
 
+    lesson.duration =
+      duration;
 
-    // OPTIONAL VIDEO UPDATE
+    // OPTIONAL VIDEO
+
     if (video) {
+
       lesson.video =
+
         "/uploads/" +
         video.filename;
+
     }
 
     // SAVE
+
     await lesson.save();
 
-    req.flash(
-      "success",
-      "Lesson updated successfully"
+    // REDIRECT
+
+    res.redirect(
+
+      `/admin-courses/${req.params.courseId}/modules`
+
     );
 
-    // REDIRECT
-    res.redirect(
-      `/admin-courses/${req.params.courseId}/modules`
-    );
   }
 
   catch (err) {
 
     console.log(err);
-    res.redirect(
-      "/admin-courses"
+
+    return res.render(
+
+      "pages/admin/courses/add-lesson",
+
+      {
+
+        title:
+          "Velora - Edit Lesson",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        isEdit: true,
+
+        course: {
+
+          _id:
+            req.params.courseId
+
+        },
+
+        module: {
+
+          _id:
+            req.params.moduleId
+
+        },
+
+        lesson: {
+
+          _id:
+            req.params.lessonId
+
+        },
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {
+
+          title:
+            req.body.title,
+
+          description:
+            req.body.description,
+
+          duration:
+            req.body.duration
+
+        }
+
+      }
+
     );
+
   }
 
 };
@@ -2236,58 +3839,291 @@ function formatBytes(bytes, decimals = 1) {
 }
 
 
-exports.getAdminCourseResources = async (req, res) => {
+exports.getAdminCourseResources =
+async (req, res) => {
+
   try {
-    const course = await Course.findById(req.params.courseId);
+
+    // COURSE
+
+    const course =
+
+      await Course.findById(
+        req.params.courseId
+      );
+
     if (!course) {
-      req.flash("error", "Course not found");
-      return res.redirect("/admin-courses");
+
+      return res.redirect(
+        "/admin-courses"
+      );
+
     }
 
-    const modules = await Module.find({ courseId: req.params.courseId }).sort({ order: 1 });
-    const lessons = await Lesson.find({
-      moduleId: { $in: modules.map(m => m._id) }
-    }).sort({ order: 1 });
+    // MODULES
 
-    res.render('pages/admin/courses/resources', {
-      title: 'Velora - Course Resources',
-      activePage: 'courses',
-      isLoggedIn: true,
-      isAdmin: true,
-      course,
-      modules,
-      lessons
-    });
-  } catch (err) {
-    console.error("Error in getAdminCourseResources:", err);
-    res.redirect("/admin-courses");
+    const modules =
+
+      await Module.find({
+
+        courseId:
+          req.params.courseId
+
+      })
+
+      .sort({
+        order: 1
+      });
+
+    // LESSONS
+
+    const lessons =
+
+      await Lesson.find({
+
+        moduleId: {
+
+          $in:
+            modules.map(
+              m => m._id
+            )
+
+        }
+
+      })
+
+      .sort({
+        order: 1
+      });
+
+    // RENDER
+
+    res.render(
+
+      "pages/admin/courses/resources",
+
+      {
+
+        title:
+          "Velora - Course Resources",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        course,
+
+        modules,
+
+        lessons,
+
+        errors: {},
+
+        formData: {}
+
+      }
+
+    );
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+
+      "pages/admin/courses/resources",
+
+      {
+
+        title:
+          "Velora - Course Resources",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        course: {},
+
+        modules: [],
+
+        lessons: [],
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
+  }
+
 };
 
+exports.getAdminCourseResourcesData =
+async (req, res) => {
 
-exports.getAdminCourseResourcesData = async (req, res) => {
   try {
-    const { moduleId, lessonId } = req.query;
-    const { courseId } = req.params;
 
-    if (!moduleId || !lessonId) {
-      return res.status(400).json({ error: "Missing module or lesson reference" });
+    const {
+      moduleId,
+      lessonId
+    } = req.query;
+
+    const {
+      courseId
+    } = req.params;
+
+    // VALIDATION
+
+    if (
+      !moduleId ||
+      !lessonId
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Missing module or lesson reference"
+
+      });
+
     }
 
-    let resource = await Resource.findOne({ courseId, moduleId, lessonId });
+    // CHECK MODULE
+
+    const module =
+
+      await Module.findOne({
+
+        _id:
+          moduleId,
+
+        courseId
+
+      });
+
+    if (!module) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Module not found"
+
+      });
+
+    }
+
+    // CHECK LESSON
+
+    const lesson =
+
+      await Lesson.findOne({
+
+        _id:
+          lessonId,
+
+        moduleId
+
+      });
+
+    if (!lesson) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Lesson not found"
+
+      });
+
+    }
+
+    // GET RESOURCE
+
+    let resource =
+
+      await Resource.findOne({
+
+        courseId,
+
+        moduleId,
+
+        lessonId
+
+      });
+
+    // EMPTY DEFAULT
+
     if (!resource) {
-      resource = { files: [], links: [], notes: "" };
+
+      resource = {
+
+        files: [],
+
+        links: [],
+
+        notes: ""
+
+      };
+
     }
 
-    res.json({
-      files: resource.files || [],
-      links: resource.links || [],
-      notes: resource.notes || ""
+    // RESPONSE
+
+    return res.json({
+
+      success: true,
+
+      files:
+        resource.files || [],
+
+      links:
+        resource.links || [],
+
+      notes:
+        resource.notes || ""
+
     });
-  } catch (err) {
-    console.error("Error in getAdminCourseResourcesData:", err);
-    res.status(500).json({ error: "Internal server error" });
+
   }
+
+  catch (err) {
+
+    console.log(
+      "Error in getAdminCourseResourcesData:",
+      err
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Internal server error"
+
+    });
+
+  }
+
 };
 
 exports.postAdminCourseResourcesUploadFile = async (req, res) => {
@@ -2444,53 +4280,20 @@ exports.postAdminCourseResourcesSaveNotes = async (req, res) => {
   }
 };
 
-exports.getAdminCoursePublish = async (req, res) => {
-  try {
-    const course = await Course.findById(req.params.courseId);
-    if (!course) {
-      req.flash("error", "Course not found");
-      return res.redirect("/admin-courses");
-    }
-
-    const modules = await Module.find({ courseId: req.params.courseId });
-    const lessons = await Lesson.find({
-      moduleId: { $in: modules.map(m => m._id) }
-    });
-
-    res.render('pages/admin/courses/publish', {
-      title: 'Velora - Publish Course',
-      activePage: 'courses',
-      isLoggedIn: true,
-      isAdmin: true,
-      course,
-      modules,
-      lessons
-    });
-  } catch (err) {
-    console.error("Error in getAdminCoursePublish:", err);
-    res.redirect("/admin-courses");
-  }
-};
-
-exports.postAdminCoursePublish =
+exports.getAdminCoursePublish =
 async (req, res) => {
 
   try {
-    // GET COURSE
+
+    // COURSE
+
     const course =
+
       await Course.findById(
         req.params.courseId
       );
 
-
-
-    // COURSE NOT FOUND
-
     if (!course) {
-      req.flash(
-        "error",
-        "Course not found"
-      );
 
       return res.redirect(
         "/admin-courses"
@@ -2498,172 +4301,338 @@ async (req, res) => {
 
     }
 
-
-
-    // =========================
-    // VALIDATE MODULES
-    // =========================
+    // MODULES
 
     const modules =
+
       await Module.find({
+
         courseId:
-        course._id
+          req.params.courseId
+
       });
 
+    // LESSONS
 
+    const lessons =
+
+      await Lesson.find({
+
+        moduleId: {
+
+          $in:
+            modules.map(
+              m => m._id
+            )
+
+        }
+
+      });
+
+    // PUBLISH CHECK
+
+    const canPublish =
+
+      modules.length > 0 &&
+
+      lessons.length > 0 &&
+
+      course.title &&
+
+      course.description &&
+
+      course.thumbnail &&
+
+      course.trailer;
+
+    // RENDER
+
+    res.render(
+
+      "pages/admin/courses/publish",
+
+      {
+
+        title:
+          "Velora - Publish Course",
+
+        activePage:
+          "courses",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        course,
+
+        modules,
+
+        lessons,
+
+        canPublish
+
+      }
+
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    res.redirect(
+      "/admin-courses"
+    );
+
+  }
+
+};
+
+exports.postAdminCoursePublish =
+async (req, res) => {
+
+  try {
+
+    // COURSE
+
+    const course =
+
+      await Course.findById(
+        req.params.courseId
+      );
+
+    if (!course) {
+
+      return res.redirect(
+        "/admin-courses"
+      );
+
+    }
+
+    // MODULES
+
+    const modules =
+
+      await Module.find({
+
+        courseId:
+          course._id
+
+      });
+
+    // LESSONS
+
+    const lessons =
+
+      await Lesson.find({
+
+        moduleId: {
+
+          $in:
+            modules.map(
+              module => module._id
+            )
+
+        }
+
+      });
+
+    // ERRORS
+
+    let errors = {};
+
+    // VALIDATIONS
 
     if (
       modules.length === 0
     ) {
 
-      req.flash(
-        "error",
-        "Add at least one module before publishing"
-      );
-
-
-
-      return res.redirect(
-        `/admin-courses/${course._id}/publish`
-      );
+      errors.modules =
+        "Add at least one module before publishing";
 
     }
-
-
-
-    // =========================
-    // VALIDATE LESSONS
-    // =========================
-
-    const moduleIds =
-      modules.map(
-        module => module._id
-      );
-
-
-
-    const lessons =
-      await Lesson.find({
-        moduleId: {
-          $in: moduleIds
-        }
-      });
-
-
 
     if (
       lessons.length === 0
     ) {
-      req.flash(
-        "error",
-        "Add at least one lesson before publishing"
-      );
 
-      return res.redirect(
-        `/admin-courses/${course._id}/publish`
+      errors.lessons =
+        "Add at least one lesson before publishing";
+
+    }
+
+    if (!course.title) {
+
+      errors.title =
+        "Course title missing";
+
+    }
+
+    if (!course.description) {
+
+      errors.description =
+        "Course description missing";
+
+    }
+
+    if (!course.thumbnail) {
+
+      errors.thumbnail =
+        "Course thumbnail missing";
+
+    }
+
+    if (!course.trailer) {
+
+      errors.trailer =
+        "Course trailer missing";
+
+    }
+
+    // FORM DATA
+
+    const {
+
+      pricingType,
+
+      currency,
+
+      basePrice,
+
+      discountPrice,
+
+      lifetimeAccess,
+
+      downloadableResources,
+
+      completionCertificate,
+
+      publishStatus
+
+    } = req.body;
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+
+        "pages/admin/courses/publish",
+
+        {
+
+          title:
+            "Velora - Publish Course",
+
+          activePage:
+            "courses",
+
+          isLoggedIn: true,
+
+          isAdmin: true,
+
+          course,
+
+          modules,
+
+          lessons,
+
+          canPublish: false,
+
+          errors,
+
+          formData: req.body
+
+        }
+
       );
 
     }
 
-
-
-    // =========================
-    // GET FORM DATA
-    // =========================
-
-    const {
-      pricingType,
-      currency,
-      basePrice,
-      discountPrice,
-      lifetimeAccess,
-      downloadableResources,
-      completionCertificate,
-      publishStatus
-    } = req.body;
-
-
-
-    // =========================
-    // SAVE COURSE SETTINGS
-    // =========================
+    // SAVE SETTINGS
 
     course.pricingType =
+
       pricingType || "paid";
 
     course.currency =
+
       currency || "INR";
 
-
-
     course.basePrice =
+
       pricingType === "free"
+
       ? 0
+
       : Number(
           basePrice || 0
         );
 
-
-
     course.discountPrice =
+
       pricingType === "free"
+
       ? 0
+
       : Number(
           discountPrice || 0
         );
 
-
-
     course.lifetimeAccess =
+
       lifetimeAccess === "on" ||
+
       lifetimeAccess === true;
 
-
-
     course.downloadableResources =
+
       downloadableResources === "on" ||
+
       downloadableResources === true;
 
-
-
     course.completionCertificate =
+
       completionCertificate === "on" ||
+
       completionCertificate === true;
 
-
-
-    // =========================
     // STATUS
-    // =========================
 
-    if (
+    course.status =
+
       publishStatus ===
       "Published (Live Now)"
-    ) {
-      course.status =
-        "published";
-    }
 
-    else {
-      course.status =
-        "draft";
-    }
+      ? "published"
+
+      : "draft";
 
     // SAVE
+
     await course.save();
-    req.flash( "success","Course published successfully"
-    );
+
+    // REDIRECT
+
     res.redirect(
       "/admin-courses"
     );
+
   }
+
   catch (err) {
+
     console.log(err);
-    req.flash("error","Failed to publish course")
+
     res.redirect(
       "/admin-courses"
     );
+
   }
+
 };
 
 

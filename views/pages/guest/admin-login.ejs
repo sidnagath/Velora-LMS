@@ -13,11 +13,11 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-2">Welcome Back Admin</h2>
                 <p class="text-gray-500 text-sm mb-8">Enter your credentials to access the admin control panel.</p>
 
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %>
+<% if(errors?.general){ %>
+<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:10px;margin-bottom:14px;">
+  <%= errors.general %>
+</p>
+<% } %>
 
                 <form action="/admin-login" method="POST" class="space-y-5">
                     <div>
@@ -31,9 +31,19 @@
                                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <input type="text" name="email" class="input-field pl-11" placeholder="name@example.com" required>
+                            <input type="text" name="email" value="<%= formData?.email || '' %>" class="input-field pl-11" placeholder="name@example.com" required>
                         </div>
                     </div>
+
+<% if(errors?.email){ %>
+
+<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+
+  <%= errors.email %>
+
+</p>
+
+<% } %>
 
                     <div>
                         <label
@@ -55,6 +65,16 @@
                             </div>
                         </div>
                     </div>
+                    
+<% if(errors?.password){ %>
+
+<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+
+  <%= errors.password %>
+
+</p>
+
+<% } %>
 
                     <button type="submit" class="btn-primary mt-6">Login</button>
                 </form>

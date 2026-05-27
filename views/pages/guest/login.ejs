@@ -13,11 +13,11 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-2">Welcome Back</h2>
                 <p class="text-gray-500 text-sm mb-8">Enter your credentials to access your sanctuary of learning.</p>
 
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %>
+               <% if(errors?.general){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.general %>
+               </p>
+               <% } %>
 
                         
                                 <form action="/login" method="POST" class="space-y-5">
@@ -35,10 +35,16 @@
                                                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
                                             </div>
-                                            <input type="email" name="email" class="input-field pl-11"
-                                                placeholder="name@example.com" required>
+                                            <input type="email" name="email"  value="<%= formData?.name || '' %>" class="input-field pl-11"
+                                                placeholder="name@example.com" >
                                         </div>
                                     </div>
+
+               <% if(errors?.email){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.email %>
+               </p>
+               <% } %>
 
                                     <div>
                                         <div class="flex justify-between items-center mb-2">
@@ -58,8 +64,8 @@
                                                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                                 </svg>
                                             </div>
-                                            <input type="password" name="password" class="input-field pl-11 pr-11"
-                                                placeholder="••••••••" required>
+                                            <input type="password" name="password" value="<%= formData?.name || '' %>" class="input-field pl-11 pr-11"
+                                                placeholder="••••••••">
                                             <div
                                                 class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer toggle-password">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400"
@@ -74,6 +80,11 @@
                                         </div>
                                     </div>
 
+               <% if(errors?.password){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.password %>
+               </p>
+               <% } %>
                                     <button type="submit" class="btn-primary mt-6">Login</button>
                                 </form>
 

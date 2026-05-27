@@ -41,6 +41,10 @@ router.get("/password-updated",noCache,userController.getPasswordUpdated);
 
 router.get("/user-dashboard", noCache, isUser,userController.getDashboard);
 
+router.get("/user-courses", noCache, isUser,userController.getCourses);
+
+router.get("/user-courses/:courseId", noCache, isUser,userController.getCourseDetails);
+
 router.get("/user-profile",noCache,isUser,userController.getProfileAccountDetails);
 
 router.post("/user-profile/update-avatar",isUser,upload.single("avatar"),userController.postUpdateAvatar);

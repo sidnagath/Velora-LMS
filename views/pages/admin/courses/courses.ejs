@@ -66,6 +66,11 @@
         <!-- Controls Row -->
         <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
           <div class="relative w-full md:max-w-md">
+ <% if(errors?.general){ %>
+<p class="text-sm text-red-500 mb-4">
+<%= errors.general %>
+</p>
+<% } %>
             <form action="/admin-courses" method="GET" class="flex items-center gap-3 w-full">
               <div class="flex-1">
                 <input type="text" name="search" value="<%= search || '' %>" placeholder="Search by title, category or instructor" class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white text-sm">
@@ -85,6 +90,7 @@
             </a>
           </div>
         </div>
+
 
         <!-- Table -->
         <div class="overflow-x-auto">
@@ -106,7 +112,7 @@
                     <td class="px-6 py-4">
                       <div class="flex flex-col">
                         <span class="font-bold text-gray-900"><%= course.title %></span>
-                        <span class="text-xs text-gray-500 mt-0.5">Last updated: <%= course.updatedAt.toDateString() %></span>
+                        <span class="text-xs text-gray-500 mt-0.5">Last updated: <%= course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : 'No update available' %></span>
                       </div>
                     </td>
                     <td class="px-6 py-4 text-gray-500">
@@ -137,7 +143,7 @@
                       </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
-                        <a href="/admin-courses/<%= course._id %>/basic-info/edit" class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
+                        <a href="/admin-courses/<%= course._id %>/edit" class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                           Edit
                         </a>
@@ -175,15 +181,103 @@
           </table>
         </div>
 
-        <!-- Pagination -->
-        <div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-            Showing 1 to <%= courses.length %> of <%= courses.length %> courses
-          </p>
-          <div class="flex items-center space-x-2">
-            <button class="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 text-white border-blue-600 shadow-sm text-sm font-semibold">1</button>
-          </div>
-        </div>
+
+        
+<!-- Pagination -->
+
+<div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+
+  <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+
+    Showing
+
+    <%= ((currentPage - 1) * LIMIT) + 1 %>
+
+    to
+
+    <%= Math.min(currentPage * LIMIT, totalCourses) %>
+
+    of
+
+    <%= totalCourses %>
+
+    courses
+
+  </p>
+
+  <% if(totalPages > 1){ %>
+
+<div class="flex items-center space-x-2">
+
+  <!-- PREVIOUS -->
+
+  <% if(currentPage > 1){ %>
+
+    <a
+
+    href="?page=<%= currentPage - 1 %><%= search ? `&search=${search}` : '' %>"
+
+    class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
+
+      Previous
+
+    </a>
+
+  <% } %>
+
+  <!-- PAGE NUMBERS -->
+
+  <% for(
+
+    let i = Math.max(1, currentPage - 1);
+
+    i <= Math.min(totalPages, currentPage + 1);
+
+    i++
+
+  ){ %>
+
+    <a
+
+    href="?page=<%= i %><%= search ? `&search=${search}` : '' %>"
+
+    class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold
+
+    <%= currentPage === i
+
+    ? 'bg-blue-600 text-white shadow-sm'
+
+    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+
+    %>">
+
+      <%= i %>
+
+    </a>
+
+  <% } %>
+
+  <!-- NEXT -->
+
+  <% if(currentPage < totalPages){ %>
+
+    <a
+
+    href="?page=<%= currentPage + 1 %><%= search ? `&search=${search}` : '' %>"
+
+    class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
+
+      Next
+
+    </a>
+
+  <% } %>
+
+</div>
+
+  <% } %>
+
+</div>
 
       </div>
     </div>

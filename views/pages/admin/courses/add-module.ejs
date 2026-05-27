@@ -67,21 +67,40 @@
           <h2 class="text-xl font-bold text-gray-900">Module Details</h2>
         </div>
 
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %>
+<% if(errors?.general){ %>
+
+<p class="input-error">
+
+  <%= errors.general %>
+
+</p>
+
+<% } %>
 
         <form action=" <%= isEdit ? `/admin-courses/${course._id}/modules/${module._id}/edit` : `/admin-courses/${course._id}/modules/create`%> " method="POST" class="space-y-8">
           <div>
             <label class="block text-sm font-bold text-gray-700 mb-2">Module Title</label>
-            <input type="text" name="title" placeholder="Introduction" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900">
+            <input type="text" name="title" value="<%= formData?.title || '' %>" placeholder="Introduction" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900">
+          <% if(errors?.title){ %>
+<p class="input-error">
+  <%= errors.title %>
+</p>
+
+<% } %>
           </div>
 
           <div>
             <label class="block text-sm font-bold text-gray-700 mb-2">Short Description</label>
-            <textarea name="description" rows="5" placeholder="Learn the foundational principles of user experience design, visual hierarchy, and modern interface design patterns through hands-on project building." class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900 resize-none"></textarea>
+            <textarea name="description" rows="5" <%= formData?.description || '' %> placeholder="Learn the foundational principles of user experience design, visual hierarchy, and modern interface design patterns through hands-on project building." class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900 resize-none"></textarea>
+        <% if(errors?.description){ %>
+
+<p class="input-error">
+
+  <%= errors.description %>
+
+</p>
+
+<% } %>
           </div>
 
       <!-- FOOTER ACTIONS -->
@@ -106,5 +125,15 @@
     </div>
   </div>
 </main>
+
+<style>
+  .input-error {
+    color: #EF4444 !important;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: block;
+  }
+</style>
 
 <%- include('../../../partials/footer') %>

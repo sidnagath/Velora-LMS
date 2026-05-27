@@ -14,20 +14,18 @@ router.get("/admin-dashboard",noCache,isAdmin,adminController.getAdminDashboard)
 router.get("/admin-users",noCache,isAdmin,adminController.getAdminUsers);
 
 // Course Management
-router.get("/admin-courses", noCache, isAdmin, adminController.getAdminCourses);
+router.get("/admin-courses",noCache,isAdmin,adminController.getAdminCourses);
 
-//Create course
-router.get("/admin-courses/create", noCache, isAdmin, adminController.getAdminCreateCourse);
+// CREATE COURSE
+router.get("/admin-courses/create",noCache,isAdmin,adminController.getAdminCreateCourse);
+router.post("/admin-courses/create",upload.fields([{ name: "thumbnail" },{ name: "trailer" }]),noCache,isAdmin,adminController.postAdminCreateCourse);
 
-//Delete course
-router.post("/admin-courses/:courseId/delete", noCache, isAdmin, adminController.postAdminDeleteCourse);
+// EDIT COURSE
+router.get("/admin-courses/:courseId/edit",noCache,isAdmin,adminController.getAdminEditCourse);
+router.post("/admin-courses/:courseId/edit",upload.fields([{ name: "thumbnail" },{ name: "trailer" }]),noCache,isAdmin,adminController.postAdminEditCourse);
 
-//Basic Info
-router.get("/admin-courses/:courseId/basic-info", noCache, isAdmin, adminController.getAdminCourseBasicInfo);
-router.post("/admin-courses/:courseId/basic-info",upload.fields([{name:"thumbnail"},{name:"trailer"}]),noCache, isAdmin, adminController.postAdminCourseBasicInfo);
-
-//Edit Course
-router.get("/admin-courses/:courseId/basic-info/edit", noCache, isAdmin, adminController.getAdminEditCourse);
+// DELETE COURSE
+router.post("/admin-courses/:courseId/delete",noCache,isAdmin,adminController.postAdminDeleteCourse);
 
 //Modules
 router.get('/admin-courses/:courseId/modules', noCache, isAdmin, adminController.getAdminCourseModules);

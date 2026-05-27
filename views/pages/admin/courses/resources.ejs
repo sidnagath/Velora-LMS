@@ -59,6 +59,15 @@
 
       <!-- MODULE & LESSON DROPDOWNS -->
       <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm mb-8">
+<% if(errors?.general){ %>
+
+<p class="text-sm text-red-500 mb-4">
+
+  <%= errors.general %>
+
+</p>
+
+<% } %>
         <h2 class="text-xl font-bold text-gray-900 mb-6">Select Module and Lesson</h2>
         <p class="text-sm text-gray-500 mb-6">Choose a specific module and lesson to upload resources and add materials for.</p>
         

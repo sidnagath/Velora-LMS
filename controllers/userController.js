@@ -37,351 +37,179 @@ exports.getHome=(req, res) => {
 
 
 //Login
-exports.getLogin=(req,res)=>{
+exports.getLogin = (req, res) => {
 
-   if (req.session.user) {
-    return res.redirect("/user-dashboard");
-  }
-
-  if (req.session.admin) {
-  return res.redirect("/admin-dashboard");
-}
-
-  res.render("pages/guest/login",{ 
-        title: 'Velora - Login', 
-        isLoggedIn: false,
-    })
-};
-
-exports.postLogin=async(req,res)=>{
-
-  const{email,password}=req.body;
-
-  const user=await User.findOne({email});
-
-  if(!user){
-    req.flash("error","User not found");
-    return res.redirect("/login");
-  }
-
-  const isMatch=await bcrypt.compare(password,user.password);
-
-  if(!isMatch){
-    req.flash("error","Invalid Credentials");
-    return res.redirect("/login");
-  }
-
- if (user.status === "inactive") {
-
-  req.flash("error", "Account is inactive");
-
-  return res.redirect("/login");
-}
-
-  req.session.user={
-    id:user._id,
-    name:user.name,
-    email:user.email
-  }
-
-  res.redirect("/user-dashboard");
-}
-
-
-//SignUp
-
-exports.getSignup=(req,res)=>{
-    
   if (req.session.user) {
     return res.redirect("/user-dashboard");
   }
 
   if (req.session.admin) {
-  return res.redirect("/admin-dashboard");
-}
-
-  res.render("pages/guest/signup",{ 
-        title: 'Velora - Sign Up', 
-        isLoggedIn: false 
-    });
-};
-
-exports.postSignup=async(req,res)=>{
-
-
-const{name,email,password,confirmPassword}=req.body;
-
-  // REGEX
-
-const nameRegex =
-/^[A-Za-z ]{3,30}$/;
-
-const emailRegex =
-/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const passwordRegex =
-/^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
-
-
-// EMPTY VALIDATION
-
-if (!name || !email || !password ||! confirmPassword) {
-
-  req.flash(
-    "error",
-    "All fields are required"
-  );
-
-  return res.redirect("/signup");
-}
-
-
-// NAME VALIDATION
-
-if (!nameRegex.test(name)) {
-
-  req.flash(
-    "error",
-    "Name should contain only letters"
-  );
-
-  return res.redirect("/signup");
-}
-
-
-// EMAIL VALIDATION
-
-if (!emailRegex.test(email)) {
-
-  req.flash(
-    "error",
-    "Invalid email format"
-  );
-
-  return res.redirect("/signup");
-}
-
-// PASSWORD MATCH VALIDATION
-
-if (
-  password !==
-  confirmPassword
-) {
-
-  req.flash(
-    "error",
-    "Passwords do not match"
-  );
-
-  return res.redirect(
-    "/signup"
-  );
-
-}
-
-// PASSWORD VALIDATION
-
-if (!passwordRegex.test(password)) {
-
-  req.flash(
-    "error",
-
-    "Password must contain uppercase letter and number"
-  );
-
-  return res.redirect("/signup");
-}
-
-  const existingUser=await User.findOne({email});
-
-  if(existingUser){
-    req.flash("error","User already exists");
-    return res.redirect("/signup");
+    return res.redirect("/admin-dashboard");
   }
 
+  res.render("pages/guest/login", {
 
+    title: "Velora - Login",
 
-  const otp=generateOTP();
+    isLoggedIn: false,
 
-  //STORE TEMP SIGNUP DATA
+    errors: {},
 
-  req.session.signupData={
-    name,
-    email,
-    password
-  }
-
-  //STORE OTP
-
-  req.session.signupOTP=otp;
-
-  req.session.signupOTPExpires= Date.now() +60 *1000;
-
-  //SEND EMAIL
-
-  const transporter=await createTransporter();
-
-  const info= await transporter.sendMail({
-     from:
-    '"Velora" <no-reply@velora.com>',
-
-    to: email,
-
-    subject:
-    "Signup OTP",
-
-    text:
-    `Your OTP is ${otp}`
+    formData: {}
 
   });
 
-
-  console.log(
-  "Preview URL:",
-  nodemailer.getTestMessageUrl(info)
-);
-
- res.redirect("/verify-signupotp");
 };
 
-
-exports.getVerifySignupOtp = (req, res) => {
-  res.render("pages/guest/verify-signupotp", {
-      title: 'Velora - Verify Signup OTP',
-      isLoggedIn: false
-  });
-};
-
-exports.postVerifySignupOtp = async (req, res) =>{
-
-  const {otp}=req.body;
-
-  // EXPIRY CHECK
-
-  if (
-    Date.now() >
-    req.session.signupOTPExpires
-  ) {
-
-    req.flash(
-      "error",
-      "OTP expired"
-    );
-
-    return res.redirect(
-      "/verify-signupotp"
-    );
-
-  }
-
-
-
-  // OTP CHECK
-
-  if (
-    otp !==
-    req.session.signupOTP
-  ) {
-
-    req.flash(
-      "error",
-      "Invalid OTP"
-    );
-
-    return res.redirect(
-      "/verify-signupotp"
-    );
-
-  }
-
-
-
-  // GET TEMP DATA
-
-  const {
-    name,
-    email,
-    password
-  } =
-  req.session.signupData;
-
-
-
-  // HASH PASSWORD
-
-  const hashedPassword =
-    await bcrypt.hash(
-      password,
-      10
-    );
-
-
-
-  // CREATE USER
-
-  await User.create({
-
-    name,
-
-    email,
-
-    password:
-    hashedPassword
-
-  });
-
-
-
-  // CLEANUP
-
-  delete req.session.signupData;
-
-  delete req.session.signupOTP;
-
-  delete req.session.signupOTPExpires;
-
-  res.redirect("/login");
-
-}
-
-exports.resendSignupOtp = async (req, res) => {
-
-  const otp = generateOTP();
-
-  req.session.signupOTP = otp;
-  req.session.signupOTPExpires= Date.now() + 60 * 1000;
-
-  const transporter = await createTransporter();
-
-  const info = await transporter.sendMail({
-    from: '"Velora" <no-reply@velora.com>',
-    to: req.session.signupData.email,
-    subject: "Resend OTP",
-    text: `Your OTP is ${otp}`
-  });
-
-  console.log("Preview URL:",nodemailer.getTestMessageUrl(info));
-
-  res.redirect("/verify-signupotp");
-};
-
-
-exports.googleAuthCallback =
-async (req, res) => {
+exports.postLogin = async (req, res) => {
 
   try {
 
+    const {
+      email,
+      password
+    } = req.body;
+
+    const trimmedEmail =
+      email?.trim();
+
+    const trimmedPassword =
+      password?.trim();
+
+    let errors = {};
+
+    // REQUIRED VALIDATIONS
+
+    if (!trimmedEmail) {
+
+      errors.email =
+        "Email is required";
+
+    }
+
+    if (!trimmedPassword) {
+
+      errors.password =
+        "Password is required";
+
+    }
+
+    // IF REQUIRED ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/login",
+        {
+          title: "Velora - Login",
+          isLoggedIn: false,
+          errors,
+
+          formData: {
+            email: trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // FIND USER
+
+    const user =
+      await User.findOne({
+        email: trimmedEmail
+      });
+
+    if (!user) {
+
+      return res.render(
+        "pages/guest/login",
+        {
+          title: "Velora - Login",
+          isLoggedIn: false,
+
+          errors: {
+            email:
+              "User not found"
+          },
+
+          formData: {
+            email: trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // PASSWORD CHECK
+
+    const isMatch =
+      await bcrypt.compare(
+        trimmedPassword,
+        user.password
+      );
+
+    if (!isMatch) {
+
+      return res.render(
+        "pages/guest/login",
+        {
+          title: "Velora - Login",
+          isLoggedIn: false,
+
+          errors: {
+            password:
+              "Invalid credentials"
+          },
+
+          formData: {
+            email: trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // ACCOUNT STATUS CHECK
+
+    if (
+      user.status === "inactive"
+    ) {
+
+      return res.render(
+        "pages/guest/login",
+        {
+          title: "Velora - Login",
+          isLoggedIn: false,
+
+          errors: {
+            general:
+              "Account is inactive"
+          },
+
+          formData: {
+            email: trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // SESSION
+
     req.session.user = {
 
-      id: req.user._id,
-
-      name: req.user.name,
-
-      email: req.user.email
+      id: user._id,
+      name: user.name,
+      email: user.email
 
     };
 
-    res.redirect("/user-dashboard");
+    res.redirect(
+      "/user-dashboard"
+    );
 
   }
 
@@ -389,12 +217,605 @@ async (req, res) => {
 
     console.log(err);
 
-    res.redirect("/login");
+    res.render(
+      "pages/guest/login",
+      {
+        title: "Velora - Login",
+        isLoggedIn: false,
+
+        errors: {
+          general:
+            "Something went wrong"
+        },
+
+        formData: {
+          email: req.body.email
+        }
+      }
+    );
+
   }
 
 };
 
 
+//SignUp
+
+exports.getSignup = (req, res) => {
+
+  if (req.session.user) {
+    return res.redirect("/user-dashboard");
+  }
+
+  if (req.session.admin) {
+    return res.redirect("/admin-dashboard");
+  }
+
+  res.render("pages/guest/signup", {
+    title: "Velora - Sign Up",
+    isLoggedIn: false,
+    errors: {},
+    formData: {}
+  });
+
+};
+
+exports.postSignup = async (req, res) => {
+
+  try {
+
+    const {
+      name,
+      email,
+      password,
+      confirmPassword
+    } = req.body;
+
+    const trimmedName =
+      name?.trim();
+
+    const trimmedEmail =
+      email?.trim();
+
+    const trimmedPassword =
+      password?.trim();
+
+    const trimmedConfirmPassword =
+      confirmPassword?.trim();
+
+    // REGEX
+
+    const nameRegex =
+      /^[A-Za-z ]{3,30}$/;
+
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
+
+    // ERRORS OBJECT
+
+    let errors = {};
+
+    // REQUIRED VALIDATIONS
+
+    if (!trimmedName) {
+      errors.name = "Name is required";
+    }
+
+    else if (!nameRegex.test(trimmedName)) {
+      errors.name =
+        "Name should contain only letters";
+    }
+
+    if (!trimmedEmail) {
+      errors.email = "Email is required";
+    }
+
+    else if (!emailRegex.test(trimmedEmail)) {
+      errors.email =
+        "Invalid email format";
+    }
+
+    if (!trimmedPassword) {
+      errors.password =
+        "Password is required";
+    }
+
+    else if (
+      !passwordRegex.test(trimmedPassword)
+    ) {
+
+      errors.password =
+        "Password must contain uppercase letter and number";
+
+    }
+
+    if (!trimmedConfirmPassword) {
+
+      errors.confirmPassword =
+        "Confirm Password is required";
+
+    }
+
+    else if (
+      trimmedPassword !==
+      trimmedConfirmPassword
+    ) {
+
+      errors.confirmPassword =
+        "Passwords do not match";
+
+    }
+
+    // CHECK EXISTING USER
+
+    const existingUser =
+      await User.findOne({
+        email: trimmedEmail
+      });
+
+    if (existingUser) {
+
+      errors.email =
+        "User already exists";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/signup",
+        {
+          title: "Velora - Sign Up",
+          isLoggedIn: false,
+          errors,
+
+          formData: {
+            name: trimmedName,
+            email: trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // GENERATE OTP
+
+    const otp = generateOTP();
+
+    // STORE TEMP SIGNUP DATA
+
+    req.session.signupData = {
+
+      name: trimmedName,
+      email: trimmedEmail,
+      password: trimmedPassword
+
+    };
+
+    // STORE OTP
+
+    req.session.signupOTP = otp;
+
+    req.session.signupOTPExpires =
+      Date.now() + 60 * 1000;
+
+    // SEND EMAIL
+
+    const transporter =
+      await createTransporter();
+
+    const info =
+      await transporter.sendMail({
+
+        from:
+          '"Velora" <no-reply@velora.com>',
+
+        to: trimmedEmail,
+
+        subject:
+          "Signup OTP",
+
+        text:
+          `Your OTP is ${otp}`
+
+      });
+
+    console.log(
+      "Preview URL:",
+      nodemailer.getTestMessageUrl(info)
+    );
+
+    res.redirect("/verify-signupotp");
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    res.render(
+      "pages/guest/signup",
+      {
+        title: "Velora - Sign Up",
+        isLoggedIn: false,
+
+        errors: {
+          general:
+            "Something went wrong"
+        },
+
+        formData: {
+          name: req.body.name,
+          email: req.body.email
+        }
+      }
+    );
+
+  }
+
+};
+
+
+
+exports.getVerifySignupOtp = (req, res) => {
+
+  res.render(
+    "pages/guest/verify-signupotp",
+    {
+      title:
+        "Velora - Verify Signup OTP",
+
+      isLoggedIn: false,
+
+      errors: {}
+    }
+  );
+
+};
+
+
+exports.postVerifySignupOtp = async (req, res) => {
+
+  try {
+
+    const { otp } = req.body;
+
+    let errors = {};
+
+    // EMPTY OTP
+
+    if (!otp?.trim()) {
+
+      errors.otp =
+        "OTP is required";
+
+    }
+
+    // SESSION CHECK
+
+    if (
+      !req.session.signupOTP ||
+      !req.session.signupOTPExpires ||
+      !req.session.signupData
+    ) {
+
+      errors.general =
+        "Session expired. Please signup again.";
+
+    }
+
+    // OTP EXPIRY
+
+    else if (
+      Date.now() >
+      req.session.signupOTPExpires
+    ) {
+
+      errors.general =
+        "OTP expired";
+
+    }
+
+    // OTP VALIDATION
+
+    else if (
+      otp.trim() !==
+      req.session.signupOTP
+    ) {
+
+      errors.otp =
+        "Invalid OTP";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/verify-signupotp",
+        {
+          title:
+            "Velora - Verify Signup OTP",
+
+          isLoggedIn: false,
+
+          errors
+        }
+      );
+
+    }
+
+    // GET SESSION DATA
+
+    const {
+      name,
+      email,
+      password
+    } = req.session.signupData;
+
+    // HASH PASSWORD
+
+    const hashedPassword =
+      await bcrypt.hash(
+        password,
+        10
+      );
+
+    // CREATE USER
+
+    await User.create({
+
+      name,
+
+      email,
+
+      password:
+        hashedPassword
+
+    });
+
+    // CLEANUP
+
+    delete req.session.signupData;
+
+    delete req.session.signupOTP;
+
+    delete req.session.signupOTPExpires;
+
+    res.redirect("/login");
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    res.render(
+      "pages/guest/verify-signupotp",
+      {
+        title:
+          "Velora - Verify Signup OTP",
+
+        isLoggedIn: false,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        }
+      }
+    );
+
+  }
+
+};
+
+exports.resendSignupOtp = async (req, res) => {
+
+  try {
+
+    // SESSION CHECK
+
+    if (
+      !req.session.signupData
+    ) {
+
+      return res.render(
+        "pages/guest/verify-signupotp",
+        {
+          title:
+            "Velora - Verify Signup OTP",
+
+          isLoggedIn: false,
+
+          errors: {
+            general:
+              "Session expired. Please signup again."
+          }
+        }
+      );
+
+    }
+
+    // GENERATE OTP
+
+    const otp =
+      generateOTP();
+
+    // STORE OTP
+
+    req.session.signupOTP =
+      otp;
+
+    req.session.signupOTPExpires =
+      Date.now() + 60 * 1000;
+
+    // SEND MAIL
+
+    const transporter =
+      await createTransporter();
+
+    const info =
+      await transporter.sendMail({
+
+        from:
+          '"Velora" <no-reply@velora.com>',
+
+        to:
+          req.session.signupData.email,
+
+        subject:
+          "Resend OTP",
+
+        text:
+          `Your OTP is ${otp}`
+
+      });
+
+    console.log(
+      "Preview URL:",
+      nodemailer.getTestMessageUrl(info)
+    );
+
+    res.redirect(
+      "/verify-signupotp"
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+      "pages/guest/verify-signupotp",
+      {
+        title:
+          "Velora - Verify Signup OTP",
+
+        isLoggedIn: false,
+
+        errors: {
+          general:
+            "Failed to resend OTP"
+        }
+      }
+    );
+
+  }
+
+};
+
+exports.googleAuthCallback =
+async (req, res) => {
+
+  try {
+
+    // GOOGLE AUTH FAILED
+
+    if (!req.user) {
+
+      return res.render(
+        "pages/guest/login",
+        {
+          title:
+            "Velora - Login",
+
+          isLoggedIn: false,
+
+          errors: {
+            general:
+              "Google authentication failed"
+          },
+
+          formData: {}
+        }
+      );
+
+    }
+
+    // INACTIVE ACCOUNT
+
+    if (
+      req.user.status ===
+      "inactive"
+    ) {
+
+      return res.render(
+        "pages/guest/login",
+        {
+          title:
+            "Velora - Login",
+
+          isLoggedIn: false,
+
+          errors: {
+            general:
+              "Account is inactive"
+          },
+
+          formData: {}
+        }
+      );
+
+    }
+
+    // SESSION
+
+    req.session.user = {
+
+      id:
+        req.user._id,
+
+      name:
+        req.user.name,
+
+      email:
+        req.user.email
+
+    };
+
+    res.redirect(
+      "/user-dashboard"
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+      "pages/guest/login",
+      {
+        title:
+          "Velora - Login",
+
+        isLoggedIn: false,
+
+        errors: {
+          general:
+            "Something went wrong"
+        },
+
+        formData: {}
+      }
+    );
+
+  }
+
+};
 
 // --- New Authentication Flows ---
 
@@ -407,82 +828,318 @@ exports.getAccountCreated = (req, res) => {
 };
 
 exports.getForgotPassword = (req, res) => {
-  res.render("pages/guest/forgot-password", {
-      title: 'Velora - Forgot Password',
-      isLoggedIn: false
-  });
+
+  res.render(
+    "pages/guest/forgot-password",
+    {
+      title:
+        "Velora - Forgot Password",
+
+      isLoggedIn: false,
+
+      errors: {},
+
+      formData: {}
+
+    }
+  );
+
 };
 
 exports.postForgotPassword = async (req, res) => {
 
-  const { email } = req.body;
+  try {
 
-  const user = await User.findOne({ email });
+    const { email } = req.body;
 
-  if (!user) {
-    req.flash("error", "User not found");
-    return res.redirect("/forgot-password");
+    const trimmedEmail =
+      email?.trim();
+
+    let errors = {};
+
+    // REQUIRED VALIDATION
+
+    if (!trimmedEmail) {
+
+      errors.email =
+        "Email is required";
+
+    }
+
+    // USER CHECK
+
+    const user =
+      await User.findOne({
+        email: trimmedEmail
+      });
+
+    if (!user) {
+
+      errors.email =
+        "User not found";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/forgot-password",
+        {
+          title:
+            "Velora - Forgot Password",
+
+          isLoggedIn: false,
+
+          errors,
+
+          formData: {
+            email: trimmedEmail
+          }
+        }
+      );
+
+    }
+
+    // GENERATE OTP
+
+    const otp =
+      generateOTP();
+
+    // STORE SESSION DATA
+
+    req.session.resetOTP =
+      otp;
+
+    req.session.resetEmail =
+      trimmedEmail;
+
+    req.session.otpExpires =
+      Date.now() + 60 * 1000;
+
+    // SEND EMAIL
+
+    const transporter =
+      await createTransporter();
+
+    const info =
+      await transporter.sendMail({
+
+        from:
+          '"Velora" <no-reply@velora.com>',
+
+        to:
+          trimmedEmail,
+
+        subject:
+          "Password Reset OTP",
+
+        text:
+          `Your OTP is ${otp}`
+
+      });
+
+    console.log(
+      "Preview URL:",
+      nodemailer.getTestMessageUrl(info)
+    );
+
+    res.redirect(
+      "/verify-otp"
+    );
+
   }
 
-  const otp = generateOTP();
+  catch (err) {
 
-  // store in session
-  req.session.resetOTP = otp;
-  req.session.resetEmail = email;
+    console.log(err);
 
-  // expiry
-  req.session.otpExpires = Date.now() + 60 * 1000;
+    return res.render(
+      "pages/guest/forgot-password",
+      {
+        title:
+          "Velora - Forgot Password",
 
-  const transporter = await createTransporter();
+        isLoggedIn: false,
 
-  const info = await transporter.sendMail({
-    from: '"Velora" <no-reply@velora.com>',
-    to: email,
-    subject: "Password Reset OTP",
-    text: `Your OTP is ${otp}`
-  });
+        errors: {
 
-  console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
+          general:
+            "Something went wrong"
 
-  res.redirect("/verify-otp");
+        },
+
+        formData: {
+          email: req.body.email
+        }
+      }
+    );
+
+  }
+
 };
 
-
 exports.getVerifyOtp = (req, res) => {
-  res.render("pages/guest/verify-otp", {
-      title: 'Velora - Verify OTP',
-      isLoggedIn: false
-  });
+
+  res.render(
+    "pages/guest/verify-otp",
+    {
+      title:
+        "Velora - Verify OTP",
+
+      isLoggedIn: false,
+
+      errors: {},
+
+      formData: {
+  otp
+}
+    }
+  );
+
 };
 
 exports.postVerifyOtp = (req, res) => {
 
-  const { otp } = req.body;
+  try {
 
-  if (Date.now() > req.session.otpExpires) {
+    const { otp } = req.body;
 
-    req.flash("error", "OTP expired");
-    return res.redirect("/verify-otp");
+    let errors = {};
+
+    // EMPTY OTP
+
+    if (!otp?.trim()) {
+
+      errors.otp =
+        "OTP is required";
+
+    }
+
+    // SESSION CHECK
+
+    if (
+      !req.session.resetOTP ||
+      !req.session.otpExpires ||
+      !req.session.resetEmail
+    ) {
+
+      errors.general =
+        "Session expired. Please try again.";
+
+    }
+
+    // OTP EXPIRY
+
+    else if (
+      Date.now() >
+      req.session.otpExpires
+    ) {
+
+      errors.general =
+        "OTP expired";
+
+    }
+
+    // INVALID OTP
+
+    else if (
+      otp.trim() !==
+      req.session.resetOTP
+    ) {
+
+      errors.otp =
+        "Invalid OTP";
+
+    }
+
+    // IF ERRORS
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/verify-otp",
+        {
+          title:
+            "Velora - Verify OTP",
+
+          isLoggedIn: false,
+
+          errors
+        }
+      );
+
+    }
+
+    // VERIFIED
+
+    req.session.otpVerified =
+      true;
+
+    res.redirect(
+      "/reset-password"
+    );
 
   }
 
-  if (otp !== req.session.resetOTP) {
+  catch (err) {
 
-    req.flash("error", "Invalid OTP");
-    return res.redirect("/verify-otp");
+    console.log(err);
+
+    return res.render(
+      "pages/guest/verify-otp",
+      {
+        title:
+          "Velora - Verify OTP",
+
+        isLoggedIn: false,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        }
+      }
+    );
 
   }
 
-  req.session.otpVerified = true;
-
-  res.redirect("/reset-password");
 };
 
+
 exports.getResetPassword = (req, res) => {
-  res.render("pages/guest/reset-password", {
-      title: 'Velora - Reset Password',
-      isLoggedIn: false
-  });
+
+  // OTP NOT VERIFIED
+
+  if (!req.session.otpVerified) {
+
+    return res.redirect(
+      "/forgot-password"
+    );
+
+  }
+
+  res.render(
+    "pages/guest/reset-password",
+    {
+      title:
+        "Velora - Reset Password",
+
+      isLoggedIn: false,
+
+      errors: {},
+
+      formData: {}
+
+    }
+  );
+
 };
 
 exports.postResetPassword = async (req, res) => {
@@ -494,94 +1151,102 @@ exports.postResetPassword = async (req, res) => {
       confirmPassword
     } = req.body;
 
-
-
     // SESSION CHECK
 
-    if (!req.session.otpVerified) {
+    if (
+      !req.session.otpVerified
+    ) {
 
       return res.redirect(
         "/forgot-password"
       );
+
     }
-
-
 
     // TRIM
 
     const trimmedPassword =
-      password.trim();
+      password?.trim();
 
     const trimmedConfirmPassword =
-      confirmPassword.trim();
-
-
+      confirmPassword?.trim();
 
     // REGEX
 
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
 
+    // ERRORS
 
+    let errors = {};
 
     // REQUIRED VALIDATION
 
+    if (!trimmedPassword) {
+
+      errors.password =
+        "Password is required";
+
+    }
+
     if (
-      !trimmedPassword ||
       !trimmedConfirmPassword
     ) {
 
-      req.flash(
-        "error",
-        "All fields are required"
-      );
+      errors.confirmPassword =
+        "Confirm Password is required";
 
-      return res.redirect(
-        "/reset-password"
-      );
     }
-
-
 
     // PASSWORD MATCH
 
     if (
+      trimmedPassword &&
+      trimmedConfirmPassword &&
       trimmedPassword !==
       trimmedConfirmPassword
     ) {
 
-      req.flash(
-        "error",
-        "Passwords do not match"
-      );
+      errors.confirmPassword =
+        "Passwords do not match";
 
-      return res.redirect(
-        "/reset-password"
-      );
     }
 
-
-
-    // PASSWORD REGEX VALIDATION
+    // PASSWORD REGEX
 
     if (
+      trimmedPassword &&
       !passwordRegex.test(
         trimmedPassword
       )
     ) {
 
-      req.flash(
-        "error",
+      errors.password =
+        "Password must contain uppercase letter, number and minimum 6 characters";
 
-        "Password must contain uppercase letter, number and minimum 6 characters"
-      );
-
-      return res.redirect(
-        "/reset-password"
-      );
     }
 
+    // IF ERRORS
 
+    if (
+      Object.keys(errors).length > 0
+    ) {
+
+      return res.render(
+        "pages/guest/reset-password",
+        {
+          title:
+            "Velora - Reset Password",
+
+          isLoggedIn: false,
+
+          errors,
+
+          formData: {}
+        }
+      );
+
+    }
 
     // HASH PASSWORD
 
@@ -590,8 +1255,6 @@ exports.postResetPassword = async (req, res) => {
         trimmedPassword,
         10
       );
-
-
 
     // UPDATE PASSWORD
 
@@ -611,9 +1274,7 @@ exports.postResetPassword = async (req, res) => {
 
     );
 
-
-
-    // CLEANUP SESSION
+    // CLEAN SESSION
 
     delete req.session.resetOTP;
 
@@ -622,15 +1283,6 @@ exports.postResetPassword = async (req, res) => {
     delete req.session.otpExpires;
 
     delete req.session.otpVerified;
-
-
-
-    req.flash(
-      "success",
-      "Password reset successful"
-    );
-
-
 
     res.redirect(
       "/password-updated"
@@ -642,8 +1294,23 @@ exports.postResetPassword = async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/reset-password"
+    return res.render(
+      "pages/guest/reset-password",
+      {
+        title:
+          "Velora - Reset Password",
+
+        isLoggedIn: false,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+      }
     );
 
   }
@@ -652,30 +1319,120 @@ exports.postResetPassword = async (req, res) => {
 
 exports.resendOtp = async (req, res) => {
 
-  const otp = generateOTP();
+  try {
 
-  req.session.resetOTP = otp;
-  req.session.otpExpires = Date.now() + 60 * 1000;
+    // SESSION CHECK
 
-  const transporter = await createTransporter();
+    if (
+      !req.session.resetEmail
+    ) {
 
-  const info = await transporter.sendMail({
-    from: '"Velora" <no-reply@velora.com>',
-    to: req.session.resetEmail,
-    subject: "Resend OTP",
-    text: `Your OTP is ${otp}`
-  });
+      return res.render(
+        "pages/guest/verify-otp",
+        {
+          title:
+            "Velora - Verify OTP",
 
-  console.log(nodemailer.getTestMessageUrl(info));
+          isLoggedIn: false,
 
-  res.redirect("/verify-otp");
+          errors: {
+
+            general:
+              "Session expired. Please try again."
+
+          }
+        }
+      );
+
+    }
+
+    // GENERATE OTP
+
+    const otp =
+      generateOTP();
+
+    // STORE OTP
+
+    req.session.resetOTP =
+      otp;
+
+    req.session.otpExpires =
+      Date.now() + 60 * 1000;
+
+    // SEND EMAIL
+
+    const transporter =
+      await createTransporter();
+
+    const info =
+      await transporter.sendMail({
+
+        from:
+          '"Velora" <no-reply@velora.com>',
+
+        to:
+          req.session.resetEmail,
+
+        subject:
+          "Resend OTP",
+
+        text:
+          `Your OTP is ${otp}`
+
+      });
+
+    console.log(
+      nodemailer.getTestMessageUrl(
+        info
+      )
+    );
+
+    res.redirect(
+      "/verify-otp"
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+      "pages/guest/verify-otp",
+      {
+        title:
+          "Velora - Verify OTP",
+
+        isLoggedIn: false,
+
+        errors: {
+
+          general:
+            "Failed to resend OTP"
+
+        }
+      }
+    );
+
+  }
+
 };
 
-exports.getPasswordUpdated = (req, res) => {
-  res.render("pages/guest/password-updated", {
-      title: 'Velora - Password Updated Successfully',
+exports.getPasswordUpdated = (
+  req,
+  res
+) => {
+
+  res.render(
+    "pages/guest/password-updated",
+    {
+      title:
+        "Velora - Password Updated Successfully",
+
       isLoggedIn: false
-  });
+    }
+  );
+
 };
 
 
@@ -1442,25 +2199,6 @@ exports.postUpdatePassword = async (req, res) => {
 
 };
 
-//User-Profile-Logout
-exports.getUserLogout =
-(req, res) => {
-
-  delete req.session.user;
-
-  req.logout?.(() => {});
-
-  res.setHeader(
-
-    "Cache-Control",
-
-    "no-store, no-cache, must-revalidate, private"
-  );
-
-  res.redirect("/login");
-
-};
-
 
 // ─── Courses Listing ─────────────────────────────────────────────────────────
 exports.getCourses = async (req, res) => {
@@ -1469,15 +2207,49 @@ exports.getCourses = async (req, res) => {
     const LIMIT = 6;
     const skip = (parseInt(page) - 1) * LIMIT;
 
-    const filter = { status: 'published', isDeleted: false };
-    if (category)          filter.category    = category;
-    if (level)             filter.level       = level;
-    if (price === 'free')  filter.pricingType = 'free';
-    if (price === 'paid')  filter.pricingType = 'paid';
-    if (search)            filter.title       = { $regex: search, $options: 'i' };
+const selectedCategory = category || "html";
+
+const filter = {
+  status: "published",
+  isDeleted: false,
+
+  category: {
+    $regex: new RegExp(`^${selectedCategory}$`, "i")
+  }
+};
+
+if (level) {
+  filter.level = {
+    $regex: new RegExp(`^${level}$`, "i")
+  };
+}
+
+if (price === "free") {
+  filter.pricingType = "free";
+}
+
+if (price === "paid") {
+  filter.pricingType = "paid";
+}
+
+if (search) {
+  filter.title = {
+    $regex: search,
+    $options: "i"
+  };
+}
 
     const [courses, totalCourses] = await Promise.all([
-      Course.find(filter).skip(skip).limit(LIMIT).lean(),
+      Course.find(filter)
+  .sort({
+  rating: -1,
+  reviewsCount: -1,
+  createdAt: -1,
+  _id: -1
+})
+  .skip(skip)
+  .limit(LIMIT)
+  .lean(),
       Course.countDocuments(filter)
     ]);
 
@@ -1486,17 +2258,37 @@ exports.getCourses = async (req, res) => {
     const isLoggedIn = !!(req.session && req.session.user);
     const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
 
-    res.render('pages/guest/courses', {
+//     const wishlist = await Wishlist.findOne({
+//   userId: req.user._id
+// });
+
+// const wishlistCourseIds =
+//   wishlist?.courses.map(
+//     course => course.toString()
+//   ) || [];
+
+// const cart = await Cart.findOne({
+//   userId: req.user._id
+// });
+
+// const cartCourseIds =
+//   cart?.courses.map(
+//     course => course.toString()
+//   ) || [];
+
+    res.render('pages/user/courses/courses', {
       title: 'Velora - Explore Courses',
       isLoggedIn,
       user,
       courses,
       totalPages,
       currentPage:      parseInt(page),
-      selectedCategory: category || '',
+      selectedCategory: selectedCategory,
       selectedLevel:    level    || '',
       selectedPrice:    price    || '',
-      search:           search   || ''
+      search:           search   || '',
+      wishlistCourseIds:[],
+      cartCourseIds:[]
     });
   } catch (err) {
     console.log(err);
@@ -1505,15 +2297,15 @@ exports.getCourses = async (req, res) => {
 };
 
 // ─── Course Detail ────────────────────────────────────────────────────────────
-exports.getCourseDetail = async (req, res) => {
+exports.getCourseDetails = async (req, res) => {
   try {
     const course = await Course.findOne({
-      _id:       req.params.id,
+      _id:       req.params.courseId,
       status:    'published',
       isDeleted: false
     }).lean();
 
-    if (!course) return res.redirect('/courses');
+    if (!course) return res.redirect('/user-courses');
 
     const modules = await Module.find({ courseId: course._id })
       .sort({ order: 1 }).lean();
@@ -1540,7 +2332,7 @@ exports.getCourseDetail = async (req, res) => {
     const isLoggedIn = !!(req.session && req.session.user);
     const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
 
-    res.render('pages/guest/course-detail', {
+    res.render('pages/user/courses/course-detail', {
       title:              `Velora - ${course.title}`,
       isLoggedIn,
       user,
@@ -1551,7 +2343,29 @@ exports.getCourseDetail = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.redirect('/courses');
+    res.redirect('/user-courses');
   }
 };
+
+
+
+//User-Profile-Logout
+exports.getUserLogout =
+(req, res) => {
+
+  delete req.session.user;
+
+  req.logout?.(() => {});
+
+  res.setHeader(
+
+    "Cache-Control",
+
+    "no-store, no-cache, must-revalidate, private"
+  );
+
+  res.redirect("/login");
+
+};
+
 
