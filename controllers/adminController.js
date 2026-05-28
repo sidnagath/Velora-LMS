@@ -382,6 +382,24 @@ exports.getAdminUsers = async (req, res) => {
     const totalPages =
       Math.ceil(totalUsers / limit);
 
+      const activeUsers =
+await User.countDocuments({
+  isDeleted: false,
+  status: "active"
+});
+
+const inactiveUsers =
+await User.countDocuments({
+  isDeleted: false,
+  status: "inactive"
+});
+
+const googleUsers =
+await User.countDocuments({
+  isDeleted: false,
+  authProvider: "google"
+});
+
     res.render(
   "pages/admin/user-management/users",
   {
@@ -400,6 +418,10 @@ exports.getAdminUsers = async (req, res) => {
     totalPages,
 
     totalUsers,
+
+    activeUsers,
+inactiveUsers,
+googleUsers,
 
     limit,
 
@@ -1280,6 +1302,19 @@ async (req, res) => {
         totalCourses / LIMIT
       );
 
+const publishedCourses =
+await Course.countDocuments({
+  status: "published"
+});
+
+const draftCourses =
+await Course.countDocuments({
+  status: "draft"
+});
+
+const instructorsCount =
+await Course.distinct("instructor");
+
     // RENDER
 
     res.render(
@@ -1306,6 +1341,10 @@ async (req, res) => {
         totalPages,
 
         totalCourses,
+        publishedCourses,
+draftCourses,
+instructorsCount:
+instructorsCount.length,
 
         LIMIT,
 

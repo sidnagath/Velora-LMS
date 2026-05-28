@@ -40,7 +40,7 @@
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Total Users</p>
             <h2 class="text-3xl font-extrabold text-gray-900 mt-1">
-              <%=users.length%>
+              <%=totalUsers%>
             </h2>
           </div>
 
@@ -55,7 +55,7 @@
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Active Users</p>
             <h2 class="text-3xl font-extrabold text-gray-900 mt-1">
-              <%=users.filter(user=>user.status==="active").length%>
+              <%=activeUsers%>
             </h2>
           </div>
 
@@ -70,7 +70,7 @@
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Inactive Users</p>
             <h2 class="text-3xl font-extrabold text-gray-900 mt-1">
-              <%=users.filter(user=>user.status==="inactive").length%>
+              <%=inactiveUsers%>
             </h2>
           </div>
 
@@ -85,7 +85,7 @@
               </div>
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Google Users</p>
-            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%=users.filter(user=>user.authProvider==="google").length%></h2>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%=googleUsers%></h2>
           </div>
         </div>
 

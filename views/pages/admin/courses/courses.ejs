@@ -26,7 +26,7 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Total Courses</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= courses.length %></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= totalCourses %></h2>
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -36,7 +36,7 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Published</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= courses.filter(course=>course.status==="published").length%></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= publishedCourses%></h2>
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -46,7 +46,7 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Drafts</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= courses.filter(course=>course.status==="draft").length%></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%=draftCourses %></h2>
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -56,7 +56,7 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Instructors</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= courses.map(course=>course.instructor).length%></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= instructorsCount%></h2>
         </div>
       </div>
 
