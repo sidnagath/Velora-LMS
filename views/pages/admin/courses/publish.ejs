@@ -187,11 +187,12 @@
 
           <!-- VISIBILITY & LAUNCH -->
           <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
-                    <% if (error.length> 0) { %>
-                    <p class="!text-red-600 font-medium mb-4">
-                    <%= error[0] %>
-                    </p>
-                    <% } %>
+            
+<% if(errors?.general){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.general %>
+</p>
+<% } %>
 
             <h2 class="text-xl font-bold text-gray-900 mb-8">Visibility & Launch</h2>
             <div class="space-y-6">

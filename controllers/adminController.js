@@ -320,127 +320,75 @@ exports.getAdminUsers = async (req, res) => {
   try {
 
     // SEARCH
-    const search =
-      req.query.search || "";
+    const search = req.query.search || "";
+
+    // FILTERS
+    const filterStatus    = req.query.status       || "";
+    const filterProvider  = req.query.authProvider || "";
+    const sortBy          = req.query.sortBy       || "newest";
 
     // PAGINATION
-    const page =
-      parseInt(req.query.page) || 1;
-
+    const page  = parseInt(req.query.page) || 1;
     const limit = 6;
+    const skip  = (page - 1) * limit;
 
-    const skip =
-      (page - 1) * limit;
+    // BUILD FILTER
+    const filter = { isDeleted: false };
 
-    // FILTER
-    const filter = {
+    if (search) {
+      filter.$or = [
+        { name:   { $regex: search, $options: "i" } },
+        { email:  { $regex: search, $options: "i" } },
+        { status: { $regex: search, $options: "i" } }
+      ];
+    }
 
-      isDeleted: false,
+    if (filterStatus)   filter.status       = filterStatus;
+    if (filterProvider) filter.authProvider = filterProvider;
 
-      $or: [
-
-        {
-          name: {
-            $regex: search,
-            $options: "i"
-          }
-        },
-
-        {
-          email: {
-            $regex: search,
-            $options: "i"
-          }
-        },
-
-        {
-          status: {
-            $regex: search,
-            $options: "i"
-          }
-        }
-
-      ]
-
+    // BUILD SORT
+    const sortMap = {
+      newest:   { createdAt: -1 },
+      oldest:   { createdAt:  1 },
+      nameAZ:   { name:       1 },
+      nameZA:   { name:      -1 }
     };
+    const sort = sortMap[sortBy] || { createdAt: -1 };
 
-    // USERS
-    const users =
-      await User.find(filter)
+    // QUERY
+    const users = await User.find(filter).sort(sort).skip(skip).limit(limit);
+    const totalUsers  = await User.countDocuments(filter);
+    const totalPages  = Math.ceil(totalUsers / limit);
 
-      .sort({ createdAt: -1 })
+    const activeUsers   = await User.countDocuments({ isDeleted: false, status: "active" });
+    const inactiveUsers = await User.countDocuments({ isDeleted: false, status: "inactive" });
+    const googleUsers   = await User.countDocuments({ isDeleted: false, authProvider: "google" });
 
-      .skip(skip)
+    res.render("pages/admin/user-management/users", {
+      title: "Velora - Admin Users",
+      isLoggedIn: true,
+      isAdmin: true,
+      users,
+      currentPage: page,
+      totalPages,
+      totalUsers,
+      activeUsers,
+      inactiveUsers,
+      googleUsers,
+      limit,
+      search,
+      filterStatus,
+      filterProvider,
+      sortBy
+    });
 
-      .limit(limit);
-
-    // TOTAL USERS
-    const totalUsers =
-      await User.countDocuments(filter);
-
-    // TOTAL PAGES
-    const totalPages =
-      Math.ceil(totalUsers / limit);
-
-      const activeUsers =
-await User.countDocuments({
-  isDeleted: false,
-  status: "active"
-});
-
-const inactiveUsers =
-await User.countDocuments({
-  isDeleted: false,
-  status: "inactive"
-});
-
-const googleUsers =
-await User.countDocuments({
-  isDeleted: false,
-  authProvider: "google"
-});
-
-    res.render(
-  "pages/admin/user-management/users",
-  {
-
-    title:
-      "Velora - Admin Users",
-
-    isLoggedIn: true,
-
-    isAdmin: true,
-
-    users,
-
-    currentPage: page,
-
-    totalPages,
-
-    totalUsers,
-
-    activeUsers,
-inactiveUsers,
-googleUsers,
-
-    limit,
-
-    search
-
-  }
-);
-
-  }
-
-  catch (err) {
-
+  } catch (err) {
     console.log(err);
-
     res.redirect("/admin-dashboard");
-
   }
 
 };
+
 
 exports.getAdminCreateUser = (
   req,
@@ -1202,203 +1150,106 @@ async (req, res) => {
   try {
 
     // SEARCH
+    const search = req.query.search?.trim() || "";
 
-    const search =
-      req.query.search?.trim();
+    // FILTERS
+    const filterStatus   = req.query.status   || "";
+    const filterLevel    = req.query.level    || "";
+    const filterCategory = req.query.category || "";
+    const sortBy         = req.query.sortBy   || "newestUpdated";
 
     // PAGE
-
-    const page =
-      Number(req.query.page) || 1;
-
-    // LIMIT
-
+    const page  = Number(req.query.page) || 1;
     const LIMIT = 12;
+    const skip  = (page - 1) * LIMIT;
 
-    // SKIP
-
-    const skip =
-      (page - 1) * LIMIT;
-
-    // FILTER
-
+    // BUILD FILTER
     const filter = {};
 
     if (search) {
-
       filter.$or = [
-
-        {
-
-          title: {
-
-            $regex: search,
-
-            $options: "i"
-
-          }
-
-        },
-
-        {
-
-          category: {
-
-            $regex: search,
-
-            $options: "i"
-
-          }
-
-        },
-
-        {
-
-          level: {
-
-            $regex: search,
-
-            $options: "i"
-
-          }
-
-        }
-
+        { title:    { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+        { level:    { $regex: search, $options: "i" } }
       ];
-
     }
 
-    // COURSES + COUNT
+    if (filterStatus)   filter.status   = filterStatus;
+    if (filterLevel)    filter.level    = filterLevel;
+    if (filterCategory) filter.category = { $regex: filterCategory, $options: "i" };
 
-    const [
+    // BUILD SORT
+    const sortMap = {
+      newestUpdated: { updatedAt: -1 },
+      oldestUpdated: { updatedAt:  1 },
+      titleAZ:       { title:      1 },
+      titleZA:       { title:     -1 }
+    };
+    const sort = sortMap[sortBy] || { updatedAt: -1 };
 
-      courses,
-
-      totalCourses
-
-    ] = await Promise.all([
-
-      Course.find(filter)
-
-      .sort({
-
-        updatedAt: -1
-
-      })
-
-      .skip(skip)
-
-      .limit(LIMIT),
-
+    // QUERY
+    const [courses, totalCourses] = await Promise.all([
+      Course.find(filter).sort(sort).skip(skip).limit(LIMIT),
       Course.countDocuments(filter)
-
     ]);
 
-    // TOTAL PAGES
+    const totalPages = Math.ceil(totalCourses / LIMIT);
 
-    const totalPages =
+    const publishedCourses  = await Course.countDocuments({ status: "published" });
+    const draftCourses      = await Course.countDocuments({ status: "draft" });
+    const instructorsCount  = await Course.distinct("instructor");
 
-      Math.ceil(
-        totalCourses / LIMIT
-      );
-
-const publishedCourses =
-await Course.countDocuments({
-  status: "published"
-});
-
-const draftCourses =
-await Course.countDocuments({
-  status: "draft"
-});
-
-const instructorsCount =
-await Course.distinct("instructor");
+    // Gather distinct categories for the filter dropdown
+    const allCategories = await Course.distinct("category");
 
     // RENDER
+    res.render("pages/admin/courses/courses", {
+      title: "Velora - Course Management",
+      isLoggedIn: true,
+      isAdmin: true,
+      courses,
+      search,
+      currentPage: page,
+      totalPages,
+      totalCourses,
+      publishedCourses,
+      draftCourses,
+      instructorsCount: instructorsCount.length,
+      allCategories: allCategories.filter(Boolean),
+      LIMIT,
+      filterStatus,
+      filterLevel,
+      filterCategory,
+      sortBy,
+      errors: {}
+    });
 
-    res.render(
-
-      "pages/admin/courses/courses",
-
-      {
-
-        title:
-          "Velora - Course Management",
-
-        isLoggedIn: true,
-
-        isAdmin: true,
-
-        courses,
-
-        search:
-          search || "",
-
-        currentPage:
-          page,
-
-        totalPages,
-
-        totalCourses,
-        publishedCourses,
-draftCourses,
-instructorsCount:
-instructorsCount.length,
-
-        LIMIT,
-
-        errors: {}
-
-      }
-
-    );
-
-  }
-
-  catch (err) {
-
+  } catch (err) {
     console.log(err);
-
-    return res.render(
-
-      "pages/admin/courses/courses",
-
-      {
-
-        title:
-          "Velora - Course Management",
-
-        isLoggedIn: true,
-
-        isAdmin: true,
-
-        courses: [],
-
-        search: "",
-
-        currentPage: 1,
-
-        totalPages: 1,
-
-        totalCourses: 0,
-
-        LIMIT: 12,
-
-        errors: {
-
-          general:
-            "Failed to load courses"
-
-        }
-
-      }
-
-    );
-
+    return res.render("pages/admin/courses/courses", {
+      title: "Velora - Course Management",
+      isLoggedIn: true,
+      isAdmin: true,
+      courses: [],
+      search: "",
+      currentPage: 1,
+      totalPages: 1,
+      totalCourses: 0,
+      publishedCourses: 0,
+      draftCourses: 0,
+      instructorsCount: 0,
+      allCategories: [],
+      LIMIT: 12,
+      filterStatus: "",
+      filterLevel: "",
+      filterCategory: "",
+      sortBy: "newestUpdated",
+      errors: { general: "Something went wrong. Please try again." }
+    });
   }
 
 };
+
 
 exports.getAdminCreateCourse =
 (req, res) => {
@@ -3064,10 +2915,10 @@ async (req, res) => {
 
     let {
       title,
-      description,
-      duration
+      description
     } = req.body;
 
+ 
     // TRIM
 
     title =
@@ -3076,8 +2927,6 @@ async (req, res) => {
     description =
       description?.trim();
 
-    duration =
-      duration?.trim();
 
     // VIDEO
 
@@ -3137,14 +2986,7 @@ async (req, res) => {
 
     }
 
-    // DURATION
-
-    if (!duration) {
-
-      errors.duration =
-        "Enter lesson duration";
-
-    }
+    
 
     // VIDEO
 
@@ -3240,10 +3082,7 @@ async (req, res) => {
 
             title,
 
-            description,
-
-            duration
-
+            description
           }
 
         }
@@ -3273,8 +3112,6 @@ async (req, res) => {
       title,
 
       description,
-
-      duration,
 
       video:
         "/uploads/" +
@@ -3346,10 +3183,7 @@ async (req, res) => {
             req.body.title,
 
           description:
-            req.body.description,
-
-          duration:
-            req.body.duration
+            req.body.description
 
         }
 
@@ -4165,158 +3999,886 @@ async (req, res) => {
 
 };
 
-exports.postAdminCourseResourcesUploadFile = async (req, res) => {
+exports.postAdminCourseResourcesUploadFile =
+async (req, res) => {
+
   try {
-    const { courseId } = req.params;
-    const { moduleId, lessonId } = req.body;
-    const file = req.file;
 
-    if (!moduleId || !lessonId) {
-      return res.status(400).json({ error: "Missing module or lesson reference" });
-    }
-    if (!file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
+    const { courseId } =
+      req.params;
 
-    let resource = await Resource.findOne({ courseId, moduleId, lessonId });
-    if (!resource) {
-      resource = new Resource({
-        courseId,
-        moduleId,
-        lessonId,
-        files: [],
-        links: [],
-        notes: ""
+    const {
+      moduleId,
+      lessonId
+    } = req.body;
+
+    const file =
+      req.file;
+
+    // VALIDATION
+
+    if (
+      !moduleId ||
+      !lessonId
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Select a module and lesson"
+
       });
+
     }
 
-    const fileSizeString = formatBytes(file.size);
+    if (!file) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Please upload a file"
+
+      });
+
+    }
+
+    // CHECK MODULE
+
+    const module =
+
+      await Module.findOne({
+
+        _id: moduleId,
+
+        courseId
+
+      });
+
+    if (!module) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Module not found"
+
+      });
+
+    }
+
+    // CHECK LESSON
+
+    const lesson =
+
+      await Lesson.findOne({
+
+        _id: lessonId,
+
+        moduleId
+
+      });
+
+    if (!lesson) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Lesson not found"
+
+      });
+
+    }
+
+    // RESOURCE
+
+    let resource =
+
+      await Resource.findOne({
+
+        courseId,
+
+        moduleId,
+
+        lessonId
+
+      });
+
+    if (!resource) {
+
+      resource =
+
+        new Resource({
+
+          courseId,
+
+          moduleId,
+
+          lessonId,
+
+          files: [],
+
+          links: [],
+
+          notes: ""
+
+        });
+
+    }
+
+    // FILE SIZE
+
+    const fileSizeString =
+
+      formatBytes(
+        file.size
+      );
+
+    // ADD FILE
+
     resource.files.push({
-      name: file.originalname,
-      path: "/uploads/" + file.filename,
-      size: fileSizeString
+
+      name:
+        file.originalname,
+
+      path:
+        "/uploads/" +
+        file.filename,
+
+      size:
+        fileSizeString
+
     });
 
     await resource.save();
-    res.json({ success: true, files: resource.files });
-  } catch (err) {
-    console.error("Error in postAdminCourseResourcesUploadFile:", err);
-    res.status(500).json({ error: "Internal server error" });
+
+    return res.json({
+
+      success: true,
+
+      files:
+        resource.files
+
+    });
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Something went wrong"
+
+    });
+
+  }
+
 };
 
-exports.postAdminCourseResourcesDeleteFile = async (req, res) => {
+exports.postAdminCourseResourcesDeleteFile =
+async (req, res) => {
+
   try {
-    const { courseId } = req.params;
-    const { moduleId, lessonId, fileId } = req.body;
 
-    if (!moduleId || !lessonId || !fileId) {
-      return res.status(400).json({ error: "Missing parameters" });
+    const { courseId } =
+      req.params;
+
+    const {
+      moduleId,
+      lessonId,
+      fileId
+    } = req.body;
+
+    // VALIDATION
+
+    if (
+      !moduleId ||
+      !lessonId ||
+      !fileId
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Missing required parameters"
+
+      });
+
     }
 
-    const resource = await Resource.findOne({ courseId, moduleId, lessonId });
+    // RESOURCE
+
+    const resource =
+
+      await Resource.findOne({
+
+        courseId,
+
+        moduleId,
+
+        lessonId
+
+      });
+
     if (!resource) {
-      return res.status(404).json({ error: "Resource not found" });
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Resource not found"
+
+      });
+
     }
 
-    resource.files = resource.files.filter(f => f._id.toString() !== fileId.toString());
+    // FILE EXISTS
+
+    const fileExists =
+
+      resource.files.some(
+
+        file =>
+
+          file._id.toString()
+
+          ===
+
+          fileId.toString()
+
+      );
+
+    if (!fileExists) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "File not found"
+
+      });
+
+    }
+
+    // DELETE FILE
+
+    resource.files =
+
+      resource.files.filter(
+
+        file =>
+
+          file._id.toString()
+
+          !==
+
+          fileId.toString()
+
+      );
+
     await resource.save();
 
-    res.json({ success: true, files: resource.files });
-  } catch (err) {
-    console.error("Error in postAdminCourseResourcesDeleteFile:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.json({
+
+      success: true,
+
+      files:
+        resource.files
+
+    });
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Something went wrong"
+
+    });
+
+  }
+
 };
 
-exports.postAdminCourseResourcesAddLink = async (req, res) => {
+
+
+exports.postAdminCourseResourcesAddLink =
+async (req, res) => {
+
   try {
-    const { courseId } = req.params;
-    const { moduleId, lessonId, title, url, description } = req.body;
 
-    if (!moduleId || !lessonId || !title || !url) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    const { courseId } =
+      req.params;
 
-    let resource = await Resource.findOne({ courseId, moduleId, lessonId });
-    if (!resource) {
-      resource = new Resource({
-        courseId,
-        moduleId,
-        lessonId,
-        files: [],
-        links: [],
-        notes: ""
+    let {
+
+      moduleId,
+
+      lessonId,
+
+      title,
+
+      url,
+
+      description
+
+    } = req.body;
+
+
+    // TRIM
+
+    title =
+      title?.trim();
+
+    url =
+      url?.trim();
+
+    description =
+      description?.trim();
+
+    // VALIDATION
+
+    if (
+      !moduleId ||
+      !lessonId
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Select a module and lesson"
+
       });
+
     }
+
+    if (!title) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Enter link title"
+
+      });
+
+    }
+
+    if (!url) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Enter link URL"
+
+      });
+
+    }
+
+    // URL VALIDATION
+
+    const urlRegex =
+      /^https?:\/\/.+/i;
+
+    if (
+      !urlRegex.test(url)
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Enter a valid URL"
+
+      });
+
+    }
+
+    // MODULE CHECK
+
+    const module =
+
+      await Module.findOne({
+
+        _id: moduleId,
+
+        courseId
+
+      });
+
+    if (!module) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Module not found"
+
+      });
+
+    }
+
+    // LESSON CHECK
+
+    const lesson =
+
+      await Lesson.findOne({
+
+        _id: lessonId,
+
+        moduleId
+
+      });
+
+    if (!lesson) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Lesson not found"
+
+      });
+
+    }
+
+    // RESOURCE
+
+    let resource =
+
+      await Resource.findOne({
+
+        courseId,
+
+        moduleId,
+
+        lessonId
+
+      });
+
+    if (!resource) {
+
+      resource =
+
+        new Resource({
+
+          courseId,
+
+          moduleId,
+
+          lessonId,
+
+          files: [],
+
+          links: [],
+
+          notes: ""
+
+        });
+
+    }
+
+    // ADD LINK
 
     resource.links.push({
+
       title,
+
       url,
-      description: description || ""
+
+      description:
+        description || ""
+
     });
 
     await resource.save();
-    res.json({ success: true, links: resource.links });
-  } catch (err) {
-    console.error("Error in postAdminCourseResourcesAddLink:", err);
-    res.status(500).json({ error: "Internal server error" });
+
+    return res.json({
+
+      success: true,
+
+      links:
+        resource.links
+
+    });
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Something went wrong"
+
+    });
+
+  }
+
 };
 
-exports.postAdminCourseResourcesDeleteLink = async (req, res) => {
+exports.postAdminCourseResourcesDeleteLink =
+async (req, res) => {
+
   try {
-    const { courseId } = req.params;
-    const { moduleId, lessonId, linkId } = req.body;
 
-    if (!moduleId || !lessonId || !linkId) {
-      return res.status(400).json({ error: "Missing parameters" });
-    }
+    const { courseId } =
+      req.params;
 
-    const resource = await Resource.findOne({ courseId, moduleId, lessonId });
-    if (!resource) {
-      return res.status(404).json({ error: "Resource not found" });
-    }
+    const {
 
-    resource.links = resource.links.filter(l => l._id.toString() !== linkId.toString());
-    await resource.save();
+      moduleId,
 
-    res.json({ success: true, links: resource.links });
-  } catch (err) {
-    console.error("Error in postAdminCourseResourcesDeleteLink:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+      lessonId,
 
-exports.postAdminCourseResourcesSaveNotes = async (req, res) => {
-  try {
-    const { courseId } = req.params;
-    const { moduleId, lessonId, notes } = req.body;
+      linkId
 
-    if (!moduleId || !lessonId) {
-      return res.status(400).json({ error: "Missing parameters" });
-    }
+    } = req.body;
 
-    let resource = await Resource.findOne({ courseId, moduleId, lessonId });
-    if (!resource) {
-      resource = new Resource({
-        courseId,
-        moduleId,
-        lessonId,
-        files: [],
-        links: [],
-        notes: ""
+    // VALIDATION
+
+    if (
+
+      !moduleId ||
+
+      !lessonId ||
+
+      !linkId
+
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Missing required parameters"
+
       });
+
     }
 
-    resource.notes = notes || "";
+    // RESOURCE
+
+    const resource =
+
+      await Resource.findOne({
+
+        courseId,
+
+        moduleId,
+
+        lessonId
+
+      });
+
+    if (!resource) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Resource not found"
+
+      });
+
+    }
+
+    // LINK EXISTS
+
+    const linkExists =
+
+      resource.links.some(
+
+        link =>
+
+          link._id.toString()
+
+          ===
+
+          linkId.toString()
+
+      );
+
+    if (!linkExists) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Link not found"
+
+      });
+
+    }
+
+    // DELETE LINK
+
+    resource.links =
+
+      resource.links.filter(
+
+        link =>
+
+          link._id.toString()
+
+          !==
+
+          linkId.toString()
+
+      );
+
     await resource.save();
 
-    res.json({ success: true, notes: resource.notes });
-  } catch (err) {
-    console.error("Error in postAdminCourseResourcesSaveNotes:", err);
-    res.status(500).json({ error: "Internal server error" });
+    return res.json({
+
+      success: true,
+
+      links:
+        resource.links
+
+    });
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Something went wrong"
+
+    });
+
+  }
+
+};
+
+
+exports.postAdminCourseResourcesSaveNotes =
+async (req, res) => {
+
+  try {
+
+    const { courseId } =
+      req.params;
+
+    let {
+
+      moduleId,
+
+      lessonId,
+
+      notes
+
+    } = req.body;
+
+    // TRIM
+
+    notes =
+      notes?.trim();
+
+    // VALIDATION
+
+    if (
+
+      !moduleId ||
+
+      !lessonId
+
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Select a module and lesson"
+
+      });
+
+    }
+
+    // MODULE CHECK
+
+    const module =
+
+      await Module.findOne({
+
+        _id: moduleId,
+
+        courseId
+
+      });
+
+    if (!module) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Module not found"
+
+      });
+
+    }
+
+    // LESSON CHECK
+
+    const lesson =
+
+      await Lesson.findOne({
+
+        _id: lessonId,
+
+        moduleId
+
+      });
+
+    if (!lesson) {
+
+      return res.status(404).json({
+
+        success: false,
+
+        error:
+          "Lesson not found"
+
+      });
+
+    }
+
+    // RESOURCE
+
+    let resource =
+
+      await Resource.findOne({
+
+        courseId,
+
+        moduleId,
+
+        lessonId
+
+      });
+
+    if (!resource) {
+
+      resource =
+
+        new Resource({
+
+          courseId,
+
+          moduleId,
+
+          lessonId,
+
+          files: [],
+
+          links: [],
+
+          notes: ""
+
+        });
+
+    }
+
+    // OPTIONAL LIMIT
+
+    if (
+
+      notes &&
+
+      notes.length > 10000
+
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Notes exceed maximum length"
+
+      });
+
+    }
+
+    // SAVE NOTES
+
+    resource.notes =
+
+      notes || "";
+
+    await resource.save();
+
+    return res.json({
+
+      success: true,
+
+      notes:
+        resource.notes
+
+    });
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Something went wrong"
+
+    });
+
+  }
+
 };
 
 exports.getAdminCoursePublish =
@@ -4408,6 +4970,8 @@ async (req, res) => {
 
         lessons,
 
+        errors: {},
+
         canPublish
 
       }
@@ -4477,58 +5041,6 @@ async (req, res) => {
 
       });
 
-    // ERRORS
-
-    let errors = {};
-
-    // VALIDATIONS
-
-    if (
-      modules.length === 0
-    ) {
-
-      errors.modules =
-        "Add at least one module before publishing";
-
-    }
-
-    if (
-      lessons.length === 0
-    ) {
-
-      errors.lessons =
-        "Add at least one lesson before publishing";
-
-    }
-
-    if (!course.title) {
-
-      errors.title =
-        "Course title missing";
-
-    }
-
-    if (!course.description) {
-
-      errors.description =
-        "Course description missing";
-
-    }
-
-    if (!course.thumbnail) {
-
-      errors.thumbnail =
-        "Course thumbnail missing";
-
-    }
-
-    if (!course.trailer) {
-
-      errors.trailer =
-        "Course trailer missing";
-
-    }
-
     // FORM DATA
 
     const {
@@ -4551,10 +5063,101 @@ async (req, res) => {
 
     } = req.body;
 
-    // IF ERRORS
+    // CHECK IF PUBLISHING
+
+    const isPublishing =
+
+      publishStatus ===
+      "Published (Live Now)";
+
+    // ERRORS
+
+    let errors = {};
+
+    // VALIDATE ONLY WHEN PUBLISHING
+
+    if (isPublishing) {
+
+      if (
+
+        modules.length === 0
+
+      ) {
+
+        errors.general =
+
+          "Add at least one module before publishing";
+
+      }
+
+      else if (
+
+        lessons.length === 0
+
+      ) {
+
+        errors.general =
+
+          "Add at least one lesson before publishing";
+
+      }
+
+      else if (
+
+        !course.title
+
+      ) {
+
+        errors.general =
+
+          "Course title missing";
+
+      }
+
+      else if (
+
+        !course.description
+
+      ) {
+
+        errors.general =
+
+          "Course description missing";
+
+      }
+
+      else if (
+
+        !course.thumbnail
+
+      ) {
+
+        errors.general =
+
+          "Course thumbnail missing";
+
+      }
+
+      else if (
+
+        !course.trailer
+
+      ) {
+
+        errors.general =
+
+          "Course trailer missing";
+
+      }
+
+    }
+
+    // RETURN WITH ERRORS
 
     if (
+
       Object.keys(errors).length > 0
+
     ) {
 
       return res.render(
@@ -4643,8 +5246,7 @@ async (req, res) => {
 
     course.status =
 
-      publishStatus ===
-      "Published (Live Now)"
+      isPublishing
 
       ? "published"
 
@@ -4654,7 +5256,7 @@ async (req, res) => {
 
     await course.save();
 
-    // REDIRECT
+    // SUCCESS
 
     res.redirect(
       "/admin-courses"

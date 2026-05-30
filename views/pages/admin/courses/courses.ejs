@@ -5,7 +5,7 @@
   <%- include('../../../partials/admin-sidebar', { activePage: 'courses' }) %>
 
   <div class="flex-1 flex flex-col h-screen overflow-y-auto">
-    
+
     <%- include('../../../partials/admin-header', { searchPlaceholder: 'Search courses' }) %>
 
     <div class="p-8 max-w-7xl mx-auto w-full">
@@ -17,7 +17,7 @@
         </p>
       </div>
 
-      <!-- STATS (Matching User Management Style) -->
+      <!-- STATS -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div class="flex justify-between items-start mb-4">
@@ -36,7 +36,7 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Published</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= publishedCourses%></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= publishedCourses %></h2>
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -46,7 +46,7 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Drafts</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%=draftCourses %></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= draftCourses %></h2>
         </div>
 
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -56,41 +56,164 @@
             </div>
           </div>
           <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Instructors</p>
-          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= instructorsCount%></h2>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= instructorsCount %></h2>
         </div>
       </div>
 
-      <!-- MAIN TABLE AREA (Matching User Management Style) -->
+      <!-- MAIN TABLE AREA -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        
+
         <!-- Controls Row -->
-        <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
-          <div class="relative w-full md:max-w-md">
- <% if(errors?.general){ %>
-<p class="text-sm text-red-500 mb-4">
-<%= errors.general %>
-</p>
-<% } %>
-            <form action="/admin-courses" method="GET" class="flex items-center gap-3 w-full">
-              <div class="flex-1">
-                <input type="text" name="search" value="<%= search || '' %>" placeholder="Search by title, category or instructor" class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white text-sm">
+        <div class="p-6 border-b border-gray-100">
+
+          <% if(errors?.general){ %>
+          <p class="mt-1 text-sm font-medium text-red-500 mb-3" style="color: var(--color-red-500);"><%= errors.general %></p>
+          <% } %>
+
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <!-- Search + hidden filter fields -->
+            <form id="courseFilterForm" action="/admin-courses" method="GET" class="flex flex-wrap items-center gap-3 w-full">
+              <input type="hidden" name="status"   id="cfHiddenStatus"   value="<%= filterStatus %>">
+              <input type="hidden" name="level"    id="cfHiddenLevel"    value="<%= filterLevel %>">
+              <input type="hidden" name="category" id="cfHiddenCategory" value="<%= filterCategory %>">
+              <input type="hidden" name="sortBy"   id="cfHiddenSortBy"   value="<%= sortBy %>">
+
+              <div class="flex-1 min-w-0">
+                <input type="text" name="search" id="courseSearchInput"
+                  value="<%= search || '' %>"
+                  placeholder="Search by title, category or instructor"
+                  class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition">
               </div>
-              <button type="submit" class="shrink-0 px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">Search</button>
+              <button type="submit"
+                class="shrink-0 px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+                Search
+              </button>
             </form>
+
+            <div class="flex items-center gap-3 shrink-0">
+              <!-- FILTER BUTTON -->
+              <div class="relative">
+                <button
+                  id="courseFilterBtn"
+                  type="button"
+                  onclick="toggleCourseFilterPanel()"
+                  class="inline-flex items-center px-4 py-2.5 border text-sm font-medium rounded-lg transition-colors
+                  <%= (filterStatus || filterLevel || filterCategory || sortBy !== 'newestUpdated') ? 'border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100' : 'border-transparent text-gray-700 bg-gray-100 hover:bg-gray-200' %>">
+                  <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                    </path>
+                  </svg>
+                  Filters
+                  <% if (filterStatus || filterLevel || filterCategory || sortBy !== 'newestUpdated') { %>
+                    <span class="ml-1.5 w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                  <% } %>
+                </button>
+
+                <!-- FILTER PANEL -->
+                <div
+                  id="courseFilterPanel"
+                  class="hidden absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50">
+
+                  <h3 class="text-sm font-bold text-gray-900 mb-4">Filter Courses</h3>
+
+                  <!-- Status -->
+                  <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+                    <div class="flex gap-2">
+                      <button type="button" onclick="setCourseFilter('status', '')"   id="cf-status-all"       class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">All</button>
+                      <button type="button" onclick="setCourseFilter('status', 'published')" id="cf-status-published" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Published</button>
+                      <button type="button" onclick="setCourseFilter('status', 'draft')"     id="cf-status-draft"     class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Draft</button>
+                    </div>
+                  </div>
+
+                  <!-- Level -->
+                  <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Level</label>
+                    <div class="flex gap-2 flex-wrap">
+                      <button type="button" onclick="setCourseFilter('level', '')"            id="cf-level-all"          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">All</button>
+                      <button type="button" onclick="setCourseFilter('level', 'Beginner')"    id="cf-level-Beginner"    class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Beginner</button>
+                      <button type="button" onclick="setCourseFilter('level', 'Intermediate')" id="cf-level-Intermediate" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Intermediate</button>
+                      <button type="button" onclick="setCourseFilter('level', 'Advanced')"    id="cf-level-Advanced"    class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Advanced</button>
+                    </div>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Category</label>
+                    <select id="cf-category-select" onchange="setCourseFilter('category', this.value)"
+                      class="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition">
+                      <option value="">All Categories</option>
+                      <% (allCategories || []).forEach(cat => { %>
+                        <option value="<%= cat %>" <%= filterCategory === cat ? 'selected' : '' %>><%= cat %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+
+                  <!-- Sort By -->
+                  <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sort By</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button type="button" onclick="setCourseFilter('sort', 'newestUpdated')" id="cf-sort-newestUpdated" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Newest Updated</button>
+                      <button type="button" onclick="setCourseFilter('sort', 'oldestUpdated')" id="cf-sort-oldestUpdated" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Oldest Updated</button>
+                      <button type="button" onclick="setCourseFilter('sort', 'titleAZ')"       id="cf-sort-titleAZ"       class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Title A–Z</button>
+                      <button type="button" onclick="setCourseFilter('sort', 'titleZA')"       id="cf-sort-titleZA"       class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Title Z–A</button>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex gap-2 pt-1 border-t border-gray-100">
+                    <button type="button" onclick="applyCourseFilters()"
+                      class="flex-1 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
+                      Apply Filters
+                    </button>
+                    <button type="button" onclick="clearCourseFilters()"
+                      class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <a href="/admin-courses/create"
+                class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Create Course
+              </a>
+            </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <button class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
-              <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-              Filters
-            </button>
-            <a href="/admin-courses/create" class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-              <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-              Create Course
-            </a>
+          <!-- Active filter chips -->
+          <% if (filterStatus || filterLevel || filterCategory || sortBy !== 'newestUpdated') { %>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <% if (filterStatus) { %>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+              Status: <%= filterStatus %>
+              <button onclick="removeCourseChip('status')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+            </span>
+            <% } %>
+            <% if (filterLevel) { %>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+              Level: <%= filterLevel %>
+              <button onclick="removeCourseChip('level')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+            </span>
+            <% } %>
+            <% if (filterCategory) { %>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+              Category: <%= filterCategory %>
+              <button onclick="removeCourseChip('category')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+            </span>
+            <% } %>
+            <% if (sortBy !== 'newestUpdated') { %>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+              Sort: <%= sortBy === 'oldestUpdated' ? 'Oldest Updated' : sortBy === 'titleAZ' ? 'Title A-Z' : 'Title Z-A' %>
+              <button onclick="removeCourseChip('sortBy')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+            </span>
+            <% } %>
           </div>
+          <% } %>
         </div>
-
 
         <!-- Table -->
         <div class="overflow-x-auto">
@@ -101,7 +224,7 @@
                 <th scope="col" class="px-6 py-4">Instructor</th>
                 <th scope="col" class="px-6 py-4">Category</th>
                 <th scope="col" class="px-6 py-4">Level</th>
-                 <th scope="col" class="px-6 py-4">Status</th>
+                <th scope="col" class="px-6 py-4">Status</th>
                 <th scope="col" class="px-6 py-4">Actions</th>
               </tr>
             </thead>
@@ -115,173 +238,196 @@
                         <span class="text-xs text-gray-500 mt-0.5">Last updated: <%= course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : 'No update available' %></span>
                       </div>
                     </td>
-                    <td class="px-6 py-4 text-gray-500">
-                      <%= course.instructor %>
-                    </td>
+                    <td class="px-6 py-4 text-gray-500"><%= course.instructor %></td>
                     <td class="px-6 py-4">
                       <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                         <%= course.category %>
                       </span>
                     </td>
-                    <td class="px-6 py-4 text-gray-500">
-                      <%= course.level %>
+                    <td class="px-6 py-4 text-gray-500"><%= course.level %></td>
+                    <td class="px-6 py-4">
+                      <% if (course.status==='published') { %>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
+                          <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>Published
+                        </span>
+                      <% } else { %>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                          <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>In Draft
+                        </span>
+                      <% } %>
                     </td>
-                        <td class="px-6 py-4">
-                        <% if (course.status==='published' ) { %>
-                          <span
-                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                            Published
-                          </span>
-                          <% } else if (course.status==='draft' ) { %>
-                            <span
-                              class="inline-flex items-center px-4 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                              <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
-                              In Draft
-                            </span>
-                            <% } %>
-                      </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
-                        <a href="/admin-courses/<%= course._id %>/edit" class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
+                        <a href="/admin-courses/<%= course._id %>/edit"
+                          class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                           Edit
                         </a>
-
-                        <form
-
-  action="/admin-courses/<%= course._id %>/delete"
-
-  method="POST"
-
-  onsubmit="return confirm('Delete this course?')"
-
->
-
-
-
-
-  <form action="/admin-courses/<%= course._id %>/delete" method="POST" onsubmit="return confirm('Delete this course?')">
-
-                        <button class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
-                          <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                          Delete
-                        </button>
-  </form>                        
+                        <form action="/admin-courses/<%= course._id %>/delete" method="POST" onsubmit="return confirm('Delete this course?')">
+                          <button type="submit"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
+                            <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Delete
+                          </button>
+                        </form>
                       </div>
                     </td>
                   </tr>
                 <% }) %>
               <% } else { %>
                 <tr>
-                  <td colspan="5" class="px-6 py-8 text-center text-gray-500">No courses found.</td>
+                  <td colspan="6" class="px-6 py-8 text-center text-gray-500">No courses found.</td>
                 </tr>
               <% } %>
             </tbody>
           </table>
         </div>
 
+        <!-- Pagination -->
+        <div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            Showing
+            <%= ((currentPage - 1) * LIMIT) + 1 %>
+            to
+            <%= Math.min(currentPage * LIMIT, totalCourses) %>
+            of
+            <%= totalCourses %>
+            courses
+          </p>
 
-        
-<!-- Pagination -->
+          <% if(totalPages > 1){ %>
+          <div class="flex items-center space-x-2">
+            <% const buildCourseQuery = (p) => {
+              const qs = new URLSearchParams();
+              if (search)         qs.set('search', search);
+              if (filterStatus)   qs.set('status', filterStatus);
+              if (filterLevel)    qs.set('level', filterLevel);
+              if (filterCategory) qs.set('category', filterCategory);
+              if (sortBy)         qs.set('sortBy', sortBy);
+              qs.set('page', p);
+              return '/admin-courses?' + qs.toString();
+            }; %>
 
-<div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <% if(currentPage > 1){ %>
+              <a href="<%= buildCourseQuery(currentPage - 1) %>"
+                class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">Previous</a>
+            <% } %>
 
-  <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <% for(let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++){ %>
+              <a href="<%= buildCourseQuery(i) %>"
+                class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
+                <%= currentPage === i ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100' %>">
+                <%= i %>
+              </a>
+            <% } %>
 
-    Showing
-
-    <%= ((currentPage - 1) * LIMIT) + 1 %>
-
-    to
-
-    <%= Math.min(currentPage * LIMIT, totalCourses) %>
-
-    of
-
-    <%= totalCourses %>
-
-    courses
-
-  </p>
-
-  <% if(totalPages > 1){ %>
-
-<div class="flex items-center space-x-2">
-
-  <!-- PREVIOUS -->
-
-  <% if(currentPage > 1){ %>
-
-    <a
-
-    href="?page=<%= currentPage - 1 %><%= search ? `&search=${search}` : '' %>"
-
-    class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
-
-      Previous
-
-    </a>
-
-  <% } %>
-
-  <!-- PAGE NUMBERS -->
-
-  <% for(
-
-    let i = Math.max(1, currentPage - 1);
-
-    i <= Math.min(totalPages, currentPage + 1);
-
-    i++
-
-  ){ %>
-
-    <a
-
-    href="?page=<%= i %><%= search ? `&search=${search}` : '' %>"
-
-    class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold
-
-    <%= currentPage === i
-
-    ? 'bg-blue-600 text-white shadow-sm'
-
-    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-
-    %>">
-
-      <%= i %>
-
-    </a>
-
-  <% } %>
-
-  <!-- NEXT -->
-
-  <% if(currentPage < totalPages){ %>
-
-    <a
-
-    href="?page=<%= currentPage + 1 %><%= search ? `&search=${search}` : '' %>"
-
-    class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
-
-      Next
-
-    </a>
-
-  <% } %>
-
-</div>
-
-  <% } %>
-
-</div>
+            <% if(currentPage < totalPages){ %>
+              <a href="<%= buildCourseQuery(currentPage + 1) %>"
+                class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">Next</a>
+            <% } %>
+          </div>
+          <% } %>
+        </div>
 
       </div>
     </div>
   </div>
 </main>
+
+<script>
+  // ─── State (seeded from server) ─────────────────────────────────────────────
+  const _cf = {
+    status:   '<%= filterStatus %>',
+    level:    '<%= filterLevel %>',
+    category: '<%= filterCategory %>',
+    sort:     '<%= sortBy %>'
+  };
+
+  // ─── Panel toggle ─────────────────────────────────────────────────────────
+  function toggleCourseFilterPanel() {
+    const panel = document.getElementById('courseFilterPanel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) syncCourseFilterUI();
+  }
+
+  document.addEventListener('click', function(e) {
+    const panel = document.getElementById('courseFilterPanel');
+    const btn   = document.getElementById('courseFilterBtn');
+    if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.classList.add('hidden');
+    }
+  });
+
+  // ─── Set a filter value ───────────────────────────────────────────────────
+  function setCourseFilter(key, value) {
+    _cf[key] = value;
+    if (key === 'category') {
+      document.getElementById('cf-category-select').value = value;
+    }
+    syncCourseFilterUI();
+  }
+
+  // ─── Sync button active states ────────────────────────────────────────────
+  function syncCourseFilterUI() {
+    const active   = 'bg-blue-600 text-white border-blue-600';
+    const inactive = 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50';
+
+    const statusBtns = { '': 'all', published: 'published', draft: 'draft' };
+    Object.entries(statusBtns).forEach(([val, key]) => {
+      const btn = document.getElementById('cf-status-' + key);
+      if (!btn) return;
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ' +
+        (_cf.status === val ? active : inactive);
+    });
+
+    const levelBtns = { '': 'all', Beginner: 'Beginner', Intermediate: 'Intermediate', Advanced: 'Advanced' };
+    Object.entries(levelBtns).forEach(([val, key]) => {
+      const btn = document.getElementById('cf-level-' + key);
+      if (!btn) return;
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ' +
+        (_cf.level === val ? active : inactive);
+    });
+
+    const sortBtns = { newestUpdated: 'newestUpdated', oldestUpdated: 'oldestUpdated', titleAZ: 'titleAZ', titleZA: 'titleZA' };
+    Object.entries(sortBtns).forEach(([val, key]) => {
+      const btn = document.getElementById('cf-sort-' + key);
+      if (!btn) return;
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ' +
+        (_cf.sort === val ? active : inactive);
+    });
+  }
+
+  // ─── Apply / Clear ────────────────────────────────────────────────────────
+  function applyCourseFilters() {
+    document.getElementById('cfHiddenStatus').value   = _cf.status;
+    document.getElementById('cfHiddenLevel').value    = _cf.level;
+    document.getElementById('cfHiddenCategory').value = _cf.category;
+    document.getElementById('cfHiddenSortBy').value   = _cf.sort;
+    document.getElementById('courseFilterForm').submit();
+  }
+
+  function clearCourseFilters() {
+    _cf.status   = '';
+    _cf.level    = '';
+    _cf.category = '';
+    _cf.sort     = 'newestUpdated';
+    syncCourseFilterUI();
+    document.getElementById('cfHiddenStatus').value   = '';
+    document.getElementById('cfHiddenLevel').value    = '';
+    document.getElementById('cfHiddenCategory').value = '';
+    document.getElementById('cfHiddenSortBy').value   = 'newestUpdated';
+    document.getElementById('courseFilterForm').submit();
+  }
+
+  function removeCourseChip(param) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(param);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+  }
+
+  // Init on load
+  syncCourseFilterUI();
+</script>
 
 <%- include('../../../partials/footer') %>

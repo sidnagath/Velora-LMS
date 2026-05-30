@@ -985,8 +985,11 @@ exports.postForgotPassword = async (req, res) => {
 exports.getVerifyOtp = (req, res) => {
 
   res.render(
+
     "pages/guest/verify-otp",
+
     {
+
       title:
         "Velora - Verify OTP",
 
@@ -994,10 +997,10 @@ exports.getVerifyOtp = (req, res) => {
 
       errors: {},
 
-      formData: {
-  otp
-}
+      formData: {}
+
     }
+
   );
 
 };
@@ -1062,17 +1065,33 @@ exports.postVerifyOtp = (req, res) => {
       Object.keys(errors).length > 0
     ) {
 
-      return res.render(
-        "pages/guest/verify-otp",
-        {
-          title:
-            "Velora - Verify OTP",
+     return res.render(
 
-          isLoggedIn: false,
+  "pages/guest/verify-otp",
 
-          errors
-        }
-      );
+  {
+
+    title:
+      "Velora - Verify OTP",
+
+    isLoggedIn: false,
+
+    errors: {
+
+      otp:
+        "Invalid OTP"
+
+    },
+
+    formData: {
+
+      otp
+
+    }
+
+  }
+
+);
 
     }
 
@@ -1445,15 +1464,53 @@ exports.getDashboard = async (req, res) => {
       req.session.user.id
     );
 
+    if (!user) {
+
+      return res.render(
+
+        "pages/guest/login",
+
+        {
+
+          title:
+            "Velora - Login",
+
+          isLoggedIn: false,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
+
     res.render(
+
       "pages/user/home/dashboard",
+
       {
-        title: "Velora - Dashboard",
+
+        title:
+          "Velora - Dashboard",
 
         isLoggedIn: true,
 
-        user
+        user,
+
+        errors: {},
+
+        formData: {}
+
       }
+
     );
 
   }
@@ -1462,59 +1519,40 @@ exports.getDashboard = async (req, res) => {
 
     console.log(err);
 
-    res.redirect("/login");
+    return res.render(
+
+      "pages/guest/login",
+
+      {
+
+        title:
+          "Velora - Login",
+
+        isLoggedIn: false,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
   }
 
 };
 
 //User-Profile-Account Details
 
-exports.getProfileAccountDetails = async (req, res) => {
+exports.getProfileAccountDetails =
+async (req, res) => {
 
   try {
-
-    const user = await User.findById(
-      req.session.user.id
-    );
-
-    res.render(
-      "pages/user/profile/account-details",
-      {
-        title:
-          "Velora - Profile",
-
-        isLoggedIn: true,
-
-        user
-      }
-    );
-
-  }
-
-  catch(err) {
-
-    console.log(err);
-
-    res.redirect("/login");
-  }
-
-};
-
-exports.postUpdateAvatar = async (req, res) => {
-
-  try {
-
-    if (!req.file) {
-
-      req.flash(
-        "error",
-        "Please select an image"
-      );
-
-      return res.redirect(
-        "/user-profile"
-      );
-    }
 
     const user =
       await User.findById(
@@ -1523,20 +1561,54 @@ exports.postUpdateAvatar = async (req, res) => {
 
     if (!user) {
 
-      return res.redirect("/login");
+      return res.render(
+
+        "pages/user/profile/account-details",
+
+        {
+
+          title:
+            "Velora - Profile",
+
+          isLoggedIn: true,
+
+          user: null,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
     }
 
-    user.avatar =
-      "/uploads/" + req.file.filename;
+    res.render(
 
-    await user.save();
+      "pages/user/profile/account-details",
 
-    req.flash(
-      "success",
-      "Profile picture updated"
+      {
+
+        title:
+          "Velora - Profile",
+
+        isLoggedIn: true,
+
+        user,
+
+        errors: {},
+
+        formData: {}
+
+      }
+
     );
-
-    res.redirect("/user-profile");
 
   }
 
@@ -1544,7 +1616,179 @@ exports.postUpdateAvatar = async (req, res) => {
 
     console.log(err);
 
-    res.redirect("/user-profile");
+    return res.render(
+
+      "pages/user/profile/account-details",
+
+      {
+
+        title:
+          "Velora - Profile",
+
+        isLoggedIn: true,
+
+        user: null,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
+  }
+
+};
+
+
+exports.postUpdateAvatar =
+async (req, res) => {
+
+  try {
+
+    const user =
+
+      await User.findById(
+        req.session.user.id
+      );
+
+    if (!user) {
+
+      return res.render(
+
+        "pages/user/profile/account-details",
+
+        {
+
+          title:
+            "Velora - Profile",
+
+          isLoggedIn: true,
+
+          user: null,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
+
+    // IMAGE REQUIRED
+
+    if (!req.file) {
+
+      return res.render(
+
+        "pages/user/profile/account-details",
+
+        {
+
+          title:
+            "Velora - Profile",
+
+          isLoggedIn: true,
+
+          user,
+
+          errors: {
+
+            avatar:
+              "Please select an image"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
+
+    // UPDATE AVATAR
+
+    user.avatar =
+
+      "/uploads/" +
+      req.file.filename;
+
+    await user.save();
+
+    return res.render(
+
+      "pages/user/profile/account-details",
+
+      {
+
+        title:
+          "Velora - Profile",
+
+        isLoggedIn: true,
+
+        user,
+
+        errors: {},
+
+        success: {
+
+          avatar:
+            "Profile picture updated"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+
+      "pages/user/profile/account-details",
+
+      {
+
+        title:
+          "Velora - Profile",
+
+        isLoggedIn: true,
+
+        user: null,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
   }
 
 };
@@ -1554,59 +1798,200 @@ exports.getEditProfile = async (req, res) => {
 
   try {
 
-    const user = await User.findById(
-      req.session.user.id
-    );
+    const user =
+      await User.findById(
+        req.session.user.id
+      );
+
+    if (!user) {
+
+      return res.render(
+
+        "pages/user/profile/edit-profile",
+
+        {
+
+          title:
+            "Edit Profile",
+
+          isLoggedIn: true,
+
+          user: null,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
 
     res.render(
-      'pages/user/profile/edit-profile',
+
+      "pages/user/profile/edit-profile",
+
       {
-        title: 'Edit Profile',
+
+        title:
+          "Edit Profile",
+
         isLoggedIn: true,
-        user
+
+        user,
+
+        errors: {},
+
+        formData: {}
+
       }
+
     );
 
-  } catch (err) {
+  }
+
+  catch (err) {
 
     console.log(err);
 
-    res.redirect('/user-profile');
+    return res.render(
+
+      "pages/user/profile/edit-profile",
+
+      {
+
+        title:
+          "Edit Profile",
+
+        isLoggedIn: true,
+
+        user: null,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
   }
+
 };
 
 exports.getChangePassword = async (req, res) => {
 
   try {
 
-    const user = await User.findById(
-      req.session.user.id
-    );
+    const user =
+      await User.findById(
+        req.session.user.id
+      );
 
+    if (!user) {
+
+      return res.render(
+
+        "pages/user/profile/change-password",
+
+        {
+
+          title:
+            "Change Password",
+
+          isLoggedIn: true,
+
+          user: null,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
 
     res.render(
-      'pages/user/profile/change-password',
+
+      "pages/user/profile/change-password",
+
       {
-        title: 'Change Password',
+
+        title:
+          "Change Password",
+
         isLoggedIn: true,
+
         user,
+
+        errors: {},
+
+        formData: {}
+
       }
+
     );
 
-  } catch (err) {
+  }
+
+  catch (err) {
 
     console.log(err);
 
-    res.redirect('/user-profile');
+    return res.render(
+
+      "pages/user/profile/change-password",
+
+      {
+
+        title:
+          "Change Password",
+
+        isLoggedIn: true,
+
+        user: null,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
   }
+
 };
 
 // ==============================
 // POST EDIT PROFILE
 // ==============================
 
-exports.postProfileDetails = async (req, res) => {
-
+exports.postProfileDetails =
+async (req, res) => {
 
   try {
 
@@ -1615,106 +2000,6 @@ exports.postProfileDetails = async (req, res) => {
       email,
       phone
     } = req.body;
-
-    // TRIM VALUES
-    const trimmedName =
-      name.trim();
-
-    const trimmedEmail =
-      email.trim();
-
-    const trimmedPhone =
-      phone ? phone.trim() : "";
-
-
-
-    // REGEX
-
-    const nameRegex =
-      /^[A-Za-z ]{3,30}$/;
-
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    const phoneRegex =
-       /^[6-9]\d{9}$/;
-
-
-
-    // REQUIRED VALIDATION
-
-    if (
-      !trimmedName ||
-      !trimmedEmail
-    ) {
-
-      req.flash(
-        "error",
-        "Name and email are required"
-      );
-
-      return res.redirect(
-        "/user-profile/edit"
-      );
-    }
-
-
-
-    // NAME VALIDATION
-
-    if (
-      !nameRegex.test(trimmedName)
-    ) {
-
-      req.flash(
-        "error",
-        "Name should contain only letters"
-      );
-
-      return res.redirect(
-        "/user-profile/edit"
-      );
-    }
-
-
-
-    // EMAIL VALIDATION
-
-    if (
-      !emailRegex.test(trimmedEmail)
-    ) {
-
-      req.flash(
-        "error",
-        "Invalid email format"
-      );
-
-      return res.redirect(
-        "/user-profile/edit"
-      );
-    }
-
-
-
-    // PHONE VALIDATION
-    // only validate if phone exists
-
-    if (
-      trimmedPhone &&
-      !phoneRegex.test(trimmedPhone)
-    ) {
-
-      req.flash(
-        "error",
-        "Enter valid 10 digit phone number"
-      );
-
-      return res.redirect(
-        "/user-profile/edit"
-      );
-    }
-
-
 
     // FIND USER
 
@@ -1725,135 +2010,434 @@ exports.postProfileDetails = async (req, res) => {
 
     if (!user) {
 
-      return res.redirect("/login");
+      return res.render(
+
+        "pages/user/profile/edit-profile",
+
+        {
+
+          title:
+            "Edit Profile",
+
+          isLoggedIn: true,
+
+          user: null,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: req.body
+
+        }
+
+      );
+
     }
- 
-  // GOOGLE USER CHECK
 
-  if(user.authProvider === "google"){
+    // TRIM VALUES
 
-  req.flash(
-    "error",
+    const trimmedName =
+      name?.trim();
 
-    "Google accounts cannot edit profile details"
+    const trimmedEmail =
+      email?.trim();
+
+    const trimmedPhone =
+      phone?.trim() || "";
+
+    // REGEX
+
+    const nameRegex =
+      /^[A-Za-z ]{3,30}$/;
+
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const phoneRegex =
+      /^[6-9]\d{9}$/;
+
+    // ERRORS
+
+    let errors = {};
+
+    // REQUIRED VALIDATION
+
+    if (!trimmedName) {
+
+      errors.name =
+        "Name is required";
+
+    }
+
+    if (!trimmedEmail) {
+
+      errors.email =
+        "Email is required";
+
+    }
+
+    // NAME VALIDATION
+
+    if (
+
+      trimmedName &&
+
+      !nameRegex.test(
+        trimmedName
+      )
+
+    ) {
+
+      errors.name =
+        "Name should contain only letters";
+
+    }
+
+    // EMAIL VALIDATION
+
+    if (
+
+      trimmedEmail &&
+
+      !emailRegex.test(
+        trimmedEmail
+      )
+
+    ) {
+
+      errors.email =
+        "Invalid email format";
+
+    }
+
+    // PHONE VALIDATION
+
+    if (
+
+      trimmedPhone &&
+
+      !phoneRegex.test(
+        trimmedPhone
+      )
+
+    ) {
+
+      errors.phone =
+        "Enter valid 10 digit phone number";
+
+    }
+
+    // GOOGLE USER CHECK
+
+    if (
+
+      user.authProvider ===
+      "google"
+
+    ) {
+
+      errors.general =
+
+        "Google accounts cannot edit profile details";
+
+    }
+
+    // RETURN ERRORS
+
+    if (
+
+      Object.keys(errors).length > 0
+
+    ) {
+
+      return res.render(
+
+        "pages/user/profile/edit-profile",
+
+        {
+
+          title:
+            "Edit Profile",
+
+          isLoggedIn: true,
+
+          user,
+
+          errors,
+
+          formData: {
+
+            name:
+              trimmedName,
+
+            email:
+              trimmedEmail,
+
+            phone:
+              trimmedPhone
+
+          }
+
+        }
+
+      );
+
+    }
+
+
+// FIND USER
+
+
+if (!user) {
+
+  return res.render(
+
+    "pages/user/profile/edit-profile",
+
+    {
+
+      title:
+        "Edit Profile",
+
+      isLoggedIn: true,
+
+      user: null,
+
+      errors: {
+
+        general:
+          "User not found"
+
+      },
+
+      formData: req.body
+
+    }
+
   );
 
-  return res.redirect(
-    "/user-profile"
-  );
-  }
+}
 
-    // DUPLICATE EMAIL CHECK
+// GOOGLE USER CHECK
+
+if (
+
+  user.authProvider ===
+  "google"
+
+) {
+
+  return res.render(
+
+    "pages/user/profile/edit-profile",
+
+    {
+
+      title:
+        "Edit Profile",
+
+      isLoggedIn: true,
+
+      user,
+
+      errors: {
+
+        general:
+          "Google accounts cannot edit profile details"
+
+      },
+
+      formData: {
+
+        name:
+          trimmedName,
+
+        email:
+          trimmedEmail,
+
+        phone:
+          trimmedPhone
+
+      }
+
+    }
+
+  );
+
+}
+
+       // DUPLICATE EMAIL CHECK
 
     const existingUser =
+
       await User.findOne({
 
-        email: trimmedEmail,
+        email:
+          trimmedEmail,
 
         _id: {
-          $ne: user._id
+
+          $ne:
+            user._id
+
         }
 
       });
 
     if (existingUser) {
 
-      req.flash(
-        "error",
-        "Email already exists"
+      return res.render(
+
+        "pages/user/profile/edit-profile",
+
+        {
+
+          title:
+            "Edit Profile",
+
+          isLoggedIn: true,
+
+          user,
+
+          errors: {
+
+            email:
+              "Email already exists"
+
+          },
+
+          formData: {
+
+            name:
+              trimmedName,
+
+            email:
+              trimmedEmail,
+
+            phone:
+              trimmedPhone
+
+          }
+
+        }
+
       );
 
-      return res.redirect(
-        "/user-profile/edit"
-      );
     }
 
     // EMAIL CHANGED
 
-if (
-  trimmedEmail !==
-  user.email
-) {
+    if (
 
-  // GENERATE OTP
+      trimmedEmail !==
 
-  const otp =
-    generateOTP();
+      user.email
+
+    ) {
+
+      // GENERATE OTP
+
+      const otp =
+
+        generateOTP();
+
+      // STORE PENDING DATA
+
+      req.session.pendingProfileUpdate = {
+
+        name:
+          trimmedName,
+
+        email:
+          trimmedEmail,
+
+        phone:
+          trimmedPhone
+
+      };
+
+      // STORE OTP
+
+      req.session.emailChangeOTP =
+        otp;
+
+      req.session.emailChangeOTPExpires =
+
+        Date.now() +
+
+        60 * 1000;
+
+      // SEND OTP
+
+      const transporter =
+
+        await createTransporter();
+
+      const info =
+
+        await transporter.sendMail({
+
+          from:
+
+            '"Velora" <no-reply@velora.com>',
+
+          to:
+            trimmedEmail,
+
+          subject:
+            "Verify Email Change",
+
+          text:
+            `Your OTP is ${otp}`
+
+        });
+
+      console.log(
+
+        "Preview URL:",
+
+        nodemailer.getTestMessageUrl(
+          info
+        )
+
+      );
+
+      return res.render(
+
+        "pages/user/profile/verify-email-change-otp",
+
+        {
+
+          title:
+            "Verify Email Change",
+
+          isLoggedIn: true,
+
+          user,
+
+          errors: {},
+
+          success: {
+
+            general:
+              "OTP sent to new email"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
 
 
-
-  // STORE PENDING DATA
-
-  req.session.pendingProfileUpdate = {
-
-    name: trimmedName,
-
-    email: trimmedEmail,
-
-    phone: trimmedPhone
-
-  };
-
-
-
-  // STORE OTP
-
-  req.session.emailChangeOTP =
-    otp;
-
-  req.session.emailChangeOTPExpires =
-    Date.now() + 60 * 1000;
-
-
-
-  // SEND OTP
-
-  const transporter =
-    await createTransporter();
-
-
-
-  const info =
-    await transporter.sendMail({
-
-      from:
-      '"Velora" <no-reply@velora.com>',
-
-      to:
-      trimmedEmail,
-
-      subject:
-      "Verify Email Change",
-
-      text:
-      `Your OTP is ${otp}`
-
-    });
-
-
-
-  console.log(
-    "Preview URL:",
-    nodemailer.getTestMessageUrl(info)
-  );
-
-
-
-  req.flash(
-    "success",
-    "OTP sent to new email"
-  );
-
-
-
-  return res.redirect(
-    "/verify-email-change-otp"
-  );
-
-}
-
-
-    // UPDATE DATA
+     // UPDATE DATA
 
     user.name =
       trimmedName;
@@ -1866,7 +2450,6 @@ if (
 
     await user.save();
 
-
     // UPDATE SESSION
 
     req.session.user.name =
@@ -1875,15 +2458,32 @@ if (
     req.session.user.email =
       user.email;
 
+    return res.render(
 
+      "pages/user/profile/account-details",
 
-    req.flash(
-      "success",
-      "Profile updated successfully"
-    );
+      {
 
-    res.redirect(
-      "/user-profile"
+        title:
+          "Velora - Profile",
+
+        isLoggedIn: true,
+
+        user,
+
+        errors: {},
+
+        success: {
+
+          general:
+            "Profile updated successfully"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }
@@ -1892,13 +2492,43 @@ if (
 
     console.log(err);
 
-    res.redirect(
-      "/user-profile/edit"
+    const user =
+
+      await User.findById(
+        req.session.user?.id
+      );
+
+    return res.render(
+
+      "pages/user/profile/edit-profile",
+
+      {
+
+        title:
+          "Edit Profile",
+
+        isLoggedIn: true,
+
+        user,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: req.body
+
+      }
+
     );
 
   }
 
 };
+
+
 
 exports.getVerifyEmailChangeOtp =
 (req, res) => {
@@ -1910,279 +2540,215 @@ exports.getVerifyEmailChangeOtp =
     {
 
       title:
-      "Verify Email Change",
+        "Verify Email Change",
 
-      isLoggedIn: true
+      isLoggedIn: true,
+
+      errors: {},
+
+      success: {},
+
+      formData: {}
 
     }
 
   );
 
 };
-
 
 exports.postVerifyEmailChangeOtp =
 async (req, res) => {
 
-  const { otp } =
-    req.body;
-
-
-
-  // EXPIRY CHECK
-
-  if (
-    Date.now() >
-    req.session.emailChangeOTPExpires
-  ) {
-
-    req.flash(
-      "error",
-      "OTP expired"
-    );
-
-    return res.redirect(
-      "/verify-email-change-otp"
-    );
-
-  }
-
-
-
-  // OTP CHECK
-
-  if (
-    otp !==
-    req.session.emailChangeOTP
-  ) {
-
-    req.flash(
-      "error",
-      "Invalid OTP"
-    );
-
-    return res.redirect(
-      "/verify-email-change-otp"
-    );
-
-  }
-
-
-
-  // FIND USER
-
-  const user =
-    await User.findById(
-      req.session.user.id
-    );
-
-
-
-  // GET PENDING DATA
-
-  const pendingData =
-    req.session.pendingProfileUpdate;
-
-
-
-  // UPDATE USER
-
-  user.name =
-    pendingData.name;
-
-  user.email =
-    pendingData.email;
-
-  user.phone =
-    pendingData.phone;
-
-
-
-  await user.save();
-
-
-
-  // UPDATE SESSION
-
-  req.session.user.name =
-    user.name;
-
-  req.session.user.email =
-    user.email;
-
-
-
-  // CLEANUP
-
-  delete req.session.pendingProfileUpdate;
-
-  delete req.session.emailChangeOTP;
-
-  delete req.session.emailChangeOTPExpires;
-
-
-
-  req.flash(
-    "success",
-    "Email updated successfully"
-  );
-
-
-
-  res.redirect(
-    "/user-profile"
-  );
-
-};
-
-// ==============================
-// POST CHANGE PASSWORD
-// ==============================
-
-exports.postUpdatePassword = async (req, res) => {
-
-
   try {
 
-    const {
-      newPassword,
-      confirmPassword
-    } = req.body;
+    const { otp } =
+      req.body;
 
-
-
-    // TRIM
-
-    const trimmedPassword =
-      newPassword.trim();
-
-    const trimmedConfirmPassword =
-      confirmPassword.trim();
-
-
-
-    // REGEX
-
-    const passwordRegex =
-      /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
-
-
-
-    // REQUIRED VALIDATION
+    // EXPIRY CHECK
 
     if (
-      !trimmedPassword ||
-      !trimmedConfirmPassword
+
+      Date.now() >
+
+      req.session.emailChangeOTPExpires
+
     ) {
 
-      req.flash(
-        "error",
-        "All fields are required"
+      return res.render(
+
+        "pages/user/profile/verify-email-change-otp",
+
+        {
+
+          title:
+            "Verify Email Change",
+
+          isLoggedIn: true,
+
+          errors: {
+
+            otp:
+              "OTP expired"
+
+          },
+
+          success: {},
+
+          formData: {
+
+            otp
+
+          }
+
+        }
+
       );
 
-      return res.redirect(
-        "/user-profile/change-password"
-      );
     }
 
-
-
-    // PASSWORD MATCH
+    // OTP CHECK
 
     if (
-      trimmedPassword !==
-      trimmedConfirmPassword
+
+      otp !==
+
+      req.session.emailChangeOTP
+
     ) {
 
-      req.flash(
-        "error",
-        "Passwords do not match"
+      return res.render(
+
+        "pages/user/profile/verify-email-change-otp",
+
+        {
+
+          title:
+            "Verify Email Change",
+
+          isLoggedIn: true,
+
+          errors: {
+
+            otp:
+              "Invalid OTP"
+
+          },
+
+          success: {},
+
+          formData: {
+
+            otp
+
+          }
+
+        }
+
       );
 
-      return res.redirect(
-        "/user-profile/change-password"
-      );
     }
-
-
-
-    // PASSWORD REGEX VALIDATION
-
-    if (
-      !passwordRegex.test(
-        trimmedPassword
-      )
-    ) {
-
-      req.flash(
-        "error",
-
-        "Password must contain uppercase letter, number and minimum 6 characters"
-      );
-
-      return res.redirect(
-        "/user-profile/change-password"
-      );
-    }
-
-
 
     // FIND USER
 
     const user =
+
       await User.findById(
+
         req.session.user.id
+
       );
 
     if (!user) {
 
-      return res.redirect("/login");
-    }
+      return res.render(
 
-// GOOGLE USER CHECK
+        "pages/user/profile/verify-email-change-otp",
 
-     if(user.authProvider === "google"){
+        {
 
-  req.flash(
-    "error",
+          title:
+            "Verify Email Change",
 
-    "Google accounts cannot change password"
-  );
+          isLoggedIn: true,
 
-  return res.redirect(
-    "/user-profile"
-  );
-}
+          errors: {
 
+            general:
+              "User not found"
 
-    // HASH PASSWORD
+          },
 
-    const hashedPassword =
-      await bcrypt.hash(
-        trimmedPassword,
-        10
+          success: {},
+
+          formData: {}
+
+        }
+
       );
 
+    }
 
+    // GET PENDING DATA
 
-    // UPDATE PASSWORD
+    const pendingData =
 
-    user.password =
-      hashedPassword;
+      req.session.pendingProfileUpdate;
+
+    // UPDATE USER
+
+    user.name =
+      pendingData.name;
+
+    user.email =
+      pendingData.email;
+
+    user.phone =
+      pendingData.phone;
 
     await user.save();
 
+    // UPDATE SESSION
 
+    req.session.user.name =
+      user.name;
 
-    req.flash(
-      "success",
-      "Password updated successfully"
-    );
+    req.session.user.email =
+      user.email;
 
+    // CLEANUP
 
+    delete req.session.pendingProfileUpdate;
 
-    res.redirect(
-      "/user-profile"
+    delete req.session.emailChangeOTP;
+
+    delete req.session.emailChangeOTPExpires;
+
+    return res.render(
+
+      "pages/user/profile/account-details",
+
+      {
+
+        title:
+          "Velora - Profile",
+
+        isLoggedIn: true,
+
+        user,
+
+        errors: {},
+
+        success: {
+
+          general:
+            "Email updated successfully"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }
@@ -2191,8 +2757,304 @@ exports.postUpdatePassword = async (req, res) => {
 
     console.log(err);
 
-    res.redirect(
-      "/user-profile/change-password"
+    return res.render(
+
+      "pages/user/profile/verify-email-change-otp",
+
+      {
+
+        title:
+          "Verify Email Change",
+
+        isLoggedIn: true,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        success: {},
+
+        formData: {}
+
+      }
+
+    );
+
+  }
+
+};
+
+// ==============================
+// POST CHANGE PASSWORD
+// ==============================
+
+exports.postUpdatePassword =
+async (req, res) => {
+
+  try {
+
+    const {
+
+      newPassword,
+
+      confirmPassword
+
+    } = req.body;
+
+    // FIND USER
+
+    const user =
+
+      await User.findById(
+
+        req.session.user.id
+
+      );
+
+    if (!user) {
+
+      return res.render(
+
+        "pages/user/profile/change-password",
+
+        {
+
+          title:
+            "Change Password",
+
+          isLoggedIn: true,
+
+          user: null,
+
+          errors: {
+
+            general:
+              "User not found"
+
+          },
+
+          formData: {}
+
+        }
+
+      );
+
+    }
+
+    // TRIM
+
+    const trimmedPassword =
+
+      newPassword?.trim();
+
+    const trimmedConfirmPassword =
+
+      confirmPassword?.trim();
+
+    // REGEX
+
+    const passwordRegex =
+
+      /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
+
+    // ERRORS
+
+    let errors = {};
+
+    // REQUIRED VALIDATION
+
+    if (!trimmedPassword) {
+
+      errors.newPassword =
+
+        "Password is required";
+
+    }
+
+    if (!trimmedConfirmPassword) {
+
+      errors.confirmPassword =
+
+        "Confirm password is required";
+
+    }
+
+    // PASSWORD MATCH
+
+    if (
+
+      trimmedPassword &&
+
+      trimmedConfirmPassword &&
+
+      trimmedPassword !==
+
+      trimmedConfirmPassword
+
+    ) {
+
+      errors.confirmPassword =
+
+        "Passwords do not match";
+
+    }
+
+    // PASSWORD REGEX
+
+    if (
+
+      trimmedPassword &&
+
+      !passwordRegex.test(
+
+        trimmedPassword
+
+      )
+
+    ) {
+
+      errors.newPassword =
+
+        "Password must contain uppercase letter, number and minimum 6 characters";
+
+    }
+
+    // GOOGLE USER CHECK
+
+    if (
+
+      user.authProvider ===
+
+      "google"
+
+    ) {
+
+      errors.general =
+
+        "Google accounts cannot change password";
+
+    }
+
+    // RETURN ERRORS
+
+    if (
+
+      Object.keys(errors).length > 0
+
+    ) {
+
+      return res.render(
+
+        "pages/user/profile/change-password",
+
+        {
+
+          title:
+            "Change Password",
+
+          isLoggedIn: true,
+
+          user,
+
+          errors,
+
+          formData: {}
+
+        }
+
+      );
+
+    }
+
+    // HASH PASSWORD
+
+    const hashedPassword =
+
+      await bcrypt.hash(
+
+        trimmedPassword,
+
+        10
+
+      );
+
+    // UPDATE PASSWORD
+
+    user.password =
+
+      hashedPassword;
+
+    await user.save();
+
+    return res.render(
+
+      "pages/guest/login",
+
+      {
+
+        title:
+          "Velora - Login",
+
+        isLoggedIn: false,
+
+        user,
+
+        errors: {},
+
+        success: {
+
+          general:
+            "Password updated successfully"
+
+        },
+
+        formData: {}
+
+      }
+
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    const user =
+
+      await User.findById(
+
+        req.session.user?.id
+
+      );
+
+    return res.render(
+
+      "pages/user/profile/change-password",
+
+      {
+
+        title:
+          "Change Password",
+
+        isLoggedIn: true,
+
+        user,
+
+        errors: {
+
+          general:
+            "Something went wrong"
+
+        },
+
+        formData: {}
+
+      }
+
     );
 
   }

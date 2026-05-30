@@ -31,14 +31,15 @@
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
                         <input type="text" name="otp" value="<%= formData?.otp || '' %>" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••" maxlength="6">
-                    </div>
-                </div>
-
-<% if(errors?.otp){ %>
+ <% if(errors?.otp){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
 <%= errors.otp %>
 </p>
 <% } %>
+                      </div>
+                </div>
+
+
 
                 <button type="submit" class="btn-primary w-full text-center block mb-6">Verify Code</button>
             </form>

@@ -11,7 +11,6 @@
       <!-- TOP NAVIGATION -->
       <%- include('../../../partials/admin-header', { searchPlaceholder: 'Search users' }) %>
 
-
       <div class="p-8 max-w-7xl mx-auto w-full">
         <!-- HEADER -->
         <div class="mb-8">
@@ -33,15 +32,9 @@
                   </path>
                 </svg>
               </div>
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
-                +12%
-              </span>
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Total Users</p>
-            <h2 class="text-3xl font-extrabold text-gray-900 mt-1">
-              <%=totalUsers%>
-            </h2>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= totalUsers %></h2>
           </div>
 
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -54,9 +47,7 @@
               </div>
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Active Users</p>
-            <h2 class="text-3xl font-extrabold text-gray-900 mt-1">
-              <%=activeUsers%>
-            </h2>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= activeUsers %></h2>
           </div>
 
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -69,9 +60,7 @@
               </div>
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Inactive Users</p>
-            <h2 class="text-3xl font-extrabold text-gray-900 mt-1">
-              <%=inactiveUsers%>
-            </h2>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= inactiveUsers %></h2>
           </div>
 
           <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
@@ -85,7 +74,7 @@
               </div>
             </div>
             <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Google Users</p>
-            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%=googleUsers%></h2>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= googleUsers %></h2>
           </div>
         </div>
 
@@ -93,62 +82,179 @@
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
           <!-- Controls Row -->
-          <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100">
-            <div class="relative w-full md:max-w-md">
+          <div class="p-6 border-b border-gray-100">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
-              <form
-  action="/admin-users"
-  method="GET"
-  class="flex items-center gap-3 w-full"
->
+              <!-- Search Form -->
+              <form id="userFilterForm" action="/admin-users" method="GET" class="flex flex-wrap items-center gap-3 w-full">
 
-  <div class="flex-1">
+                <!-- Hidden filter fields (populated by JS from the panel) -->
+                <input type="hidden" name="status"       id="hiddenStatus"   value="<%= filterStatus %>">
+                <input type="hidden" name="authProvider" id="hiddenProvider"  value="<%= filterProvider %>">
+                <input type="hidden" name="sortBy"       id="hiddenSortBy"    value="<%= sortBy %>">
 
-    <input
-      type="text"
-      name="search"
-      value="<%= search %>"
-      placeholder="Search by name, email or status"
+                <div class="flex-1 min-w-0">
+                  <input
+                    type="text"
+                    name="search"
+                    id="userSearchInput"
+                    value="<%= search %>"
+                    placeholder="Search by name, email or status"
+                    class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                  >
+                </div>
 
-      class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white text-sm"
-    >
-
-  </div>
-
-               <button type="submit"
+                <button type="submit"
                   class="shrink-0 px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
                   Search
                 </button>
+              </form>
 
-</form>
+              <div class="flex items-center gap-3 shrink-0">
+                <!-- FILTER BUTTON -->
+                <div class="relative">
+                  <button
+                    id="userFilterBtn"
+                    type="button"
+                    onclick="toggleUserFilterPanel()"
+                    class="inline-flex items-center px-4 py-2.5 border text-sm font-medium rounded-lg transition-colors
+                    <%= (filterStatus || filterProvider || sortBy !== 'newest') ? 'border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100' : 'border-transparent text-gray-700 bg-gray-100 hover:bg-gray-200' %>">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                      </path>
+                    </svg>
+                    Filters
+                    <% if (filterStatus || filterProvider || sortBy !== 'newest') { %>
+                      <span class="ml-1.5 w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                    <% } %>
+                  </button>
+
+                  <!-- FILTER PANEL -->
+                  <div
+                    id="userFilterPanel"
+                    class="hidden absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50">
+
+                    <h3 class="text-sm font-bold text-gray-900 mb-4">Filter Users</h3>
+
+                    <!-- Status -->
+                    <div class="mb-4">
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+                      <div class="flex gap-2 flex-wrap">
+                        <button type="button" onclick="setUserFilter('status', '')"
+                          id="uf-status-all"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          All
+                        </button>
+                        <button type="button" onclick="setUserFilter('status', 'active')"
+                          id="uf-status-active"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Active
+                        </button>
+                        <button type="button" onclick="setUserFilter('status', 'inactive')"
+                          id="uf-status-inactive"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Inactive
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Auth Provider -->
+                    <div class="mb-4">
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Auth Provider</label>
+                      <div class="flex gap-2 flex-wrap">
+                        <button type="button" onclick="setUserFilter('provider', '')"
+                          id="uf-provider-all"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          All
+                        </button>
+                        <button type="button" onclick="setUserFilter('provider', 'local')"
+                          id="uf-provider-local"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Email
+                        </button>
+                        <button type="button" onclick="setUserFilter('provider', 'google')"
+                          id="uf-provider-google"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Google
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Sort By -->
+                    <div class="mb-5">
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sort By</label>
+                      <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="setUserFilter('sort', 'newest')"
+                          id="uf-sort-newest"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Newest
+                        </button>
+                        <button type="button" onclick="setUserFilter('sort', 'oldest')"
+                          id="uf-sort-oldest"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Oldest
+                        </button>
+                        <button type="button" onclick="setUserFilter('sort', 'nameAZ')"
+                          id="uf-sort-nameAZ"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Name A–Z
+                        </button>
+                        <button type="button" onclick="setUserFilter('sort', 'nameZA')"
+                          id="uf-sort-nameZA"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">
+                          Name Z–A
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-2 pt-1 border-t border-gray-100">
+                      <button type="button" onclick="applyUserFilters()"
+                        class="flex-1 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
+                        Apply Filters
+                      </button>
+                      <button type="button" onclick="clearUserFilters()"
+                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <a href="/admin-create-user"
+                  class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                  <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                  </svg>
+                  Create User
+                </a>
+              </div>
             </div>
 
-            <div class="flex items-center gap-3">
-              <button
-                class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
-                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                  </path>
-                </svg>
-                Filters
-              </button>
-              <!-- <button
-                class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-colors">
-                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Export
-              </button> -->
-              <a href="/admin-create-user"
-                class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Create User
-              </a>
+            <!-- Active filter chips -->
+            <% if (filterStatus || filterProvider || sortBy !== 'newest') { %>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <% if (filterStatus) { %>
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                Status: <%= filterStatus %>
+                <button onclick="removeUserChip('status')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+              </span>
+              <% } %>
+              <% if (filterProvider) { %>
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                Provider: <%= filterProvider === 'local' ? 'Email' : 'Google' %>
+                <button onclick="removeUserChip('authProvider')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+              </span>
+              <% } %>
+              <% if (sortBy !== 'newest') { %>
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                Sort: <%= sortBy === 'oldest' ? 'Oldest' : sortBy === 'nameAZ' ? 'Name A-Z' : 'Name Z-A' %>
+                <button onclick="removeUserChip('sortBy')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+              </span>
+              <% } %>
             </div>
+            <% } %>
           </div>
 
           <!-- Table -->
@@ -159,13 +265,14 @@
                 <tr>
                   <th scope="col" class="px-6 py-4">Name</th>
                   <th scope="col" class="px-6 py-4">Email</th>
+                  <th scope="col" class="px-6 py-4">Auth Provider</th>
                   <th scope="col" class="px-6 py-4">Joined Date</th>
                   <th scope="col" class="px-6 py-4">Status</th>
                   <th scope="col" class="px-6 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
-                <% if(users && users.length> 0) { %>
+                <% if(users && users.length > 0) { %>
                   <% users.forEach(user=> { %>
                     <tr class="hover:bg-gray-50 transition-colors">
                       <td class="px-6 py-4">
@@ -174,36 +281,31 @@
                             <img src="<%= user.avatar %>" alt="<%= user.name %>"
                               class="w-10 h-10 rounded-full border border-gray-200">
                             <% } else { %>
-                              <!-- Placeholder Avatar based on name -->
                               <img
                                 src="https://ui-avatars.com/api/?name=<%= encodeURIComponent(user.name) %>&background=random"
                                 alt="<%= user.name %>" class="w-10 h-10 rounded-full border border-gray-200">
                               <% } %>
                                 <div>
-                                  <p class="text-sm font-bold text-gray-900">
-                                    <%= user.name %>
-                                  </p>
-                                  <p class="text-xs text-gray-500 mt-0.5">ID: <%= user._id %>
-                                  </p>
+                                  <p class="text-sm font-bold text-gray-900"><%= user.name %></p>
+                                  <p class="text-xs text-gray-500 mt-0.5">ID: <%= user._id %></p>
                                 </div>
                         </div>
                       </td>
-                      <td class="px-6 py-4 text-gray-500">
-                        <%= user.email %>
+                      <td class="px-6 py-4 text-gray-500"><%= user.email %></td>
+                      <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                          <%= user.authProvider %>
+                        </span>
                       </td>
-                      <td class="px-6 py-4 text-gray-500">
-                        <%= user.createdAt.toDateString() %>
-                      </td>
+                      <td class="px-6 py-4 text-gray-500"><%= user.createdAt.toDateString() %></td>
                       <td class="px-6 py-4">
                         <% if (user.status==='active' ) { %>
-                          <span
-                            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
+                          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
                             <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
                             Active
                           </span>
                           <% } else if (user.status==='inactive' ) { %>
-                            <span
-                              class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
                               <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
                               Inactive
                             </span>
@@ -211,9 +313,8 @@
                       </td>
                       <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
-                          <a href="/admin-edit-user/<%= user._id %>""
-                            class=" inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold
-                            rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
+                          <a href="/admin-edit-user/<%= user._id %>"
+                            class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                             <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
@@ -230,7 +331,6 @@
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                 </path>
                               </svg>
-
                               Delete
                             </button>
                           </form>
@@ -240,7 +340,7 @@
                     <% }) %>
                       <% } else { %>
                         <tr>
-                          <td colspan="5" class="px-6 py-8 text-center text-gray-500">No users found.</td>
+                          <td colspan="6" class="px-6 py-8 text-center text-gray-500">No users found.</td>
                         </tr>
                         <% } %>
               </tbody>
@@ -249,100 +349,140 @@
 
           <!-- Pagination -->
           <div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-
-            <!-- LEFT -->
             <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-
               Showing
-
               <%= users.length ? ((currentPage - 1) * limit) + 1 : 0 %>
-
-                to
-
-                <%= ((currentPage - 1) * limit) + users.length %>
-
-                  of
-
-                  <%= totalUsers %>
-
-                    users
-
+              to
+              <%= ((currentPage - 1) * limit) + users.length %>
+              of
+              <%= totalUsers %>
+              users
             </p>
 
+            <div class="flex items-center space-x-2">
+              <% const buildUserQuery = (p) => {
+                const qs = new URLSearchParams();
+                if (search)         qs.set('search', search);
+                if (filterStatus)   qs.set('status', filterStatus);
+                if (filterProvider) qs.set('authProvider', filterProvider);
+                if (sortBy)         qs.set('sortBy', sortBy);
+                qs.set('page', p);
+                return '/admin-users?' + qs.toString();
+              }; %>
 
+              <% if(currentPage > 1){ %>
+                <a href="<%= buildUserQuery(currentPage - 1) %>"
+                  class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                  Previous
+                </a>
+              <% } %>
 
-            <!-- RIGHT -->
-<div class="flex items-center space-x-2">
+              <% for(let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++){ %>
+                <a href="<%= buildUserQuery(i) %>"
+                  class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
+                  <%= currentPage === i ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' %>">
+                  <%= i %>
+                </a>
+              <% } %>
 
-  <!-- PREVIOUS -->
-
-  <% if(currentPage > 1){ %>
-
-    <a
-      href="/admin-users?page=<%= currentPage - 1 %>&search=<%= search %>"
-
-      class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
-
-      Previous
-
-    </a>
-
-  <% } %>
-
-  <!-- PAGE NUMBERS -->
-
-  <% for(
-
-    let i = Math.max(1, currentPage - 1);
-
-    i <= Math.min(totalPages, currentPage + 1);
-
-    i++
-
-  ){ %>
-
-    <a
-
-      href="/admin-users?page=<%= i %>&search=<%= search %>"
-
-      class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
-
-      <%= currentPage === i
-
-      ? 'bg-blue-600 text-white shadow-sm'
-
-      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-
-      %>">
-
-      <%= i %>
-
-    </a>
-
-  <% } %>
-
-  <!-- NEXT -->
-
-  <% if(currentPage < totalPages){ %>
-
-    <a
-
-      href="/admin-users?page=<%= currentPage + 1 %>&search=<%= search %>"
-
-      class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
-
-      Next
-
-    </a>
-
-  <% } %>
-
-</div>
-
+              <% if(currentPage < totalPages){ %>
+                <a href="<%= buildUserQuery(currentPage + 1) %>"
+                  class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">
+                  Next
+                </a>
+              <% } %>
+            </div>
           </div>
 
         </div>
       </div>
+    </div>
   </main>
 
-  <%- include('../../../partials/footer') %>
+  <script>
+    // ─── State (seeded from server) ────────────────────────────────────────────
+    const _uf = {
+      status:   '<%= filterStatus %>',
+      provider: '<%= filterProvider %>',
+      sort:     '<%= sortBy %>'
+    };
+
+    // ─── Panel toggle ──────────────────────────────────────────────────────────
+    function toggleUserFilterPanel() {
+      const panel = document.getElementById('userFilterPanel');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) syncUserFilterUI();
+    }
+
+    document.addEventListener('click', function(e) {
+      const panel = document.getElementById('userFilterPanel');
+      const btn   = document.getElementById('userFilterBtn');
+      if (!panel.classList.contains('hidden') && !panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.add('hidden');
+      }
+    });
+
+    // ─── Set a filter value ────────────────────────────────────────────────────
+    function setUserFilter(key, value) {
+      _uf[key] = value;
+      syncUserFilterUI();
+    }
+
+    // ─── Sync button active states ─────────────────────────────────────────────
+    function syncUserFilterUI() {
+      const active   = 'bg-blue-600 text-white border-blue-600';
+      const inactive = 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50';
+
+      const statusBtns = { '': 'all', active: 'active', inactive: 'inactive' };
+      Object.entries(statusBtns).forEach(([val, key]) => {
+        const btn = document.getElementById('uf-status-' + key);
+        if (btn) btn.className = btn.className.replace(/bg-\S+|text-\S+|border-\S+|hover:\S+/g, '').trim();
+        if (btn) btn.classList.add(...(_uf.status === val ? active : inactive).split(' '));
+      });
+
+      const providerBtns = { '': 'all', local: 'local', google: 'google' };
+      Object.entries(providerBtns).forEach(([val, key]) => {
+        const btn = document.getElementById('uf-provider-' + key);
+        if (btn) btn.className = btn.className.replace(/bg-\S+|text-\S+|border-\S+|hover:\S+/g, '').trim();
+        if (btn) btn.classList.add(...(_uf.provider === val ? active : inactive).split(' '));
+      });
+
+      const sortBtns = { newest: 'newest', oldest: 'oldest', nameAZ: 'nameAZ', nameZA: 'nameZA' };
+      Object.entries(sortBtns).forEach(([val, key]) => {
+        const btn = document.getElementById('uf-sort-' + key);
+        if (btn) btn.className = btn.className.replace(/bg-\S+|text-\S+|border-\S+|hover:\S+/g, '').trim();
+        if (btn) btn.classList.add(...(_uf.sort === val ? active : inactive).split(' '));
+      });
+    }
+
+    // ─── Apply / Clear ─────────────────────────────────────────────────────────
+    function applyUserFilters() {
+      document.getElementById('hiddenStatus').value   = _uf.status;
+      document.getElementById('hiddenProvider').value = _uf.provider;
+      document.getElementById('hiddenSortBy').value   = _uf.sort;
+      document.getElementById('userFilterForm').submit();
+    }
+
+    function clearUserFilters() {
+      _uf.status   = '';
+      _uf.provider = '';
+      _uf.sort     = 'newest';
+      syncUserFilterUI();
+      document.getElementById('hiddenStatus').value   = '';
+      document.getElementById('hiddenProvider').value = '';
+      document.getElementById('hiddenSortBy').value   = 'newest';
+      document.getElementById('userFilterForm').submit();
+    }
+
+    function removeUserChip(param) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete(param);
+      url.searchParams.delete('page');
+      window.location.href = url.toString();
+    }
+
+    // Init on load
+    syncUserFilterUI();
+  </script>
+
+<%- include('../../../partials/footer') %>

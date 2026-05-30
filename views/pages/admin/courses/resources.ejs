@@ -414,13 +414,13 @@
     })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
+        if (!data.success) {
           showToast(data.error, 'error');
-        } else {
-          renderFiles(data.files);
-          showToast('File uploaded successfully!', 'success');
+          return;
         }
-        fileInput.value = ''; // Reset input
+        renderFiles(data.files);
+        showToast('File uploaded successfully!', 'success');
+        fileInput.value = '';
       })
       .catch(err => {
         console.error('Error uploading file:', err);
@@ -445,12 +445,12 @@
     })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
+        if (!data.success) {
           showToast(data.error, 'error');
-        } else {
-          renderFiles(data.files);
-          showToast('File deleted successfully!', 'success');
+          return;
         }
+        renderFiles(data.files);
+        showToast('File deleted successfully!', 'success');
       })
       .catch(err => {
         console.error('Error deleting file:', err);
@@ -489,16 +489,15 @@
     })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
+        if (!data.success) {
           showToast(data.error, 'error');
-        } else {
-          renderLinks(data.links);
-          showToast('Link added successfully!', 'success');
-          // Clear inputs
-          titleInput.value = '';
-          urlInput.value = '';
-          descInput.value = '';
+          return;
         }
+        renderLinks(data.links);
+        showToast('Link added successfully!', 'success');
+        titleInput.value = '';
+        urlInput.value = '';
+        descInput.value = '';
       })
       .catch(err => {
         console.error('Error adding link:', err);
@@ -522,12 +521,12 @@
     })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
+        if (!data.success) {
           showToast(data.error, 'error');
-        } else {
-          renderLinks(data.links);
-          showToast('Link deleted successfully!', 'success');
+          return;
         }
+        renderLinks(data.links);
+        showToast('Link deleted successfully!', 'success');
       })
       .catch(err => {
         console.error('Error deleting link:', err);
@@ -555,11 +554,11 @@
     })
       .then(res => res.json())
       .then(data => {
-        if (data.error) {
+        if (!data.success) {
           showToast(data.error, 'error');
-        } else {
-          showToast('Notes saved successfully!', 'success');
+          return;
         }
+        showToast('Notes saved successfully!', 'success');
       })
       .catch(err => {
         console.error('Error saving notes:', err);
@@ -571,11 +570,15 @@
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     let colorClass = 'bg-blue-600';
-    if (type === 'success') colorClass = 'bg-green-600';
-    if (type === 'error') colorClass = 'bg-red-600';
-    if (type === 'warning') colorClass = 'bg-yellow-500';
+    let bgColor = '#2563EB'; // fallback inline color
+    
+    if (type === 'success') { colorClass = 'bg-green-600'; bgColor = '#16A34A'; }
+    if (type === 'error') { colorClass = 'bg-red-600'; bgColor = '#DC2626'; }
+    if (type === 'warning') { colorClass = 'bg-yellow-500'; bgColor = '#EAB308'; }
 
     toast.className = `text-white px-5 py-3 rounded-xl shadow-2xl flex items-center justify-between min-w-[200px] border border-white/10 ${colorClass} transition-all duration-300 animate-bounce`;
+    toast.style.backgroundColor = bgColor;
+    
     toast.innerHTML = `
       <span class="text-sm font-bold">${message}</span>
       <button onclick="this.parentElement.remove()" class="ml-4 text-white hover:text-gray-200 text-xs font-black">×</button>

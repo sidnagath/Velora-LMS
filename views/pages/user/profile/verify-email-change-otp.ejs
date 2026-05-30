@@ -20,17 +20,22 @@
                 Enter the verification code sent to your email
             </p>
             
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %>
+<% if(errors?.general){ %>
+<p class="text-sm text-red-500 mb-4">
+  <%= errors.general %>
+</p>
+<% } %>
 
             <form action="/verify-email-change-otp" method="POST" class="w-full text-left space-y-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
-                        <input type="text" name="otp" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••" maxlength="6">
+                        <input type="text" name="otp" value="<%= formData?.otp || '' %>" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••" maxlength="6">
+<% if(errors?.otp){ %>
+<p class="text-sm text-red-500 mb-2">
+  <%= errors.otp %>
+</p>
+<% } %>
                     </div>
                 </div>
 

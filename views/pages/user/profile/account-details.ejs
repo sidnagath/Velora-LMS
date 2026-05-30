@@ -194,6 +194,15 @@
 
   </div>
 
+<% if(errors?.avatar){ %>
+<p class="text-sm text-red-500 mt-2">
+<%= errors.avatar %>
+
+</p>
+
+<% } %>
+
+
 </form>
 
           <!-- Form Fields -->
@@ -266,11 +275,11 @@
         </div>
 
         <div class="space-y-6 max-w-3xl">
-                <% if (error.length> 0) { %>
-                <p class="!text-red-600 font-medium mb-4">
-                <%= error[0] %>
-                </p>
-                <% } %> 
+<% if(errors?.general){ %>
+<p class="text-sm text-red-500 mb-4">
+  <%= errors.general %>
+</p>
+<% } %>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Current Password</label>
@@ -281,10 +290,6 @@
                 </div>
               </div>
             </div>
-            <!-- <div>
-              <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Confirm New Password</label>
-              <input type="password" placeholder="Repeat password" class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
-            </div> -->
           </div>
 
           <div class="pt-4">
