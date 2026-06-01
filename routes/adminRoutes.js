@@ -11,45 +11,70 @@ router.get("/admin-login", noCache,isAdminGuest,adminController.getAdminLogin);
 router.post("/admin-login", adminController.postAdminLogin);
 
 router.get("/admin-dashboard",noCache,isAdmin,adminController.getAdminDashboard);
+
+// User Management
 router.get("/admin-users",noCache,isAdmin,adminController.getAdminUsers);
+
+router.get("/admin-create-user",noCache,isAdmin,adminController.getAdminCreateUser);
+router.post("/admin-create-user",upload.single("avatar"),isAdmin,adminController.postAdminCreateUser);
+
+router.get("/admin-edit-user/:id",noCache,isAdmin,adminController.getAdminEditUser);
+router.post("/admin-edit-user/:id", upload.single("avatar"),isAdmin,adminController.postAdminEditUser);
+
+router.post("/admin-delete-user/:id",isAdmin,adminController.deleteUser);
+
+
+// Category Management
+router.get("/admin-categories",noCache, isAdmin, adminController.getAdminCategories);
+
+// Create Category  
+router.get("/admin-categories/create", noCache, isAdmin, adminController.getAdminAddCategory);
+router.post("/admin-categories/create",  upload.single("thumbnail"), noCache, isAdmin, adminController.postAdminAddCategory);
+
+// Edit Category
+router.get("/admin-categories/:categoryId/edit",noCache, isAdmin, adminController.getAdminEditCategory);
+router.post("/admin-categories/:categoryId/edit",upload.single("thumbnail"), noCache, isAdmin, adminController.postAdminEditCategory);
+
+// Delete Category
+router.post("/admin-categories/:categoryId/delete", noCache, isAdmin, adminController.postAdminDeleteCategory);
 
 // Course Management
 router.get("/admin-courses",noCache,isAdmin,adminController.getAdminCourses);
 
-// CREATE COURSE
+// Create Course
 router.get("/admin-courses/create",noCache,isAdmin,adminController.getAdminCreateCourse);
 router.post("/admin-courses/create",upload.fields([{ name: "thumbnail" },{ name: "trailer" }]),noCache,isAdmin,adminController.postAdminCreateCourse);
 
-// EDIT COURSE
+// Edit Course
 router.get("/admin-courses/:courseId/edit",noCache,isAdmin,adminController.getAdminEditCourse);
 router.post("/admin-courses/:courseId/edit",upload.fields([{ name: "thumbnail" },{ name: "trailer" }]),noCache,isAdmin,adminController.postAdminEditCourse);
 
-// DELETE COURSE
+// Delete Course
 router.post("/admin-courses/:courseId/delete",noCache,isAdmin,adminController.postAdminDeleteCourse);
 
-//Modules
+// Modules
 router.get('/admin-courses/:courseId/modules', noCache, isAdmin, adminController.getAdminCourseModules);
 
-// //Add Module
+// Add Module
 router.get('/admin-courses/:courseId/modules/create', noCache, isAdmin, adminController.getAdminAddModule);
 router.post('/admin-courses/:courseId/modules/create', noCache, isAdmin, adminController.postAdminAddModule);
 
-// //Edit Module
+// Edit Module
 router.get('/admin-courses/:courseId/modules/:moduleId/edit', noCache, isAdmin, adminController.getAdminEditModule);
 router.post('/admin-courses/:courseId/modules/:moduleId/edit', noCache, isAdmin, adminController.postAdminEditModule);
 
-// //Delete Module
+// Delete Module
 router.post('/admin-courses/:courseId/modules/:moduleId/delete', noCache, isAdmin, adminController.postAdminDeleteModule);
 
-//Add Lesson
+// Add Lesson
 router.get('/admin-courses/:courseId/modules/:moduleId/lessons/create', noCache, isAdmin, adminController.getAdminAddLesson);
 router.post('/admin-courses/:courseId/modules/:moduleId/lessons/create', upload.single("video"), noCache, isAdmin, adminController.postAdminAddLesson);
 
-// //Edit Lesson
+// Edit Lesson
 router.get('/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/edit', noCache, isAdmin, adminController.getAdminEditLesson);
 router.post("/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/edit",upload.single("video"),noCache,isAdmin,adminController.postAdminEditLesson);
 
-//Delete Lesson
+// Delete Lesson
 router.post('/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/delete', noCache, isAdmin, adminController.postAdminDeleteLesson);
 
 // Resources 
@@ -65,14 +90,7 @@ router.post('/admin-courses/:courseId/resources/save-notes', noCache, isAdmin, a
 router.get('/admin-courses/:courseId/publish', noCache, isAdmin, adminController.getAdminCoursePublish);
 router.post('/admin-courses/:courseId/publish', noCache, isAdmin, adminController.postAdminCoursePublish);
 
-router.get("/admin-create-user",noCache,isAdmin,adminController.getAdminCreateUser);
-router.post("/admin-create-user",upload.single("avatar"),isAdmin,adminController.postAdminCreateUser);
-
-router.get("/admin-edit-user/:id",noCache,isAdmin,adminController.getAdminEditUser);
-router.post("/admin-edit-user/:id", upload.single("avatar"),isAdmin,adminController.postAdminEditUser);
-
-router.post("/admin-delete-user/:id",isAdmin,adminController.deleteUser);
-
+// Logout
 router.get("/admin-logout",noCache,adminController.getAdminLogout);
 
 module.exports=router;

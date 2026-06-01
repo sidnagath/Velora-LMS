@@ -10,7 +10,6 @@ const passport =require("passport");
 
 require("./config/passport");
 
-const flash =require("connect-flash");
 
 const app = express();
 
@@ -85,33 +84,11 @@ app.use(session({
 }));
 
 
-
 // PASSPORT
 
 app.use(passport.initialize());
 
 app.use(passport.session());
-
-
-// FLASH
-
-app.use(flash());
-
-
-
-// GLOBAL FLASH
-
-app.use((req, res, next) => {
-
-  res.locals.error =
-    req.flash("error");
-
-  res.locals.success =
-    req.flash("success");
-
-  next();
-
-});
 
 
 
@@ -123,31 +100,6 @@ app.use("/", userRoutes);
 
 app.use("/", adminRoutes);
 
-app.use((err, req, res, next) => {
-
-  console.log(err);
-
-
-
-  req.flash(
-
-    "error",
-
-    err.message ||
-
-    "Something went wrong"
-
-  );
-
-
-
-  return res.redirect(
-
-    req.get("Referrer") || "/"
-
-  );
-
-});
 
 // SERVER
 

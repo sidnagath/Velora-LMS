@@ -124,85 +124,15 @@
                             <select name="category"
                               class="w-full pl-4 pr-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900 appearance-none">
 
-<option
-  value="html"
+                            <option value="">Select a category</option>
+                            <% (categories || []).forEach(cat => { %>
+                            <option value="<%= cat._id %>"
+                              <%= (formData?.category?.toString() || course?.category?._id?.toString() || course?.category?.toString()) === cat._id.toString() ? 'selected' : '' %>>
+                              <%= cat.name %>
+                            </option>
+                            <% }) %>
 
-  <%= (formData?.category || course?.category) === "html"
-  ? "selected"
-  : "" %>
->
-
-  HTML
-
-</option>
-
-<option
-  value="css"
-
-  <%= (formData?.category || course?.category) === "css"
-  ? "selected"
-  : "" %>
->
-
-  CSS
-
-</option>
-
-<option
-  value="javascript"
-
-  <%= (formData?.category || course?.category) === "javascript"
-  ? "selected"
-  : "" %>
->
-
-  JavaScript
-
-</option>
-
-<option
-  value="react"
-
-  <%= (formData?.category || course?.category) === "react"
-  ? "selected"
-  : "" %>
->
-
-  React
-</option>
-
-<option
-  value="python"
-
-  <%= (formData?.category || course?.category) === "python"
-  ? "selected"
-  : "" %>
->
-
-  Python
-</option>
-
-<option
-  value="nodejs"
-
-  <%= (formData?.category || course?.category) === "nodejs"
-  ? "selected"
-  : "" %>
->
-
-  Node.js
-</option>
-
-<option
-  value="django"
-
-  <%= (formData?.category || course?.category) === "django"
-  ? "selected"
-  : "" %>
->
-  Django
-</option>
-                            </select>
+                          </select>
                             <div
                               class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
                               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

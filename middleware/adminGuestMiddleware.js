@@ -9,14 +9,6 @@ exports.isAdminGuest =
 
   }
 
-  if (req.session.user) {
-
-    return res.redirect(
-      "/user-dashboard"
-    );
-
-  }
-
   next();
 
 };

@@ -1,56 +1,14 @@
 const Admin = require('../models/adminModel');
 const bcrypt = require('bcrypt');
 const User = require("../models/userModel");
+const Category = require("../models/categoryModel");
 const Course = require("../models/courseModel");
 const Module = require("../models/moduleModel");
 const Lesson = require("../models/lessonModel");
 const Resource = require("../models/resourceModel");
 
-exports.getAdminLogin = (req, res) => {
-
-  if (req.session.user) {
-
-    return res.redirect(
-      "/user-dashboard"
-    );
-
-  }
-
-  if (req.session.admin) {
-
-    return res.redirect(
-      "/admin-dashboard"
-    );
-
-  }
-
-  res.render(
-    "pages/guest/admin-login",
-    {
-      title:
-        "Velora - Admin Login",
-
-      isLoggedIn: false,
-
-      errors: {},
-
-      formData: {}
-
-    }
-  );
-
-};
-
 
 exports.getAdminLogin = (req, res) => {
-
-  if (req.session.user) {
-
-    return res.redirect(
-      "/user-dashboard"
-    );
-
-  }
 
   if (req.session.admin) {
 
@@ -379,7 +337,8 @@ exports.getAdminUsers = async (req, res) => {
       search,
       filterStatus,
       filterProvider,
-      sortBy
+      sortBy,
+      success: req.query.success || ""
     });
 
   } catch (err) {
@@ -654,7 +613,7 @@ async (req, res) => {
     });
 
     res.redirect(
-      "/admin-users"
+      "/admin-users?success=created"
     );
 
   }
@@ -1072,7 +1031,7 @@ async (req, res) => {
     );
 
     res.redirect(
-      "/admin-users"
+      "/admin-users?success=updated"
     );
 
   }
@@ -1132,7 +1091,7 @@ exports.deleteUser = async (req, res) => {
       }
     );
 
-    res.redirect("/admin-users");
+    res.redirect("/admin-users?success=deleted");
 
   } catch (err) {
 
@@ -1141,6 +1100,440 @@ exports.deleteUser = async (req, res) => {
     res.redirect("/admin-users");
   }
 };
+
+
+// Category Management Methods
+
+exports.getAdminCategories =
+async (req, res) => {
+
+  try {
+
+    const search =
+      req.query.search?.trim() || "";
+
+    const filterStatus =
+      req.query.status || "";
+
+    const sortBy =
+      req.query.sortBy || "newest";
+
+    const page =
+      Number(req.query.page) || 1;
+
+    const LIMIT = 12;
+
+    const skip =
+      (page - 1) * LIMIT;
+
+    // FILTER
+
+    const filter = {};
+
+    if (search) {
+
+      filter.name = {
+
+        $regex: search,
+
+        $options: "i"
+
+      };
+
+    }
+
+    if (filterStatus) {
+
+      filter.status =
+        filterStatus;
+
+    }
+
+    // SORT
+
+    const sortMap = {
+
+      newest:
+        { createdAt: -1 },
+
+      oldest:
+        { createdAt: 1 },
+
+      nameAZ:
+        { name: 1 },
+
+      nameZA:
+        { name: -1 }
+
+    };
+
+    const sort =
+      sortMap[sortBy] ||
+      sortMap.newest;
+
+    // GLOBAL STAT COUNTS (never affected by search/filter)
+
+    const [
+      totalCategoriesGlobal,
+      activeCategories,
+      categories,
+      totalCategories
+    ] = await Promise.all([
+      Category.countDocuments({}),
+      Category.countDocuments({ status: "active" }),
+      Category.find(filter).sort(sort).skip(skip).limit(LIMIT),
+      Category.countDocuments(filter)
+    ]);
+
+    // COURSE COUNT PER CATEGORY (for table rows)
+
+const courseCountsAgg = await Course.aggregate([
+  {
+    $match: {
+      category: { $exists: true }
+    }
+  },
+  {
+    $group: {
+      _id: "$category",
+      count: { $sum: 1 }
+    }
+  }
+]);
+
+const courseCountMap = {};
+
+courseCountsAgg.forEach(({ _id, count }) => {
+  if (_id) {
+    courseCountMap[_id.toString()] = count;
+  }
+});
+
+const categoriesWithCounts = categories.map(cat => {
+  const obj = cat.toObject();
+
+  obj.courseCount =
+    courseCountMap[cat._id.toString()] || 0;
+
+  return obj;
+});
+
+    // STAT CARDS: accurate intersection-based counting
+
+const categoriesWithCoursesCount =
+  (await Course.distinct("category")).filter(Boolean).length;
+
+   const emptyCategories = Math.max(
+  0,
+  totalCategoriesGlobal - categoriesWithCoursesCount
+);
+
+    const totalPages = Math.ceil(totalCategories / LIMIT);
+
+    res.render(
+
+      "pages/admin/categories/categories",
+
+      {
+
+        title:
+          "Velora - Category Management",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        categories: categoriesWithCounts,
+
+        totalCategoriesGlobal,
+
+        search,
+
+        currentPage: page,
+
+        totalPages,
+
+        totalCategories,
+
+        activeCategories,
+
+        categoriesWithCoursesCount,
+
+        emptyCategories,
+
+        filterStatus,
+
+        sortBy,
+
+        LIMIT,
+
+        success: req.query.success || "",
+        error: req.query.error || "",
+        errors: {}
+
+      }
+
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    res.render(
+
+      "pages/admin/categories/categories",
+
+      {
+
+        title:
+          "Velora - Category Management",
+
+        isLoggedIn: true,
+
+        isAdmin: true,
+
+        categories: [],
+
+        totalCategoriesGlobal: 0,
+
+        search: "",
+
+        currentPage: 1,
+
+        totalPages: 1,
+
+        totalCategories: 0,
+
+        activeCategories: 0,
+
+        categoriesWithCoursesCount: 0,
+
+        emptyCategories: 0,
+
+        filterStatus: "",
+
+        sortBy: "newest",
+
+        LIMIT: 12,
+
+        success:"",
+
+        error:"",
+
+        errors: {
+
+          general:
+            "Failed to load categories"
+
+        }
+
+      }
+
+    );
+
+  }
+
+};
+
+
+// ─── ADD CATEGORY ────────────────────────────────────────────────────────────
+
+exports.getAdminAddCategory =
+(req, res) => {
+  res.render(
+    "pages/admin/categories/add-category",
+    {
+      title: "Velora - Add Category",
+      isLoggedIn: true,
+      isAdmin: true,
+      errors: {},
+      formData: {}
+    }
+  );
+};
+
+exports.postAdminAddCategory =
+async (req, res) => {
+  try {
+    let { name, description, status } = req.body;
+
+    name        = name?.trim();
+    description = description?.trim();
+    status      = status?.trim() || "active";
+
+    const thumbnailFile = req.file;
+
+    let errors = {};
+
+    if (!name) {
+      errors.name = "Category name is required";
+    } else if (name.length < 3) {
+      errors.name = "Category name must be at least 3 characters";
+    }
+
+    if (!description) {
+      errors.description = "Description is required";
+    }
+
+    if (name && name.length >= 3) {
+      const existing = await Category.findOne({
+        name: { $regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: "i" }
+      });
+      if (existing) {
+        errors.name = "A category with this name already exists";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.render(
+        "pages/admin/categories/add-category",
+        {
+          title: "Velora - Add Category",
+          isLoggedIn: true,
+          isAdmin: true,
+          errors,
+          formData: { name, description, status }
+        }
+      );
+    }
+
+    const thumbnail = thumbnailFile
+      ? "/uploads/" + thumbnailFile.filename
+      : "";
+
+    await Category.create({ name, description, thumbnail, status });
+
+    res.redirect("/admin-categories?success=created");
+
+  } catch (err) {
+    console.log(err);
+    res.render(
+      "pages/admin/categories/add-category",
+      {
+        title: "Velora - Add Category",
+        isLoggedIn: true,
+        isAdmin: true,
+        errors: { general: "Something went wrong. Please try again." },
+        formData: req.body
+      }
+    );
+  }
+};
+
+
+// ─── EDIT CATEGORY ────────────────────────────────────────────────────────────
+
+exports.getAdminEditCategory =
+async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.categoryId);
+
+    if (!category) return res.redirect("/admin-categories");
+
+    res.render(
+      "pages/admin/categories/edit-category",
+      {
+        title: "Velora - Edit Category",
+        isLoggedIn: true,
+        isAdmin: true,
+        category,
+        errors: {},
+        formData: {}
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    res.redirect("/admin-categories");
+  }
+};
+
+exports.postAdminEditCategory =
+async (req, res) => {
+  try {
+    let { name, description, status } = req.body;
+
+    name        = name?.trim();
+    description = description?.trim();
+    status      = status?.trim() || "active";
+
+    const thumbnailFile = req.file;
+
+    const category = await Category.findById(req.params.categoryId);
+    if (!category) return res.redirect("/admin-categories");
+
+    let errors = {};
+
+    if (!name) {
+      errors.name = "Category name is required";
+    } else if (name.length < 3) {
+      errors.name = "Category name must be at least 3 characters";
+    }
+
+    if (!description) {
+      errors.description = "Description is required";
+    }
+
+    if (name && name.length >= 3) {
+      const existing = await Category.findOne({
+        name: { $regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: "i" },
+        _id: { $ne: category._id }
+      });
+      if (existing) {
+        errors.name = "A category with this name already exists";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.render(
+        "pages/admin/categories/edit-category",
+        {
+          title: "Velora - Edit Category",
+          isLoggedIn: true,
+          isAdmin: true,
+          category,
+          errors,
+          formData: { name, description, status }
+        }
+      );
+    }
+
+    category.name        = name;
+    category.description = description;
+    category.status      = status;
+    if (thumbnailFile) {
+      category.thumbnail = "/uploads/" + thumbnailFile.filename;
+    }
+
+    await category.save();
+
+    res.redirect("/admin-categories?success=updated");
+
+  } catch (err) {
+    console.log(err);
+    res.redirect("/admin-categories");
+  }
+};
+
+
+// ─── DELETE CATEGORY ─────────────────────────────────────────────────────────
+
+exports.postAdminDeleteCategory =
+async (req, res) => {
+  try {
+    const courseCount = await Course.countDocuments({ category: req.params.categoryId });
+    if (courseCount > 0) {
+      return res.redirect("/admin-categories?error=in-use");
+    }
+    await Category.findByIdAndDelete(req.params.categoryId);
+    res.redirect("/admin-categories?success=deleted");
+  } catch (err) {
+    console.log(err);
+    res.redirect("/admin-categories");
+  }
+};
+
 
 // Course Management Methods
 
@@ -1168,15 +1561,20 @@ async (req, res) => {
 
     if (search) {
       filter.$or = [
-        { title:    { $regex: search, $options: "i" } },
-        { category: { $regex: search, $options: "i" } },
-        { level:    { $regex: search, $options: "i" } }
+        { title: { $regex: search, $options: "i" } },
+        { level: { $regex: search, $options: "i" } }
       ];
     }
 
     if (filterStatus)   filter.status   = filterStatus;
     if (filterLevel)    filter.level    = filterLevel;
-    if (filterCategory) filter.category = { $regex: filterCategory, $options: "i" };
+    if (filterCategory) {
+      if (mongoose.Types.ObjectId.isValid(filterCategory)) {
+        filter.category = filterCategory;
+      } else {
+        filter.category = new mongoose.Types.ObjectId();
+      }
+    }
 
     // BUILD SORT
     const sortMap = {
@@ -1189,7 +1587,7 @@ async (req, res) => {
 
     // QUERY
     const [courses, totalCourses] = await Promise.all([
-      Course.find(filter).sort(sort).skip(skip).limit(LIMIT),
+      Course.find(filter).populate("category").sort(sort).skip(skip).limit(LIMIT),
       Course.countDocuments(filter)
     ]);
 
@@ -1199,8 +1597,8 @@ async (req, res) => {
     const draftCourses      = await Course.countDocuments({ status: "draft" });
     const instructorsCount  = await Course.distinct("instructor");
 
-    // Gather distinct categories for the filter dropdown
-    const allCategories = await Course.distinct("category");
+    // Gather all active categories for the filter dropdown
+    const allCategories = await Category.find({ status: "active" }).sort({ name: 1 });
 
     // RENDER
     res.render("pages/admin/courses/courses", {
@@ -1215,12 +1613,13 @@ async (req, res) => {
       publishedCourses,
       draftCourses,
       instructorsCount: instructorsCount.length,
-      allCategories: allCategories.filter(Boolean),
+      allCategories,
       LIMIT,
       filterStatus,
       filterLevel,
       filterCategory,
       sortBy,
+      success: req.query.success || "",
       errors: {}
     });
 
@@ -1252,33 +1651,27 @@ async (req, res) => {
 
 
 exports.getAdminCreateCourse =
-(req, res) => {
+async (req, res) => {
+  try {
+    const categories = await Category.find({ status: "active" }).sort({ name: 1 });
 
-  res.render(
-
-    "pages/admin/courses/basic-info",
-
-    {
-
-      title:
-        "Velora - Create Course",
-
-      isLoggedIn: true,
-
-      isAdmin: true,
-
-      isEdit: false,
-
-      course: {},
-
-      errors: {},
-
-      formData: {}
-
-    }
-
-  );
-
+    res.render(
+      "pages/admin/courses/basic-info",
+      {
+        title: "Velora - Create Course",
+        isLoggedIn: true,
+        isAdmin: true,
+        isEdit: false,
+        course: {},
+        categories,
+        errors: {},
+        formData: {}
+      }
+    );
+  } catch (err) {
+    console.log(err);
+    res.redirect("/admin-courses");
+  }
 };
 
 exports.postAdminCreateCourse =
@@ -1343,6 +1736,8 @@ async (req, res) => {
       errors.category =
         "Select category";
 
+    } else if (!mongoose.Types.ObjectId.isValid(category)) {
+      errors.category = "Invalid category format";
     }
 
     if (!instructor) {
@@ -1378,7 +1773,7 @@ async (req, res) => {
     if (
       Object.keys(errors).length > 0
     ) {
-
+      const categories = await Category.find({ status: "active" }).sort({ name: 1 });
       return res.render(
 
         "pages/admin/courses/basic-info",
@@ -1397,6 +1792,8 @@ async (req, res) => {
           course: {},
 
           errors,
+
+          categories,
 
           formData: {
 
@@ -1551,7 +1948,7 @@ async (req, res) => {
     );
 
     res.redirect(
-      "/admin-courses"
+      "/admin-courses?success=deleted"
     );
   }
 
@@ -1590,6 +1987,8 @@ async (req, res) => {
 
     // RENDER
 
+    const categories = await Category.find({ status: "active" }).sort({ name: 1 });
+
     res.render(
 
       "pages/admin/courses/basic-info",
@@ -1606,6 +2005,8 @@ async (req, res) => {
         isEdit: true,
 
         course,
+
+        categories,
 
         errors: {},
 
@@ -1726,6 +2127,8 @@ async (req, res) => {
       errors.category =
         "Select category";
 
+    } else if (!mongoose.Types.ObjectId.isValid(category)) {
+      errors.category = "Invalid category format";
     }
 
     if (!instructor) {
@@ -1910,7 +2313,7 @@ async (req, res) => {
     if (
       Object.keys(errors).length > 0
     ) {
-
+      const categories = await Category.find({ status: "active" }).sort({ name: 1 });
       return res.render(
 
         "pages/admin/courses/basic-info",
@@ -1927,6 +2330,8 @@ async (req, res) => {
           isEdit: true,
 
           errors,
+
+          categories,
 
           course:
             existingCourse,

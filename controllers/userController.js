@@ -2,6 +2,8 @@ const User=require("../models/userModel");
 const Course=require("../models/courseModel");
 const Module=require("../models/moduleModel");
 const Lesson=require("../models/lessonModel");
+const Category=require("../models/categoryModel");
+const mongoose=require("mongoose");
 const bcrypt=require("bcrypt");
 const nodemailer = require("nodemailer");
 
@@ -12,7 +14,15 @@ function generateOTP() {
 }
 
 //Guest Home
-exports.getHome=(req, res) => {
+exports.getHome = (req, res) => {
+
+  if (req.session.user) {
+
+    return res.redirect(
+      "/user-dashboard"
+    );
+
+  }
 
   if (req.session.admin) {
 
@@ -22,18 +32,22 @@ exports.getHome=(req, res) => {
 
   }
 
-  if (req.session.user) {
+  res.render(
 
-    return res.redirect(
-      "/user-dashboard"
-    );
+    "pages/guest/home",
 
-  }
-    res.render('pages/guest/home', { 
-        title: 'Velora - Master Coding With Focus', 
-        isLoggedIn: false 
-    })
-  }
+    {
+
+      title:
+        "Velora",
+
+      isLoggedIn: false
+
+    }
+
+  );
+
+};
 
 
 //Login
@@ -41,10 +55,6 @@ exports.getLogin = (req, res) => {
 
   if (req.session.user) {
     return res.redirect("/user-dashboard");
-  }
-
-  if (req.session.admin) {
-    return res.redirect("/admin-dashboard");
   }
 
   res.render("pages/guest/login", {
@@ -3067,96 +3077,81 @@ exports.getCourses = async (req, res) => {
   try {
     const { category, level, price, search, page = 1 } = req.query;
     const LIMIT = 6;
-    const skip = (parseInt(page) - 1) * LIMIT;
+    const skip  = (parseInt(page) - 1) * LIMIT;
 
-const selectedCategory = category || "html";
+    // Load all active categories for sidebar
+    const allCategories = await Category.find({ status: "active" }).sort({ name: 1 }).lean();
 
-const filter = {
-  status: "published",
-  isDeleted: false,
+    // Resolve which category is selected (ObjectId string or name slug)
+    let selectedCategoryDoc = null;
+    let selectedCategoryId  = null;
 
-  category: {
-    $regex: new RegExp(`^${selectedCategory}$`, "i")
-  }
-};
+    if (category) {
+      if (mongoose.Types.ObjectId.isValid(category)) {
+        selectedCategoryDoc = allCategories.find(c => c._id.toString() === category);
+      } else {
+        // Backward-compat: match by name case-insensitively
+        selectedCategoryDoc = allCategories.find(
+          c => c.name.toLowerCase() === category.toLowerCase()
+        );
+      }
+      if (selectedCategoryDoc) selectedCategoryId = selectedCategoryDoc._id;
+    }
 
-if (level) {
-  filter.level = {
-    $regex: new RegExp(`^${level}$`, "i")
-  };
-}
+    // Default to first active category
+    if (!selectedCategoryDoc && allCategories.length > 0) {
+      selectedCategoryDoc = allCategories[0];
+      selectedCategoryId  = selectedCategoryDoc._id;
+    }
 
-if (price === "free") {
-  filter.pricingType = "free";
-}
+    const filter = { status: "published", isDeleted: false };
 
-if (price === "paid") {
-  filter.pricingType = "paid";
-}
+    // ObjectId-based category filter — no $regex
+    if (selectedCategoryId) filter.category = selectedCategoryId;
 
-if (search) {
-  filter.title = {
-    $regex: search,
-    $options: "i"
-  };
-}
+    if (level) filter.level = { $regex: new RegExp(`^${level}$`, "i") };
+
+    if (price === "free") filter.pricingType = "free";
+    if (price === "paid") filter.pricingType = "paid";
+
+    if (search) filter.title = { $regex: search, $options: "i" };
 
     const [courses, totalCourses] = await Promise.all([
       Course.find(filter)
-  .sort({
-  rating: -1,
-  reviewsCount: -1,
-  createdAt: -1,
-  _id: -1
-})
-  .skip(skip)
-  .limit(LIMIT)
-  .lean(),
+        .populate("category")
+        .sort({ rating: -1, reviewsCount: -1, createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(LIMIT)
+        .lean(),
       Course.countDocuments(filter)
     ]);
 
     const totalPages = Math.ceil(totalCourses / LIMIT);
-
     const isLoggedIn = !!(req.session && req.session.user);
     const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
 
-//     const wishlist = await Wishlist.findOne({
-//   userId: req.user._id
-// });
-
-// const wishlistCourseIds =
-//   wishlist?.courses.map(
-//     course => course.toString()
-//   ) || [];
-
-// const cart = await Cart.findOne({
-//   userId: req.user._id
-// });
-
-// const cartCourseIds =
-//   cart?.courses.map(
-//     course => course.toString()
-//   ) || [];
-
     res.render('pages/user/courses/courses', {
-      title: 'Velora - Explore Courses',
+      title:              'Velora - Explore Courses',
       isLoggedIn,
       user,
       courses,
       totalPages,
-      currentPage:      parseInt(page),
-      selectedCategory: selectedCategory,
-      selectedLevel:    level    || '',
-      selectedPrice:    price    || '',
-      search:           search   || '',
-      wishlistCourseIds:[],
-      cartCourseIds:[]
+      currentPage:        parseInt(page),
+      allCategories,
+      selectedCategoryDoc,
+      selectedCategoryId: selectedCategoryId ? selectedCategoryId.toString() : null,
+      selectedLevel:      level  || '',
+      selectedPrice:      price  || '',
+      search:             search || '',
+      wishlistCourseIds:  [],
+      cartCourseIds:      []
     });
   } catch (err) {
     console.log(err);
     res.redirect('/');
   }
 };
+
 
 // ─── Course Detail ────────────────────────────────────────────────────────────
 exports.getCourseDetails = async (req, res) => {
@@ -3165,7 +3160,7 @@ exports.getCourseDetails = async (req, res) => {
       _id:       req.params.courseId,
       status:    'published',
       isDeleted: false
-    }).lean();
+    }).populate('category').lean();
 
     if (!course) return res.redirect('/user-courses');
 
@@ -3184,12 +3179,14 @@ exports.getCourseDetails = async (req, res) => {
       (sum, m) => sum + m.lessons.length, 0
     );
 
+    // Use the populated _id for related courses query
+    const categoryId = course.category ? course.category._id || course.category : new mongoose.Types.ObjectId();
     const relatedCourses = await Course.find({
-      category:  course.category,
+      category:  categoryId,
       _id:       { $ne: course._id },
       status:    'published',
       isDeleted: false
-    }).limit(4).lean();
+    }).populate('category').limit(4).lean();
 
     const isLoggedIn = !!(req.session && req.session.user);
     const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;

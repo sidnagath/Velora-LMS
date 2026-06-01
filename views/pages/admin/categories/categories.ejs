@@ -1,0 +1,422 @@
+<%- include('../../../partials/header') %>
+
+<main class="flex min-h-screen bg-gray-50 font-sans">
+
+  <%- include('../../../partials/admin-sidebar', { activePage: 'categories' }) %>
+
+  <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+
+    <%- include('../../../partials/admin-header', { searchPlaceholder: 'Search category' }) %>
+
+    <div class="p-8 max-w-7xl mx-auto w-full">
+      <!-- HEADER -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Category Management</h1>
+        <p class="text-gray-500 mt-2 text-sm max-w-2xl">
+          Organize and manage course categories across the platform to help learners find content faster
+        </p>
+      </div>
+
+      <!-- STATS -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Categories -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Total Categories</p>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= totalCategoriesGlobal %></h2>
+        </div>
+
+        <!-- Active Categories -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-green-50 text-green-600 rounded-xl">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Active Categories</p>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= activeCategories %></h2>
+        </div>
+
+        <!-- Categories With Courses -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-orange-50 text-orange-600 rounded-xl">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Categories With Courses</p>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= categoriesWithCoursesCount %></h2>
+        </div>
+
+        <!-- Empty Categories -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-start mb-4">
+            <div class="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs font-bold text-gray-500 tracking-wider uppercase">Empty Categories</p>
+          <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= emptyCategories %></h2>
+        </div>
+      </div>
+
+      <!-- SUCCESS BANNER -->
+      <% const successMessages = { created: 'Category created successfully!', updated: 'Category updated successfully!', deleted: 'Category deleted successfully!' }; %>
+      <% if (success && successMessages[success]) { %>
+      <div id="successBanner" class="mb-6 flex items-center gap-3 p-4 bg-green-50 border border-green-100 rounded-xl text-sm font-semibold text-green-700">
+        <svg class="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <%= successMessages[success] %>
+      </div>
+      <script>setTimeout(() => { const b = document.getElementById('successBanner'); if(b) b.remove(); }, 4000);</script>
+      <% } %>
+
+      <!-- ERROR BANNER -->
+      <% const errorMessages = { 'in-use': 'Cannot delete category because it is currently used by one or more courses.' }; %>
+      <% if (typeof error !== 'undefined' && error && errorMessages[error]) { %>
+      <div id="errorBanner" class="mb-6 flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-xl text-sm font-semibold text-red-700">
+        <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <%= errorMessages[error] %>
+      </div>
+      <% } %>
+
+      <!-- MAIN TABLE AREA -->
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+        <!-- Controls Row -->
+        <div class="p-6 border-b border-gray-100">
+
+          <% if(errors?.general){ %>
+          <p class="mt-1 text-sm font-medium text-red-500 mb-3" style="color: var(--color-red-500);"><%= errors.general %></p>
+          <% } %>
+
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <!-- Search + hidden filter fields -->
+            <form id="categoryFilterForm" action="/admin-categories" method="GET" class="flex flex-wrap items-center gap-3 w-full">
+              <input type="hidden" name="status" id="cfHiddenStatus" value="<%= filterStatus %>">
+              <input type="hidden" name="sortBy"  id="cfHiddenSortBy"  value="<%= sortBy %>">
+
+              <div class="flex-1 min-w-0">
+                <input type="text" name="search" id="categorySearchInput"
+                  value="<%= search || '' %>"
+                  placeholder="Search category name"
+                  class="w-full px-6 py-4 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition">
+              </div>
+              <button type="submit"
+                class="shrink-0 px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+                Search
+              </button>
+            </form>
+
+            <div class="flex items-center gap-3 shrink-0">
+              <!-- FILTER BUTTON -->
+              <div class="relative">
+                <button
+                  id="categoryFilterBtn"
+                  type="button"
+                  onclick="toggleCategoryFilterPanel()"
+                  class="inline-flex items-center px-4 py-2.5 border text-sm font-medium rounded-lg transition-colors
+                  <%= (filterStatus || sortBy !== 'newest') ? 'border-blue-500 text-blue-600 bg-blue-50 hover:bg-blue-100' : 'border-transparent text-gray-700 bg-gray-100 hover:bg-gray-200' %>">
+                  <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                    </path>
+                  </svg>
+                  Filters
+                  <% if (filterStatus || sortBy !== 'newest') { %>
+                    <span class="ml-1.5 w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
+                  <% } %>
+                </button>
+
+                <!-- FILTER PANEL -->
+                <div
+                  id="categoryFilterPanel"
+                  class="hidden absolute right-0 top-full mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 z-50">
+
+                  <h3 class="text-sm font-bold text-gray-900 mb-4">Filter Categories</h3>
+
+                  <!-- Status -->
+                  <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Status</label>
+                    <div class="flex gap-2">
+                      <button type="button" onclick="setCategoryFilter('status', '')"         id="cf-status-all"      class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">All</button>
+                      <button type="button" onclick="setCategoryFilter('status', 'active')"   id="cf-status-active"   class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Active</button>
+                      <button type="button" onclick="setCategoryFilter('status', 'inactive')" id="cf-status-inactive" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Inactive</button>
+                    </div>
+                  </div>
+
+                  <!-- Sort By -->
+                  <div class="mb-5">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sort By</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button type="button" onclick="setCategoryFilter('sort', 'newest')"  id="cf-sort-newest"  class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Newest</button>
+                      <button type="button" onclick="setCategoryFilter('sort', 'oldest')"  id="cf-sort-oldest"  class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Oldest</button>
+                      <button type="button" onclick="setCategoryFilter('sort', 'nameAZ')"  id="cf-sort-nameAZ"  class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Name A–Z</button>
+                      <button type="button" onclick="setCategoryFilter('sort', 'nameZA')"  id="cf-sort-nameZA"  class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors">Name Z–A</button>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex gap-2 pt-1 border-t border-gray-100">
+                    <button type="button" onclick="applyCategoryFilters()"
+                      class="flex-1 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
+                      Apply Filters
+                    </button>
+                    <button type="button" onclick="clearCategoryFilters()"
+                      class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-200 transition">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <a href="/admin-categories/create"
+                class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Create Category
+              </a>
+            </div>
+          </div>
+
+          <!-- Active filter chips -->
+          <% if (filterStatus || sortBy !== 'newest') { %>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <% if (filterStatus) { %>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+              Status: <%= filterStatus %>
+              <button onclick="removeCategoryChip('status')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+            </span>
+            <% } %>
+            <% if (sortBy !== 'newest') { %>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+              Sort: <%= sortBy === 'oldest' ? 'Oldest' : sortBy === 'nameAZ' ? 'Name A-Z' : 'Name Z-A' %>
+              <button onclick="removeCategoryChip('sortBy')" class="ml-1.5 text-blue-400 hover:text-blue-700">✕</button>
+            </span>
+            <% } %>
+          </div>
+          <% } %>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-600">
+            <thead class="bg-gray-50 text-xs font-bold uppercase tracking-wider text-gray-500 border-b border-gray-100">
+              <tr>
+                <th scope="col" class="px-6 py-4">Category Name</th>
+                <th scope="col" class="px-6 py-4">Description</th>
+                <th scope="col" class="px-6 py-4">Total Courses</th>
+                <th scope="col" class="px-6 py-4">Status</th>
+                <th scope="col" class="px-6 py-4">Created Date</th>
+                <th scope="col" class="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <% if (categories && categories.length > 0) { %>
+                <% categories.forEach(category => { %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4">
+                      <div class="flex flex-col">
+                        <span class="font-bold text-gray-900"><%= category.name %></span>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500 max-w-xs truncate"><%= category.description || '—' %></td>
+                    <td class="px-6 py-4">
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                        <%= category.courseCount !== undefined ? category.courseCount : 0 %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4">
+                      <% if (category.status === 'active') { %>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-100">
+                          <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>Active
+                        </span>
+                      <% } else { %>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                          <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>Inactive
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4 text-gray-500">
+                      <%= category.createdAt ? new Date(category.createdAt).toLocaleDateString() : '—' %>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <a href="/admin-categories/<%= category._id %>/edit"
+                          class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
+                          <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                          Edit
+                        </a>
+                        <form action="/admin-categories/<%= category._id %>/delete" method="POST" onsubmit="return confirm('Delete this category?')">
+                          <button type="submit"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
+                            <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="px-6 py-16 text-center">
+                    <div class="flex flex-col items-center justify-center">
+                      <div class="p-4 bg-gray-100 rounded-full mb-4">
+                        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                      </div>
+                      <p class="text-gray-500 font-semibold text-sm">No categories found</p>
+                      <p class="text-gray-400 text-xs mt-1">Try adjusting your search or filters</p>
+                      <a href="/admin-categories/create" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Create First Category
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            Showing
+            <%= ((currentPage - 1) * LIMIT) + 1 %>
+            to
+            <%= Math.min(currentPage * LIMIT, totalCategories) %>
+            of
+            <%= totalCategories %>
+            categories
+          </p>
+
+          <% if(totalPages > 1){ %>
+          <div class="flex items-center space-x-2">
+            <% const buildCategoryQuery = (p) => {
+              const qs = new URLSearchParams();
+              if (search)       qs.set('search', search);
+              if (filterStatus) qs.set('status', filterStatus);
+              if (sortBy)       qs.set('sortBy', sortBy);
+              qs.set('page', p);
+              return '/admin-categories?' + qs.toString();
+            }; %>
+
+            <% if(currentPage > 1){ %>
+              <a href="<%= buildCategoryQuery(currentPage - 1) %>"
+                class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">Previous</a>
+            <% } %>
+
+            <% for(let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++){ %>
+              <a href="<%= buildCategoryQuery(i) %>"
+                class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
+                <%= currentPage === i ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100' %>">
+                <%= i %>
+              </a>
+            <% } %>
+
+            <% if(currentPage < totalPages){ %>
+              <a href="<%= buildCategoryQuery(currentPage + 1) %>"
+                class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">Next</a>
+            <% } %>
+          </div>
+          <% } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ─── State (seeded from server) ─────────────────────────────────────────────
+  const _cf = {
+    status: '<%= filterStatus %>',
+    sort:   '<%= sortBy %>'
+  };
+
+  // ─── Panel toggle ─────────────────────────────────────────────────────────
+  function toggleCategoryFilterPanel() {
+    const panel = document.getElementById('categoryFilterPanel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) syncCategoryFilterUI();
+  }
+
+  document.addEventListener('click', function(e) {
+    const panel = document.getElementById('categoryFilterPanel');
+    const btn   = document.getElementById('categoryFilterBtn');
+    if (panel && !panel.classList.contains('hidden') && !panel.contains(e.target) && !btn.contains(e.target)) {
+      panel.classList.add('hidden');
+    }
+  });
+
+  // ─── Set a filter value ───────────────────────────────────────────────────
+  function setCategoryFilter(key, value) {
+    _cf[key] = value;
+    syncCategoryFilterUI();
+  }
+
+  // ─── Sync button active states ────────────────────────────────────────────
+  function syncCategoryFilterUI() {
+    const active   = 'bg-blue-600 text-white border-blue-600';
+    const inactive = 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50';
+
+    const statusBtns = { '': 'all', active: 'active', inactive: 'inactive' };
+    Object.entries(statusBtns).forEach(([val, key]) => {
+      const btn = document.getElementById('cf-status-' + key);
+      if (!btn) return;
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ' +
+        (_cf.status === val ? active : inactive);
+    });
+
+    const sortBtns = { newest: 'newest', oldest: 'oldest', nameAZ: 'nameAZ', nameZA: 'nameZA' };
+    Object.entries(sortBtns).forEach(([val, key]) => {
+      const btn = document.getElementById('cf-sort-' + key);
+      if (!btn) return;
+      btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ' +
+        (_cf.sort === val ? active : inactive);
+    });
+  }
+
+  // ─── Apply / Clear ────────────────────────────────────────────────────────
+  function applyCategoryFilters() {
+    document.getElementById('cfHiddenStatus').value = _cf.status;
+    document.getElementById('cfHiddenSortBy').value = _cf.sort;
+    document.getElementById('categoryFilterForm').submit();
+  }
+
+  function clearCategoryFilters() {
+    _cf.status = '';
+    _cf.sort   = 'newest';
+    syncCategoryFilterUI();
+    document.getElementById('cfHiddenStatus').value = '';
+    document.getElementById('cfHiddenSortBy').value = 'newest';
+    document.getElementById('categoryFilterForm').submit();
+  }
+
+  function removeCategoryChip(param) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(param);
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+  }
+
+  // Init on load
+  syncCategoryFilterUI();
+</script>
+
+<%- include('../../../partials/footer') %>

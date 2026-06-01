@@ -1,0 +1,21 @@
+const http = require('http');
+
+const options = {
+  hostname: 'localhost',
+  port: 3000,
+  path: '/admin-login', // Just testing if the server responds
+  method: 'GET',
+};
+
+const req = http.request(options, (res) => {
+  console.log(`STATUS: ${res.statusCode}`);
+  let data = '';
+  res.on('data', (chunk) => data += chunk);
+  res.on('end', () => console.log('Response length:', data.length));
+});
+
+req.on('error', (e) => {
+  console.error(`Problem with request: ${e.message}`);
+});
+
+req.end();

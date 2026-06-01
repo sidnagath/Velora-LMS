@@ -343,7 +343,7 @@
                   <img src="<%= rc.thumbnail || '/placeholder.png' %>" alt="<%= rc.title %>">
                 </div>
                 <div class="cd-rc-body">
-                  <div class="cd-rc-cat"><%= rc.category || 'DEVELOPMENT' %></div>
+                  <div class="cd-rc-cat"><%= (rc.category && rc.category.name) ? rc.category.name.toUpperCase() : 'DEVELOPMENT' %></div>
                   <div class="cd-rc-title"><%= rc.title %></div>
                   <div class="cd-rc-footer">
                     <div class="cd-rc-rating"><span style="color:#F59E0B;">★</span><%= rc.rating || '0.0' %></div>
