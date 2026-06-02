@@ -14,37 +14,40 @@
                 </div>
             </div>
 
-            <!-- Header Text -->
+       
+
+    <!-- Header Text -->
             <h2 class="text-2xl font-bold text-gray-900 mb-3 tracking-tight">Verify OTP</h2>
             <p class="text-gray-500 text-sm mb-8 px-4 leading-relaxed">
                 Enter the verification code sent to your email
             </p>
             
-<% if(errors?.general){ %>
-  <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:10px;margin-bottom:14px;">
-    <%= errors.general %>
-  </p>
-<% } %>
+               <% if(errors?.general){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.general %>
+               </p>
+               <% } %>
 
             <form action="/verify-otp" method="POST" class="w-full text-left space-y-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
-                        <input type="text" name="otp" value="<%= formData?.otp || '' %>" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••" maxlength="6">
- <% if(errors?.otp){ %>
-<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-<%= errors.otp %>
-</p>
-<% } %>
-                      </div>
+                        <input type="text" name="otp" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••" maxlength="6">
+                    </div>
                 </div>
 
-
+                <% if(errors?.otp){ %>
+               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
+               <%= errors.otp %>
+               </p>
+               <% } %>
 
                 <button type="submit" class="btn-primary w-full text-center block mb-6">Verify Code</button>
             </form>
 
 <div class="text-center mt-4 space-y-3">
+
+  <!-- TIMER TEXT -->
 
   <p
     id="timerText"
@@ -54,6 +57,8 @@
     <span id="otpTimer">01:00</span>
     seconds
   </p>
+
+  <!-- RESEND FORM -->
 
   <form
     action="/resend-otp"
@@ -84,7 +89,7 @@
 <script>
 
   const TIMER_KEY =
-    "forgotPasswordOtpExpiry";
+    "signupOtpExpiry";
 
   // INITIAL TIMER
 
@@ -131,7 +136,7 @@
         / 1000
       );
 
-    // TIMER ENDED
+    // TIMER FINISHED
 
     if (remaining <= 0) {
 
@@ -179,7 +184,7 @@
 
   }
 
-  // INITIAL
+  // INITIAL CALL
 
   updateTimer();
 
@@ -205,5 +210,6 @@
   );
 
 </script>
+
 
   <%- include('../../partials/footer') %>

@@ -5682,19 +5682,24 @@ async (req, res) => {
 };
 
 
-exports.getAdminLogout =
-(req, res) => {
+exports.getAdminLogout = (req, res) => {
 
   delete req.session.admin;
 
-  res.setHeader(
+  req.session.save(err => {
 
-    "Cache-Control",
+    if (err) {
+      console.log(err);
+      return res.redirect("/admin-login");
+    }
 
-    "no-store, no-cache, must-revalidate, private"
-  );
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, private"
+    );
 
-  res.redirect("/admin-login");
+    res.redirect("/admin-login");
+  });
 
 };
 

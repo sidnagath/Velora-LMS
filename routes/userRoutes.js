@@ -5,6 +5,7 @@ const userController=require("../controllers/userController");
 const {isUser}=require("../middleware/userMiddleware");
 const {noCache} = require('../middleware/noCache');
 const {isUserGuest}=require('../middleware/userGuestMiddleware');
+const {ensureActiveUser}=require('../middleware/ensureActiveUser');
 const upload = require("../config/multer");
 
 
@@ -39,28 +40,30 @@ router.post("/resend-otp", userController.resendOtp);
 
 router.get("/password-updated",noCache,userController.getPasswordUpdated);
 
-router.get("/user-dashboard", noCache, isUser,userController.getDashboard);
+router.get("/user-dashboard", noCache, isUser,ensureActiveUser,userController.getDashboard);
 
-router.get("/user-courses", noCache, isUser,userController.getCourses);
+router.get("/user-courses", noCache, isUser,ensureActiveUser, userController.getCourses);
 
-router.get("/user-courses/:courseId", noCache, isUser,userController.getCourseDetails);
+router.get("/user-courses/:courseId", noCache, isUser,ensureActiveUser,userController.getCourseDetails);
 
-router.get("/user-profile",noCache,isUser,userController.getProfileAccountDetails);
+router.get("/user-profile",noCache,isUser,ensureActiveUser,userController.getProfileAccountDetails);
 
-router.post("/user-profile/update-avatar",isUser,upload.single("avatar"),userController.postUpdateAvatar);
+router.post("/user-profile/update-avatar",isUser,ensureActiveUser,upload.single("avatar"),userController.postUpdateAvatar);
 
-router.get("/user-profile/edit",noCache,isUser,userController.getEditProfile);
+router.get("/user-profile/edit",noCache,isUser,ensureActiveUser,userController.getEditProfile);
 
-router.post("/user-profile/edit",isUser,userController.postProfileDetails);
+router.post("/user-profile/edit",isUser,ensureActiveUser,userController.postProfileDetails);
 
 
-router.get("/verify-email-change-otp",noCache,isUser,userController.getVerifyEmailChangeOtp);
+router.get("/verify-email-change-otp",noCache,isUser,ensureActiveUser,userController.getVerifyEmailChangeOtp);
 
-router.post("/verify-email-change-otp",isUser,userController.postVerifyEmailChangeOtp);
+router.post("/verify-email-change-otp",isUser,ensureActiveUser,userController.postVerifyEmailChangeOtp);
 
-router.get("/user-profile/change-password",noCache,isUser,userController.getChangePassword);
+router.post("/resend-profile-otp",isUser,ensureActiveUser,userController.resendProfileOtp);
 
-router.post("/user-profile/change-password",isUser,userController.postUpdatePassword);
+router.get("/user-profile/change-password",noCache,isUser,ensureActiveUser,userController.getChangePassword);
+
+router.post("/user-profile/change-password",isUser,ensureActiveUser,userController.postUpdatePassword);
 
 router.get("/user-logout",noCache,userController.getUserLogout);
 

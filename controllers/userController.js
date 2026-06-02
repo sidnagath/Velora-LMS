@@ -878,17 +878,20 @@ exports.postForgotPassword = async (req, res) => {
 
     // USER CHECK
 
-    const user =
-      await User.findOne({
-        email: trimmedEmail
-      });
+    const user = await User.findOne({
+  email: trimmedEmail
+});
 
-    if (!user) {
+if (!user) {
 
-      errors.email =
-        "User not found";
+  errors.email = "User not found";
 
-    }
+}
+else if (user.status === "inactive") {
+
+  errors.email = "Account is blocked. Please contact support.";
+
+}
 
     // IF ERRORS
 
@@ -2797,6 +2800,89 @@ async (req, res) => {
 
 };
 
+
+exports.resendProfileOtp = async (req, res) => {
+
+  try {
+
+    if (
+      !req.session.pendingProfileUpdate ||
+      !req.session.pendingProfileUpdate.email
+    ) {
+
+      return res.render(
+        "pages/user/profile/verify-email-change-otp",
+        {
+          title: "Verify Email Change",
+          isLoggedIn: true,
+          errors: {
+            general: "Session expired. Please try again."
+          },
+          success: {},
+          formData: {}
+        }
+      );
+
+    }
+
+    const otp = generateOTP();
+
+    req.session.emailChangeOTP = otp;
+
+    req.session.emailChangeOTPExpires =
+      Date.now() + 60 * 1000;
+
+    const transporter =
+      await createTransporter();
+
+    const info =
+      await transporter.sendMail({
+
+        from:
+          '"Velora" <no-reply@velora.com>',
+
+        to:
+          req.session.pendingProfileUpdate.email,
+
+        subject:
+          "Email Change Verification OTP",
+
+        text:
+          `Your OTP is ${otp}`
+
+      });
+
+    console.log(
+      nodemailer.getTestMessageUrl(info)
+    );
+
+    res.redirect(
+      "/verify-email-change-otp"
+    );
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    return res.render(
+      "pages/user/profile/verify-email-change-otp",
+      {
+        title: "Verify Email Change",
+        isLoggedIn: true,
+        errors: {
+          general: "Failed to resend OTP"
+        },
+        success: {},
+        formData: {}
+      }
+    );
+
+  }
+
+};
+
 // ==============================
 // POST CHANGE PASSWORD
 // ==============================
@@ -3209,21 +3295,24 @@ exports.getCourseDetails = async (req, res) => {
 
 
 //User-Profile-Logout
-exports.getUserLogout =
-(req, res) => {
+exports.getUserLogout = (req, res) => {
 
   delete req.session.user;
 
-  req.logout?.(() => {});
+  req.session.save(err => {
 
-  res.setHeader(
+    if (err) {
+      console.log(err);
+      return res.redirect("/login");
+    }
 
-    "Cache-Control",
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, private"
+    );
 
-    "no-store, no-cache, must-revalidate, private"
-  );
-
-  res.redirect("/login");
+    res.redirect("/login");
+  });
 
 };
 
