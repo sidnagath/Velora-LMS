@@ -6,6 +6,7 @@ const Course = require("../models/courseModel");
 const Module = require("../models/moduleModel");
 const Lesson = require("../models/lessonModel");
 const Resource = require("../models/resourceModel");
+const mongoose = require("mongoose");
 
 
 exports.getAdminLogin = (req, res) => {
@@ -1522,7 +1523,15 @@ async (req, res) => {
 exports.postAdminDeleteCategory =
 async (req, res) => {
   try {
-    const courseCount = await Course.countDocuments({ category: req.params.categoryId });
+
+    const categoryId = req.params.categoryId;
+
+const courseCount =
+  await Course.countDocuments({
+    category: categoryId,
+    isDeleted: false
+  });
+
     if (courseCount > 0) {
       return res.redirect("/admin-categories?error=in-use");
     }
@@ -1942,10 +1951,6 @@ async (req, res) => {
       courseId
     );
 
-    req.flash(
-      "success",
-      "Course deleted successfully"
-    );
 
     res.redirect(
       "/admin-courses?success=deleted"
@@ -2403,62 +2408,69 @@ await Course.findByIdAndUpdate(
 
   catch (err) {
 
-    console.log(err);
+  console.log(err);
 
-    const existingCourse =
-      await Course.findById(
-        req.params.courseId
-      );
+  const existingCourse =
+    await Course.findById(
+      req.params.courseId
+    );
 
-    return res.render(
+  const categories =
+    await Category.find({
+      status: "active"
+    }).sort({ name: 1 });
 
-      "pages/admin/courses/basic-info",
+  return res.render(
 
-      {
+    "pages/admin/courses/basic-info",
+
+    {
+
+      title:
+        "Velora - Course Basic Info",
+
+      isLoggedIn: true,
+
+      isAdmin: true,
+
+      isEdit: true,
+
+      course:
+        existingCourse,
+
+      categories,
+
+      errors: {
+
+        general:
+          "Something went wrong"
+
+      },
+
+      formData: {
 
         title:
-          "Velora - Course Basic Info",
+          req.body.title,
 
-        isLoggedIn: true,
+        description:
+          req.body.description,
 
-        isAdmin: true,
+        category:
+          req.body.category,
 
-        isEdit: true,
+        instructor:
+          req.body.instructor,
 
-        course:
-          existingCourse,
-
-        errors: {
-
-          general:
-            "Something went wrong"
-
-        },
-
-        formData: {
-
-          title:
-            req.body.title,
-
-          description:
-            req.body.description,
-
-          category:
-            req.body.category,
-
-          instructor:
-            req.body.instructor,
-
-          level:
-            req.body.level
-
-        }
+        level:
+          req.body.level
 
       }
 
-    );
+    }
 
-  }
+  );
+
+}
 
 };
 
@@ -2602,6 +2614,8 @@ async (req, res) => {
 
         course,
 
+        module: {}, 
+
         errors: {},
 
         formData: {}
@@ -2635,6 +2649,8 @@ async (req, res) => {
         isEdit: false,
 
         course: {},
+
+        module: {}, 
 
         errors: {
 
@@ -2743,6 +2759,8 @@ async (req, res) => {
 
           course,
 
+          module: {}, 
+
           errors,
 
           formData: {
@@ -2819,6 +2837,8 @@ async (req, res) => {
         isEdit: false,
 
         course: {},
+
+        module: {}, 
 
         errors: {
 
@@ -3172,8 +3192,6 @@ if(!module){
 }
 
 await Module.findByIdAndDelete(req.params.moduleId);
-
-req.flash("success","Module deleted successfully");
 
 res.redirect(`/admin-courses/${req.params.courseId}/modules`);
 
@@ -3750,7 +3768,6 @@ async (req, res) => {
     let {
       title,
       description,
-      duration
     } = req.body;
 
     // TRIM
@@ -3760,9 +3777,6 @@ async (req, res) => {
 
     description =
       description?.trim();
-
-    duration =
-      duration?.trim();
 
     // VIDEO
 
@@ -3852,14 +3866,6 @@ async (req, res) => {
 
     }
 
-    // DURATION
-
-    if (!duration) {
-
-      errors.duration =
-        "Enter lesson duration";
-
-    }
 
     // VIDEO TYPE
 
@@ -3939,9 +3945,7 @@ async (req, res) => {
 
             title,
 
-            description,
-
-            duration
+            description
 
           }
 
@@ -3958,9 +3962,6 @@ async (req, res) => {
 
     lesson.description =
       description;
-
-    lesson.duration =
-      duration;
 
     // OPTIONAL VIDEO
 
@@ -4045,9 +4046,6 @@ async (req, res) => {
           description:
             req.body.description,
 
-          duration:
-            req.body.duration
-
         }
 
       }
@@ -4082,11 +4080,6 @@ exports.postAdminDeleteLesson =async (req, res) => {
     // DELETE LESSON
     await Lesson.findByIdAndDelete(
       req.params.lessonId
-    );
-
-    req.flash(
-      "success",
-      "Lesson deleted successfully"
     );
 
     // REDIRECT
