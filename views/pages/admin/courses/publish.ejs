@@ -21,7 +21,7 @@
           <div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 z-0"></div>
           <div class="absolute top-1/2 left-0 w-full h-0.5 bg-blue-600 -translate-y-1/2 z-0"></div>
           
-          <!-- Steps 1-4 (Done) -->
+          <!-- Step 1 (Done) -->
           <div class="relative z-10 flex flex-col items-center">
             <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -29,6 +29,7 @@
             <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">1. Basic Info</span>
           </div>
 
+          <!-- Step 2 (Done) -->
           <div class="relative z-10 flex flex-col items-center">
             <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -36,27 +37,16 @@
             <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">2. Curriculum</span>
           </div>
 
+          <!-- Step 3 (Active) -->
           <div class="relative z-10 flex flex-col items-center">
-            <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">3. Lessons</span>
-          </div>
-
-          <div class="relative z-10 flex flex-col items-center">
-            <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white shadow-md flex items-center justify-center text-white font-bold">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <span class="absolute top-12 text-xs font-bold text-gray-900 whitespace-nowrap">4. Resources</span>
-          </div>
-
-          <!-- Step 5 (Active) -->
-          <div class="relative z-10 flex flex-col items-center">
-            <div class="w-10 h-10 rounded-full bg-white border-4 border-blue-600 shadow-md flex items-center justify-center text-blue-600 font-bold">5</div>
-            <span class="absolute top-12 text-xs font-bold text-blue-600 whitespace-nowrap">5. Publish</span>
+            <div class="w-10 h-10 rounded-full bg-white border-4 border-blue-600 shadow-md flex items-center justify-center text-blue-600 font-bold">3</div>
+            <span class="absolute top-12 text-xs font-bold text-blue-600 whitespace-nowrap">3. Publish</span>
           </div>
         </div>
       </div>
+
+      <!-- FLASH BANNER -->
+      <%- include('../../../partials/admin-banner') %>
 
       <form action="/admin-courses/<%= course._id %>/publish" method="POST" class="space-y-8">
         
@@ -77,12 +67,34 @@
             <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-4 line-clamp-2"><%= course.title %></h2>
             
             <% 
-              let totalMin = lessons.length * 15;
-              let hr = Math.floor(totalMin / 60);
-              let mn = totalMin % 60;
-              let durStr = hr > 0 ? `${hr}h ${mn}m Total` : `${mn}m Total`;
+              // Sum durations entered by the admin (stored as strings like "45" or "1:30")
+              let totalSeconds = 0;
+              lessons.forEach(function(l) {
+                if (l.duration) {
+                  const raw = String(l.duration).trim();
+                  if (raw.indexOf(':') !== -1) {
+                    // Format: mm:ss or hh:mm:ss
+                    const parts = raw.split(':').map(Number);
+                    if (parts.length === 3) totalSeconds += parts[0]*3600 + parts[1]*60 + parts[2];
+                    else if (parts.length === 2) totalSeconds += parts[0]*60 + parts[1];
+                  } else {
+                    // Plain number — treat as minutes
+                    const n = parseFloat(raw);
+                    if (!isNaN(n)) totalSeconds += n * 60;
+                  }
+                }
+              });
+              const totalMin = Math.floor(totalSeconds / 60);
+              const hr = Math.floor(totalMin / 60);
+              const mn = totalMin % 60;
+              const durStr = totalSeconds === 0 ? 'N/A' : (hr > 0 ? `${hr}h ${mn}m Total` : `${mn}m Total`);
+              const moduleCount = modules ? modules.length : 0;
             %>
             <div class="flex flex-wrap items-center gap-6 text-blue-100 text-sm font-medium mt-4">
+              <span class="flex items-center">
+                <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                <%= moduleCount %> Module<%= moduleCount !== 1 ? 's' : '' %>
+              </span>
               <span class="flex items-center">
                 <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                 <%= lessons.length %> Lesson<%= lessons.length !== 1 ? 's' : '' %>
@@ -222,9 +234,9 @@
 
         <!-- ACTIONS -->
         <div class="flex items-center justify-between pt-6 border-t border-gray-100">
-          <a href="/admin-courses/<%= course._id %>/resources" class="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
+          <a href="/admin-courses/<%= course._id %>/modules" class="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back to Resources
+            Back to Curriculum
           </a>
           <div class="flex items-center space-x-4">
             <a href="/admin-courses" class="px-8 py-3.5 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">Save Draft</a>

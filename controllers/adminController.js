@@ -269,7 +269,9 @@ const activities = [
         title: 'Velora - Admin Dashboard', 
         isLoggedIn: true,
         activities,
-        isAdmin: true
+        isAdmin: true,
+        flashMsg: req.query.flashMsg ? decodeURIComponent(req.query.flashMsg) : "",
+        flashType: req.query.flashType || "success"
     });
   }
 
@@ -339,7 +341,9 @@ exports.getAdminUsers = async (req, res) => {
       filterStatus,
       filterProvider,
       sortBy,
-      success: req.query.success || ""
+      success: req.query.success || "",
+      flashMsg: req.query.flashMsg ? decodeURIComponent(req.query.flashMsg) : "",
+      flashType: req.query.flashType || "success"
     });
 
   } catch (err) {
@@ -614,7 +618,7 @@ async (req, res) => {
     });
 
     res.redirect(
-      "/admin-users?success=created"
+      "/admin-users?flashType=success&flashMsg=" + encodeURIComponent("User '" + trimmedName + "' created successfully.")
     );
 
   }
@@ -1032,7 +1036,7 @@ async (req, res) => {
     );
 
     res.redirect(
-      "/admin-users?success=updated"
+      "/admin-users?flashType=success&flashMsg=" + encodeURIComponent("User '" + trimmedName + "' updated successfully.")
     );
 
   }
@@ -1084,6 +1088,9 @@ exports.deleteUser = async (req, res) => {
 
   try {
 
+    const userToDelete = await User.findById(req.params.id);
+    const userName = userToDelete ? userToDelete.name : "User";
+
     await User.findByIdAndUpdate(
       req.params.id,
       {
@@ -1092,7 +1099,7 @@ exports.deleteUser = async (req, res) => {
       }
     );
 
-    res.redirect("/admin-users?success=deleted");
+    res.redirect("/admin-users?flashType=success&flashMsg=" + encodeURIComponent("User '" + userName + "' deleted successfully."));
 
   } catch (err) {
 
@@ -1122,7 +1129,7 @@ async (req, res) => {
     const page =
       Number(req.query.page) || 1;
 
-    const LIMIT = 12;
+    const LIMIT = 10;
 
     const skip =
       (page - 1) * LIMIT;
@@ -1270,6 +1277,8 @@ const categoriesWithCoursesCount =
 
         success: req.query.success || "",
         error: req.query.error || "",
+        flashMsg: req.query.flashMsg ? decodeURIComponent(req.query.flashMsg) : "",
+        flashType: req.query.flashType || "success",
         errors: {}
 
       }
@@ -1322,6 +1331,10 @@ const categoriesWithCoursesCount =
         success:"",
 
         error:"",
+
+        flashMsg: "",
+
+        flashType: "success",
 
         errors: {
 
@@ -1406,7 +1419,7 @@ async (req, res) => {
 
     await Category.create({ name, description, thumbnail, status });
 
-    res.redirect("/admin-categories?success=created");
+    res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + name + "' created successfully."));
 
   } catch (err) {
     console.log(err);
@@ -1509,7 +1522,7 @@ async (req, res) => {
 
     await category.save();
 
-    res.redirect("/admin-categories?success=updated");
+    res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + name + "' updated successfully."));
 
   } catch (err) {
     console.log(err);
@@ -1526,6 +1539,9 @@ async (req, res) => {
 
     const categoryId = req.params.categoryId;
 
+    const categoryToDelete = await Category.findById(categoryId);
+    const categoryName = categoryToDelete ? categoryToDelete.name : "Category";
+
 const courseCount =
   await Course.countDocuments({
     category: categoryId,
@@ -1533,10 +1549,10 @@ const courseCount =
   });
 
     if (courseCount > 0) {
-      return res.redirect("/admin-categories?error=in-use");
+      return res.redirect("/admin-categories?flashType=error&flashMsg=" + encodeURIComponent("Cannot delete '" + categoryName + "' — it is assigned to " + courseCount + " course(s)."));
     }
     await Category.findByIdAndDelete(req.params.categoryId);
-    res.redirect("/admin-categories?success=deleted");
+    res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + categoryName + "' deleted successfully."));
   } catch (err) {
     console.log(err);
     res.redirect("/admin-categories");
@@ -1629,6 +1645,8 @@ async (req, res) => {
       filterCategory,
       sortBy,
       success: req.query.success || "",
+      flashMsg: req.query.flashMsg ? decodeURIComponent(req.query.flashMsg) : "",
+      flashType: req.query.flashType || "success",
       errors: {}
     });
 
@@ -1652,6 +1670,8 @@ async (req, res) => {
       filterLevel: "",
       filterCategory: "",
       sortBy: "newestUpdated",
+      flashMsg: "",
+      flashType: "success",
       errors: { general: "Something went wrong. Please try again." }
     });
   }
@@ -1862,7 +1882,7 @@ async (req, res) => {
 
     res.redirect(
 
-      `/admin-courses/${course._id}/modules`
+      `/admin-courses/${course._id}/modules?flashType=success&flashMsg=` + encodeURIComponent("Course '" + title + "' created successfully")
 
     );
 
@@ -1953,7 +1973,7 @@ async (req, res) => {
 
 
     res.redirect(
-      "/admin-courses?success=deleted"
+      "/admin-courses?flashType=success&flashMsg=" + encodeURIComponent("Course '" + course.title + "' deleted successfully")
     );
   }
 
@@ -2400,7 +2420,7 @@ await Course.findByIdAndUpdate(
 
     res.redirect(
 
-      `/admin-courses/${req.params.courseId}/modules`
+      `/admin-courses/${req.params.courseId}/modules?flashType=success&flashMsg=` + encodeURIComponent("Course '" + title + "' updated successfully")
 
     );
 
@@ -2519,48 +2539,28 @@ async (req, res) => {
 
 
     // GET LESSONS
+    const lessons = await Lesson.find({
+      moduleId: { $in: modules.map(module => module._id) }
+    }).sort({ order: 1 });
 
-    const lessons =
-       await Lesson.find({
+    // GET RESOURCES
+    const resources = await Resource.find({
+      courseId: req.params.courseId
+    });
 
-      moduleId: {
-      $in:
-      modules.map(
-        module => module._id
-       )
-       }
-     })
-  .sort({
-    order: 1
-  });
-
-
-res.render(
-
-  "pages/admin/courses/modules",
-
-  {
-
-    title:
-      "Velora - Course Modules",
-
-    isLoggedIn: true,
-
-    isAdmin: true,
-
-    course,
-
-    modules,
-
-    lessons,
-
-    errors: {},
-
-    formData: {}
-
-  }
-
-);
+    res.render("pages/admin/courses/modules", {
+      title: "Velora - Course Curriculum",
+      isLoggedIn: true,
+      isAdmin: true,
+      course,
+      modules,
+      lessons,
+      resources,
+      flashMsg: req.query.flashMsg ? decodeURIComponent(req.query.flashMsg) : "",
+      flashType: req.query.flashType || "success",
+      errors: {},
+      formData: {}
+    });
 
   }
 
@@ -2734,133 +2734,56 @@ async (req, res) => {
     }
 
     // IF ERRORS
-
-    if (
-      Object.keys(errors).length > 0
-    ) {
-
-      return res.render(
-
-        "pages/admin/courses/add-module",
-
-        {
-
-          title:
-            "Velora - Add Module",
-
-          activePage:
-            "courses",
-
-          isLoggedIn: true,
-
-          isAdmin: true,
-
-          isEdit: false,
-
-          course,
-
-          module: {}, 
-
-          errors,
-
-          formData: {
-
-            title,
-
-            description
-
-          }
-
-        }
-
-      );
-
+    if (Object.keys(errors).length > 0) {
+      if (req.xhr || req.headers.accept.includes('json')) {
+        return res.status(400).json({ success: false, errors });
+      }
+      return res.render("pages/admin/courses/add-module", {
+        title: "Velora - Add Module",
+        activePage: "courses",
+        isLoggedIn: true,
+        isAdmin: true,
+        isEdit: false,
+        course,
+        module: {}, 
+        errors,
+        formData: { title, description }
+      });
     }
 
     // MODULE ORDER
-
-    const moduleCount =
-
-      await Module.countDocuments({
-
-        courseId:
-          req.params.courseId
-
-      });
+    const moduleCount = await Module.countDocuments({ courseId: req.params.courseId });
 
     // CREATE MODULE
-
-    await Module.create({
-
-      courseId:
-        req.params.courseId,
-
+    const newModule = await Module.create({
+      courseId: req.params.courseId,
       title,
-
       description,
-
-      order:
-        moduleCount + 1
-
+      order: moduleCount + 1
     });
 
+    if (req.xhr || req.headers.accept.includes('json')) {
+      return res.json({ success: true, module: newModule });
+    }
+
     // REDIRECT
-
-    res.redirect(
-
-      `/admin-courses/${req.params.courseId}/modules`
-
-    );
-
-  }
-
-  catch (err) {
-
+    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+  } catch (err) {
     console.log(err);
-
-    return res.render(
-
-      "pages/admin/courses/add-module",
-
-      {
-
-        title:
-          "Velora - Add Module",
-
-        activePage:
-          "courses",
-
-        isLoggedIn: true,
-
-        isAdmin: true,
-
-        isEdit: false,
-
-        course: {},
-
-        module: {}, 
-
-        errors: {
-
-          general:
-            "Something went wrong"
-
-        },
-
-        formData: {
-
-          title:
-            req.body.title,
-
-          description:
-            req.body.description
-
-        }
-
-      }
-
-    );
-
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, error: "Something went wrong" });
+    }
+    return res.render("pages/admin/courses/add-module", {
+      title: "Velora - Add Module",
+      activePage: "courses",
+      isLoggedIn: true,
+      isAdmin: true,
+      isEdit: false,
+      course: {},
+      module: {}, 
+      errors: { general: "Something went wrong" },
+      formData: { title: req.body.title, description: req.body.description }
+    });
   }
 
 };
@@ -3066,140 +2989,77 @@ async (req, res) => {
     }
 
     // IF ERRORS
-
-    if (
-      Object.keys(errors).length > 0
-    ) {
-
-      return res.render(
-
-        "pages/admin/courses/add-module",
-
-        {
-
-          title:
-            "Velora - Edit Module",
-
-          activePage:
-            "courses",
-
-          isLoggedIn: true,
-
-          isAdmin: true,
-
-          isEdit: true,
-
-          course,
-
-          module,
-
-          errors,
-
-          formData: {
-
-            title,
-
-            description
-
-          }
-
-        }
-
-      );
-
+    if (Object.keys(errors).length > 0) {
+      if (req.xhr || req.headers.accept.includes('json')) {
+        return res.status(400).json({ success: false, errors });
+      }
+      return res.render("pages/admin/courses/add-module", {
+        title: "Velora - Edit Module",
+        activePage: "courses",
+        isLoggedIn: true,
+        isAdmin: true,
+        isEdit: true,
+        course,
+        module,
+        errors,
+        formData: { title, description }
+      });
     }
 
     // UPDATE MODULE
-
-    module.title =
-      title;
-
-    module.description =
-      description;
-
+    module.title = title;
+    module.description = description;
     await module.save();
 
+    if (req.xhr || req.headers.accept.includes('json')) {
+      return res.json({ success: true, module });
+    }
+
     // REDIRECT
-
-    res.redirect(
-
-      `/admin-courses/${req.params.courseId}/modules`
-
-    );
-
-  }
-
-  catch (err) {
-
+    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+  } catch (err) {
     console.log(err);
-
-    return res.render(
-
-      "pages/admin/courses/add-module",
-
-      {
-
-        title:
-          "Velora - Edit Module",
-
-        activePage:
-          "courses",
-
-        isLoggedIn: true,
-
-        isAdmin: true,
-
-        isEdit: true,
-
-        course: {},
-
-        module: {},
-
-        errors: {
-
-          general:
-            "Something went wrong"
-
-        },
-
-        formData: {
-
-          title:
-            req.body.title,
-
-          description:
-            req.body.description
-
-        }
-
-      }
-
-    );
-
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, error: "Something went wrong" });
+    }
+    return res.render("pages/admin/courses/add-module", {
+      title: "Velora - Edit Module",
+      activePage: "courses",
+      isLoggedIn: true,
+      isAdmin: true,
+      isEdit: true,
+      course: {},
+      module: {},
+      errors: { general: "Something went wrong" },
+      formData: { title: req.body.title, description: req.body.description }
+    });
   }
 
 };
 
 
-exports.postAdminDeleteModule = async (req, res) => 
-{
-try{
-const module=await Module.findById(req.params.moduleId);
-
-if(!module){
-  req.flash("error","Module not found");
-  return res.redirect("/admin-courses");
-}
-
-await Module.findByIdAndDelete(req.params.moduleId);
-
-res.redirect(`/admin-courses/${req.params.courseId}/modules`);
-
-}
-catch(err){
+exports.postAdminDeleteModule = async (req, res) => {
+  try {
+    const module = await Module.findById(req.params.moduleId);
+    if (!module) {
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+        return res.status(404).json({ success: false, error: "Module not found" });
+      }
+      req.flash("error","Module not found");
+      return res.redirect("/admin-courses");
+    }
+    await Module.findByIdAndDelete(req.params.moduleId);
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.json({ success: true });
+    }
+    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+  } catch(err) {
     console.log(err);
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, error: "Something went wrong" });
+    }
     res.redirect("/admin-courses");
-   }
+  }
 }
 
 
@@ -3338,7 +3198,8 @@ async (req, res) => {
 
     let {
       title,
-      description
+      description,
+      duration
     } = req.body;
 
  
@@ -3349,6 +3210,9 @@ async (req, res) => {
 
     description =
       description?.trim();
+
+    duration =
+      duration?.toString().trim();
 
 
     // VIDEO
@@ -3465,131 +3329,56 @@ async (req, res) => {
     }
 
     // IF ERRORS
-
-    if (
-      Object.keys(errors).length > 0
-    ) {
-
-      return res.render(
-
-        "pages/admin/courses/add-lesson",
-
-        {
-
-          title:
-            "Velora - Add Lesson",
-
-          activePage:
-            "courses",
-
-          isLoggedIn: true,
-
-          isAdmin: true,
-
-          isEdit: false,
-
-          course: {
-
-            _id:
-              req.params.courseId
-
-          },
-
-          module,
-
-          lesson: null,
-
-          errors,
-
-          formData: {
-
-            title,
-
-            description
-          }
-
-        }
-
-      );
-
+    if (Object.keys(errors).length > 0) {
+      if (req.xhr || req.headers.accept.includes('json')) {
+        return res.status(400).json({ success: false, errors });
+      }
+      return res.render("pages/admin/courses/add-lesson", {
+        title: "Velora - Add Lesson",
+        activePage: "courses",
+        isLoggedIn: true,
+        isAdmin: true,
+        isEdit: false,
+        course: { _id: req.params.courseId },
+        module,
+        lesson: null,
+        errors,
+        formData: { title, description }
+      });
     }
 
     // LESSON ORDER
-
-    const lessonCount =
-
-      await Lesson.countDocuments({
-
-        moduleId:
-          req.params.moduleId
-
-      });
+    const lessonCount = await Lesson.countDocuments({ moduleId: req.params.moduleId });
 
     // CREATE LESSON
-
-    await Lesson.create({
-
-      moduleId:
-        req.params.moduleId,
-
+    const newLesson = await Lesson.create({
+      moduleId: req.params.moduleId,
       title,
-
       description,
-
-      video:
-        "/uploads/" +
-        video.filename,
-
-      order:
-        lessonCount + 1
-
+      duration: duration || null,
+      video: "/uploads/" + video.filename,
+      order: lessonCount + 1
     });
 
+    if (req.xhr || req.headers.accept.includes('json')) {
+      return res.json({ success: true, lesson: newLesson });
+    }
+
     // REDIRECT
-
-    res.redirect(
-
-      `/admin-courses/${req.params.courseId}/modules`
-
-    );
-
-  }
-
-  catch (err) {
-
+    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+  } catch (err) {
     console.log(err);
-
-    return res.render(
-
-      "pages/admin/courses/add-lesson",
-
-      {
-
-        title:
-          "Velora - Add Lesson",
-
-        activePage:
-          "courses",
-
-        isLoggedIn: true,
-
-        isAdmin: true,
-
-        isEdit: false,
-
-        course: {
-
-          _id:
-            req.params.courseId
-
-        },
-
-        module: {
-
-          _id:
-            req.params.moduleId
-
-        },
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, error: "Something went wrong" });
+    }
+    return res.render("pages/admin/courses/add-lesson", {
+      title: "Velora - Add Lesson",
+      activePage: "courses",
+      isLoggedIn: true,
+      isAdmin: true,
+      isEdit: false,
+      course: { _id: req.params.courseId },
+      module: { _id: req.params.moduleId },
 
         lesson: null,
 
@@ -3768,6 +3557,7 @@ async (req, res) => {
     let {
       title,
       description,
+      duration,
     } = req.body;
 
     // TRIM
@@ -3777,6 +3567,9 @@ async (req, res) => {
 
     description =
       description?.trim();
+
+    duration =
+      duration?.toString().trim();
 
     // VIDEO
 
@@ -3910,189 +3703,88 @@ async (req, res) => {
     }
 
     // IF ERRORS
-
-    if (
-      Object.keys(errors).length > 0
-    ) {
-
-      return res.render(
-
-        "pages/admin/courses/add-lesson",
-
-        {
-
-          title:
-            "Velora - Edit Lesson",
-
-          activePage:
-            "courses",
-
-          isLoggedIn: true,
-
-          isAdmin: true,
-
-          isEdit: true,
-
-          course,
-
-          module,
-
-          lesson,
-
-          errors,
-
-          formData: {
-
-            title,
-
-            description
-
-          }
-
-        }
-
-      );
-
+    if (Object.keys(errors).length > 0) {
+      if (req.xhr || req.headers.accept.includes('json')) {
+        return res.status(400).json({ success: false, errors });
+      }
+      return res.render("pages/admin/courses/add-lesson", {
+        title: "Velora - Edit Lesson",
+        activePage: "courses",
+        isLoggedIn: true,
+        isAdmin: true,
+        isEdit: true,
+        course,
+        module,
+        lesson,
+        errors,
+        formData: { title, description }
+      });
     }
 
     // UPDATE
-
-    lesson.title =
-      title;
-
-    lesson.description =
-      description;
+    lesson.title = title;
+    lesson.description = description;
+    if (duration) lesson.duration = duration;
 
     // OPTIONAL VIDEO
-
     if (video) {
-
-      lesson.video =
-
-        "/uploads/" +
-        video.filename;
-
+      lesson.video = "/uploads/" + video.filename;
     }
 
     // SAVE
-
     await lesson.save();
 
+    if (req.xhr || req.headers.accept.includes('json')) {
+      return res.json({ success: true, lesson });
+    }
+
     // REDIRECT
-
-    res.redirect(
-
-      `/admin-courses/${req.params.courseId}/modules`
-
-    );
-
-  }
-
-  catch (err) {
-
+    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+  } catch (err) {
     console.log(err);
-
-    return res.render(
-
-      "pages/admin/courses/add-lesson",
-
-      {
-
-        title:
-          "Velora - Edit Lesson",
-
-        activePage:
-          "courses",
-
-        isLoggedIn: true,
-
-        isAdmin: true,
-
-        isEdit: true,
-
-        course: {
-
-          _id:
-            req.params.courseId
-
-        },
-
-        module: {
-
-          _id:
-            req.params.moduleId
-
-        },
-
-        lesson: {
-
-          _id:
-            req.params.lessonId
-
-        },
-
-        errors: {
-
-          general:
-            "Something went wrong"
-
-        },
-
-        formData: {
-
-          title:
-            req.body.title,
-
-          description:
-            req.body.description,
-
-        }
-
-      }
-
-    );
-
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, error: "Something went wrong" });
+    }
+    return res.render("pages/admin/courses/add-lesson", {
+      title: "Velora - Edit Lesson",
+      activePage: "courses",
+      isLoggedIn: true,
+      isAdmin: true,
+      isEdit: true,
+      course: { _id: req.params.courseId },
+      module: { _id: req.params.moduleId },
+      lesson: { _id: req.params.lessonId },
+      errors: { general: "Something went wrong" },
+      formData: { title: req.body.title, description: req.body.description }
+    });
   }
 
 };
 
-exports.postAdminDeleteLesson =async (req, res) => {
+exports.postAdminDeleteLesson = async (req, res) => {
   try {
-    // FIND LESSON
-    const lesson =
-      await Lesson.findOne({
-        _id:
-        req.params.lessonId,
-        moduleId:
-        req.params.moduleId
-      });
-
-    // LESSON NOT FOUND
+    const lesson = await Lesson.findOne({ _id: req.params.lessonId, moduleId: req.params.moduleId });
     if (!lesson) {
-      req.flash(
-        "error",
-        "Lesson not found"
-      );
+      if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+        return res.status(404).json({ success: false, error: "Lesson not found" });
+      }
+      req.flash("error", "Lesson not found");
       return res.redirect(`/admin-courses/${req.params.courseId}/modules`);
     }
 
+    await Lesson.findByIdAndDelete(req.params.lessonId);
 
-    // DELETE LESSON
-    await Lesson.findByIdAndDelete(
-      req.params.lessonId
-    );
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.json({ success: true });
+    }
 
-    // REDIRECT
-    res.redirect(
-      `/admin-courses/${req.params.courseId}/modules`
-    );
-  }
-
-  catch (err) {
+    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+  } catch (err) {
     console.log(err);
-    res.redirect(
-      "/admin-courses"
-    );
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+      return res.status(500).json({ success: false, error: "Something went wrong" });
+    }
+    res.redirect("/admin-courses");
   }
 };
 
@@ -5656,8 +5348,11 @@ async (req, res) => {
 
     // SUCCESS
 
+    const successMsg = isPublishing
+      ? "Course '" + course.title + "' published successfully"
+      : "Course '" + course.title + "' moved back to draft";
     res.redirect(
-      "/admin-courses"
+      "/admin-courses?flashType=success&flashMsg=" + encodeURIComponent(successMsg)
     );
 
   }

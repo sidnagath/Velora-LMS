@@ -126,6 +126,7 @@
                <% courses.forEach(course => { %>
 <div onclick="window.location.href='/courses/<%= course._id %>'" class="w-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col group cursor-pointer" style="height: 450px;">
 
+    
     <!-- IMAGE -->
 
     <div class="w-full overflow-hidden bg-gray-200" style="position: relative; height: 14rem; width: 100%;">
@@ -190,7 +191,7 @@
 
                 <%= course.basePrice === 0
                 ? 'Free'
-                : '$' + course.basePrice %>
+                : '₹' + course.basePrice %>
 
             </span>
 

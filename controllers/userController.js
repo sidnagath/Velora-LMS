@@ -57,13 +57,25 @@ exports.getLogin = (req, res) => {
     return res.redirect("/user-dashboard");
   }
 
+  let errors = {};
+
+  if (
+    req.query.error ===
+    "inactive"
+  ) {
+
+    errors.general =
+      "Account is inactive";
+
+  }
+
   res.render("pages/guest/login", {
 
     title: "Velora - Login",
 
     isLoggedIn: false,
 
-    errors: {},
+    errors,
 
     formData: {}
 
@@ -474,21 +486,30 @@ exports.postSignup = async (req, res) => {
 
 
 
-exports.getVerifySignupOtp = (req, res) => {
+
+exports.getVerifySignupOtp =
+(req, res) => {
 
   res.render(
     "pages/guest/verify-signupotp",
     {
+
       title:
         "Velora - Verify Signup OTP",
 
       isLoggedIn: false,
 
-      errors: {}
+      errors: {},
+
+      otpExpires:
+        req.session.signupOTPExpires || 0
+
     }
   );
 
 };
+
+
 
 
 exports.postVerifySignupOtp = async (req, res) => {
@@ -528,8 +549,8 @@ exports.postVerifySignupOtp = async (req, res) => {
       req.session.signupOTPExpires
     ) {
 
-      errors.general =
-        "OTP expired";
+    errors.general =
+  "OTP has expired. Please resend a new OTP.";
 
     }
 
@@ -552,16 +573,19 @@ exports.postVerifySignupOtp = async (req, res) => {
     ) {
 
       return res.render(
-        "pages/guest/verify-signupotp",
-        {
-          title:
-            "Velora - Verify Signup OTP",
+  "pages/guest/verify-signupotp",
+  {
+    title:
+      "Velora - Verify Signup OTP",
 
-          isLoggedIn: false,
+    isLoggedIn: false,
 
-          errors
-        }
-      );
+    errors,
+
+    otpExpires:
+      req.session.signupOTPExpires || 0
+  }
+);
 
     }
 
@@ -610,22 +634,25 @@ exports.postVerifySignupOtp = async (req, res) => {
 
     console.log(err);
 
-    res.render(
-      "pages/guest/verify-signupotp",
-      {
-        title:
-          "Velora - Verify Signup OTP",
+   res.render(
+  "pages/guest/verify-signupotp",
+  {
+    title:
+      "Velora - Verify Signup OTP",
 
-        isLoggedIn: false,
+    isLoggedIn: false,
 
-        errors: {
+    errors: {
 
-          general:
-            "Something went wrong"
+      general:
+        "Something went wrong"
 
-        }
-      }
-    );
+    },
+
+    otpExpires:
+      req.session.signupOTPExpires || 0
+  }
+);
 
   }
 
@@ -728,102 +755,68 @@ exports.resendSignupOtp = async (req, res) => {
 };
 
 exports.googleAuthCallback =
-async (req, res) => {
+(req, res, next) => {
 
-  try {
+  passport.authenticate(
+    "google",
+    (
+      err,
+      user,
+      info
+    ) => {
 
-    // GOOGLE AUTH FAILED
+      if (err) {
 
-    if (!req.user) {
+        console.log(err);
 
-      return res.render(
-        "pages/guest/login",
-        {
-          title:
-            "Velora - Login",
+        return res.render(
+          "pages/guest/login",
+          {
+            title:
+              "Velora - Login",
 
-          isLoggedIn: false,
+            isLoggedIn: false,
 
-          errors: {
-            general:
-              "Google authentication failed"
-          },
+            errors: {
+              general:
+                "Something went wrong"
+            },
 
-          formData: {}
-        }
-      );
+            formData: {}
+          }
+        );
 
-    }
-
-    // INACTIVE ACCOUNT
-
-    if (
-      req.user.status ===
-      "inactive"
-    ) {
-
-      return res.render(
-        "pages/guest/login",
-        {
-          title:
-            "Velora - Login",
-
-          isLoggedIn: false,
-
-          errors: {
-            general:
-              "Account is inactive"
-          },
-
-          formData: {}
-        }
-      );
-
-    }
-
-    // SESSION
-
-    req.session.user = {
-
-      id:
-        req.user._id,
-
-      name:
-        req.user.name,
-
-      email:
-        req.user.email
-
-    };
-
-    res.redirect(
-      "/user-dashboard"
-    );
-
-  }
-
-  catch (err) {
-
-    console.log(err);
-
-    return res.render(
-      "pages/guest/login",
-      {
-        title:
-          "Velora - Login",
-
-        isLoggedIn: false,
-
-        errors: {
-          general:
-            "Something went wrong"
-        },
-
-        formData: {}
       }
-    );
 
-  }
+      if (!user) {
+
+        return res.render(
+          "pages/guest/login",
+          {
+            title:
+              "Velora - Login",
+
+            isLoggedIn: false,
+
+            errors: {
+              general:
+                info?.message ||
+                "Google authentication failed"
+            },
+
+            formData: {}
+          }
+        );
+
+      }
+
+      req.user = user;
+
+      next();
+
+    }
+
+  )(req, res, next);
 
 };
 
@@ -995,14 +988,13 @@ else if (user.status === "inactive") {
 
 };
 
-exports.getVerifyOtp = (req, res) => {
+exports.getVerifyOtp =
+(req, res) => {
+
 
   res.render(
-
     "pages/guest/verify-otp",
-
     {
-
       title:
         "Velora - Verify OTP",
 
@@ -1010,10 +1002,9 @@ exports.getVerifyOtp = (req, res) => {
 
       errors: {},
 
-      formData: {}
-
+      otpExpires:
+        req.session.otpExpires || 0
     }
-
   );
 
 };
@@ -1089,18 +1080,15 @@ exports.postVerifyOtp = (req, res) => {
 
     isLoggedIn: false,
 
-    errors: {
-
-      otp:
-        "Invalid OTP"
-
-    },
+    errors,
 
     formData: {
 
       otp
 
-    }
+    },
+    otpExpires:
+  req.session.otpExpires || 0
 
   }
 
@@ -1136,7 +1124,9 @@ exports.postVerifyOtp = (req, res) => {
           general:
             "Something went wrong"
 
-        }
+        },
+    otpExpires:
+  req.session.otpExpires || 0
       }
     );
 
@@ -1372,9 +1362,12 @@ exports.resendOtp = async (req, res) => {
             general:
               "Session expired. Please try again."
 
-          }
         }
-      );
+        ,
+        otpExpires:
+  req.session.otpExpires || 0
+    }
+     );
 
     }
 
@@ -1425,6 +1418,7 @@ exports.resendOtp = async (req, res) => {
 
   }
 
+
   catch (err) {
 
     console.log(err);
@@ -1441,12 +1435,13 @@ exports.resendOtp = async (req, res) => {
 
           general:
             "Failed to resend OTP"
-
+        },
+ otpExpires:
+  req.session.otpExpires || 0
         }
-      }
-    );
-
+      );
   }
+
 
 };
 
@@ -2441,7 +2436,9 @@ if (
 
           },
 
-          formData: {}
+          formData: {},
+           otpExpires:
+      req.session.emailChangeOTPExpires || 0
 
         }
 
@@ -2547,25 +2544,23 @@ exports.getVerifyEmailChangeOtp =
 (req, res) => {
 
   res.render(
+  "pages/user/profile/verify-email-change-otp",
+  {
+    title:
+      "Verify Email Change",
 
-    "pages/user/profile/verify-email-change-otp",
+    isLoggedIn: true,
 
-    {
+    errors: {},
 
-      title:
-        "Verify Email Change",
+    success: {},
 
-      isLoggedIn: true,
+    formData: {},
 
-      errors: {},
-
-      success: {},
-
-      formData: {}
-
-    }
-
-  );
+    otpExpires:
+      req.session.emailChangeOTPExpires || 0
+  }
+);
 
 };
 
@@ -2611,7 +2606,9 @@ async (req, res) => {
 
             otp
 
-          }
+          },
+          otpExpires:
+  req.session.emailChangeOTPExpires || 0
 
         }
 
@@ -2653,7 +2650,9 @@ async (req, res) => {
 
             otp
 
-          }
+          },
+          otpExpires:
+  req.session.emailChangeOTPExpires || 0
 
         }
 
@@ -2693,7 +2692,9 @@ async (req, res) => {
 
           success: {},
 
-          formData: {}
+          formData: {},
+          otpExpires:
+  req.session.emailChangeOTPExpires || 0
 
         }
 
@@ -2758,7 +2759,9 @@ async (req, res) => {
 
         },
 
-        formData: {}
+        formData: {},
+        otpExpires:
+  req.session.emailChangeOTPExpires || 0
 
       }
 
@@ -2790,7 +2793,9 @@ async (req, res) => {
 
         success: {},
 
-        formData: {}
+        formData: {},
+        otpExpires:
+  req.session.emailChangeOTPExpires || 0
 
       }
 
@@ -2819,7 +2824,9 @@ exports.resendProfileOtp = async (req, res) => {
             general: "Session expired. Please try again."
           },
           success: {},
-          formData: {}
+          formData: {},
+           otpExpires:
+      req.session.emailChangeOTPExpires || 0
         }
       );
 
@@ -2875,7 +2882,9 @@ exports.resendProfileOtp = async (req, res) => {
           general: "Failed to resend OTP"
         },
         success: {},
-        formData: {}
+        formData: {},
+        otpExpires:
+      req.session.emailChangeOTPExpires || 0
       }
     );
 

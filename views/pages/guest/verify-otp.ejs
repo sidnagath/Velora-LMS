@@ -49,14 +49,12 @@
 
   <!-- TIMER TEXT -->
 
-  <p
-    id="timerText"
-    class="text-sm text-gray-500"
-  >
-    Resend OTP in
-    <span id="otpTimer">01:00</span>
-    seconds
-  </p>
+<p id="timerText" class="text-sm text-gray-500">
+  OTP expires in
+  <span id="otpTimer" class="font-semibold text-[#0B5ED7]">
+    01:00
+  </span>
+</p>
 
   <!-- RESEND FORM -->
 
@@ -88,126 +86,80 @@
 
 <script>
 
-  const TIMER_KEY =
-    "signupOtpExpiry";
+const otpExpiry =
+    <%= otpExpires || 0 %>;
 
-  // INITIAL TIMER
 
-  if (
-    !localStorage.getItem(
-      TIMER_KEY
-    )
-  ) {
+ const timerElement =
+  document.getElementById(
+    "otpTimer"
+  );
 
-    localStorage.setItem(
-      TIMER_KEY,
-      Date.now() + 60 * 1000
+const resendBtn =
+  document.getElementById(
+    "resendBtn"
+  );
+
+const timerText =
+  document.getElementById(
+    "timerText"
+  );
+
+function updateTimer() {
+
+  const remaining =
+    Math.floor(
+      (otpExpiry - Date.now())
+      / 1000
     );
 
-  }
-
-  const timerElement =
-    document.getElementById(
-      "otpTimer"
-    );
-
-  const resendBtn =
-    document.getElementById(
-      "resendBtn"
-    );
-
-  const timerText =
-    document.getElementById(
-      "timerText"
-    );
-
-  function updateTimer() {
-
-    const expiryTime =
-      parseInt(
-        localStorage.getItem(
-          TIMER_KEY
-        )
-      );
-
-    const remaining =
-      Math.floor(
-        (expiryTime - Date.now())
-        / 1000
-      );
-
-    // TIMER FINISHED
-
-    if (remaining <= 0) {
-
-      timerElement.innerText =
-        "00:00";
-
-      resendBtn.disabled =
-        false;
-
-      resendBtn.classList.remove(
-        "text-gray-400",
-        "cursor-not-allowed"
-      );
-
-      resendBtn.classList.add(
-        "text-blue-600"
-      );
-
-      timerText.innerHTML =
-        "Didn't receive the OTP?";
-
-      return;
-
-    }
-
-    // TIMER RUNNING
-
-    resendBtn.disabled =
-      true;
-
-    const minutes =
-      String(
-        Math.floor(
-          remaining / 60
-        )
-      ).padStart(2, "0");
-
-    const seconds =
-      String(
-        remaining % 60
-      ).padStart(2, "0");
+  if (remaining <= 0) {
 
     timerElement.innerText =
-      `${minutes}:${seconds}`;
+      "00:00";
+
+    timerText.innerHTML =
+      '<span class="text-red-500 font-medium">OTP expired</span>';
+
+    resendBtn.disabled =
+      false;
+
+    resendBtn.classList.remove(
+      "text-gray-400",
+      "cursor-not-allowed"
+    );
+
+    resendBtn.classList.add(
+      "text-blue-600"
+    );
+
+    return;
 
   }
 
-  // INITIAL CALL
+  const minutes =
+    String(
+      Math.floor(
+        remaining / 60
+      )
+    ).padStart(2, "0");
 
-  updateTimer();
+  const seconds =
+    String(
+      remaining % 60
+    ).padStart(2, "0");
 
-  // LOOP
+  timerElement.innerText =
+    `${minutes}:${seconds}`;
 
-  setInterval(
-    updateTimer,
-    1000
-  );
+}
 
-  // RESET TIMER ON RESEND
+updateTimer();
 
-  resendBtn.addEventListener(
-    "click",
-    () => {
-
-      localStorage.setItem(
-        TIMER_KEY,
-        Date.now() + 60 * 1000
-      );
-
-    }
-  );
+setInterval(
+  updateTimer,
+  1000
+);
 
 </script>
 

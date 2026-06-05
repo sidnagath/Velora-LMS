@@ -105,6 +105,8 @@ exports.getCourses = async (req, res) => {
   }
 };
 
+
+
 // ── Course Detail ─────────────────────────────────────────────────────────────
 exports.getCourseDetails = async (req, res) => {
   try {

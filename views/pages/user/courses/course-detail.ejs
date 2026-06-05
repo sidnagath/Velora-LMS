@@ -347,7 +347,7 @@
                   <div class="cd-rc-title"><%= rc.title %></div>
                   <div class="cd-rc-footer">
                     <div class="cd-rc-rating"><span style="color:#F59E0B;">★</span><%= rc.rating || '0.0' %></div>
-                    <div class="cd-rc-price"><%= rc.pricingType === 'free' ? 'Free' : '$' + (rc.basePrice || 0).toFixed(2) %></div>
+                    <div class="cd-rc-price"><%= rc.pricingType === 'free' ? 'Free' : '₹' + (rc.basePrice || 0).toFixed(2) %></div>
                   </div>
                 </div>
               </div>
@@ -379,11 +379,11 @@
           <div class="cd-price-row">
             <% if (course.pricingType === 'free') { %>
               <span class="cd-price-main">Free</span>
-              <span class="cd-price-orig" style="text-decoration:line-through;">$49.99</span>
+              <span class="cd-price-orig" style="text-decoration:line-through;">₹4,999</span>
             <% } else { %>
-              <span class="cd-price-main">$<%= (course.discountPrice || course.basePrice || 0).toFixed(2) %></span>
+              <span class="cd-price-main">₹<%= (course.discountPrice || course.basePrice || 0).toFixed(2) %></span>
               <% if (course.discountPrice && course.discountPrice < course.basePrice) { %>
-                <span class="cd-price-orig">$<%= (course.basePrice || 0).toFixed(2) %></span>
+                <span class="cd-price-orig">₹<%= (course.basePrice || 0).toFixed(2) %></span>
               <% } %>
             <% } %>
           </div>
