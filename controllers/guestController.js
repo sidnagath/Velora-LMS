@@ -7,8 +7,8 @@ const mongoose  = require("mongoose");
 // ── Home ─────────────────────────────────────────────────────────────────────
 exports.getHome = (req, res) => {
 
-  if (req.session.user)  return res.redirect("/user-dashboard");
-  if (req.session.admin) return res.redirect("/admin-dashboard");
+  // if (req.session.user)  return res.redirect("/user-dashboard");
+  // if (req.session.admin) return res.redirect("/admin-dashboard");
 
   res.render("pages/guest/home", {
     title:     "Home - Velora",

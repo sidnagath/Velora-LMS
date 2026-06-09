@@ -85,6 +85,9 @@ router.post('/admin-courses/:courseId/resources/upload-file', upload.single("res
 router.post('/admin-courses/:courseId/resources/delete-file', noCache, isAdmin, adminController.postAdminCourseResourcesDeleteFile);
 router.post('/admin-courses/:courseId/resources/add-link', noCache, isAdmin, adminController.postAdminCourseResourcesAddLink);
 router.post('/admin-courses/:courseId/resources/delete-link', noCache, isAdmin, adminController.postAdminCourseResourcesDeleteLink);
+// router.post('/admin-courses/:courseId/resources/bulk-save', upload.array("resourceFiles", 10), noCache, isAdmin, adminController.postAdminCourseResourcesBulkSave);
+// router.post('/admin-courses/:courseId/resources/edit-file', noCache, isAdmin, adminController.postAdminCourseResourcesEditFile);
+// router.post('/admin-courses/:courseId/resources/edit-link', noCache, isAdmin, adminController.postAdminCourseResourcesEditLink);
 router.post('/admin-courses/:courseId/resources/save-notes', noCache, isAdmin, adminController.postAdminCourseResourcesSaveNotes);
 
 // Publish Course

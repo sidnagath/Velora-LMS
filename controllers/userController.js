@@ -6,6 +6,7 @@ const Category=require("../models/categoryModel");
 const mongoose=require("mongoose");
 const bcrypt=require("bcrypt");
 const nodemailer = require("nodemailer");
+const passport = require("passport");
 
 const createTransporter = require("../config/mail");
 
@@ -267,10 +268,6 @@ exports.getSignup = (req, res) => {
 
   if (req.session.user) {
     return res.redirect("/user-dashboard");
-  }
-
-  if (req.session.admin) {
-    return res.redirect("/admin-dashboard");
   }
 
   res.render("pages/guest/signup", {
@@ -810,10 +807,13 @@ exports.googleAuthCallback =
 
       }
 
-      req.user = user;
+      req.session.user = {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      };
 
-      next();
-
+      res.redirect("/user-dashboard");
     }
 
   )(req, res, next);
@@ -2047,15 +2047,9 @@ async (req, res) => {
     }
 
     // TRIM VALUES
-
-    const trimmedName =
-      name?.trim();
-
-    const trimmedEmail =
-      email?.trim();
-
-    const trimmedPhone =
-      phone?.trim() || "";
+    let trimmedName = name?.trim();
+    let trimmedEmail = email?.trim();
+    let trimmedPhone = phone?.trim() || "";
 
     // REGEX
 
@@ -2140,18 +2134,8 @@ async (req, res) => {
     }
 
     // GOOGLE USER CHECK
-
-    if (
-
-      user.authProvider ===
-      "google"
-
-    ) {
-
-      errors.general =
-
-        "Google accounts cannot edit profile details";
-
+    if (user.authProvider === "google") {
+      trimmedEmail = user.email; // Override manual email change
     }
 
     // RETURN ERRORS
@@ -2223,54 +2207,6 @@ if (!user) {
       },
 
       formData: req.body
-
-    }
-
-  );
-
-}
-
-// GOOGLE USER CHECK
-
-if (
-
-  user.authProvider ===
-  "google"
-
-) {
-
-  return res.render(
-
-    "pages/user/profile/edit-profile",
-
-    {
-
-      title:
-        "Edit Profile",
-
-      isLoggedIn: true,
-
-      user,
-
-      errors: {
-
-        general:
-          "Google accounts cannot edit profile details"
-
-      },
-
-      formData: {
-
-        name:
-          trimmedName,
-
-        email:
-          trimmedEmail,
-
-        phone:
-          trimmedPhone
-
-      }
 
     }
 

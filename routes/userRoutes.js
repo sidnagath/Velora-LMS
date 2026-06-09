@@ -13,7 +13,7 @@ router.get("/login",noCache,isUserGuest,userController.getLogin);
 router.post("/login", userController.postLogin);
 
 router.get("/auth/google",noCache,passport.authenticate("google",{scope: ["profile", "email"], prompt: "select_account"}));
-router.get("/auth/google/callback",noCache,passport.authenticate("google",{failureRedirect:"/login?error=inactive"}),userController.googleAuthCallback);
+router.get("/auth/google/callback",noCache,userController.googleAuthCallback);
 
 
 router.get("/signup", noCache,isUserGuest,userController.getSignup);

@@ -59,14 +59,20 @@
               Email Address
             </label>
 
+<% const isGoogleUser = user?.authProvider === 'google'; %>
             <input
               type="email"
               name="email"
               value="<%= formData?.email || user?.email || '' %>"
-             
-
-              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+              <%= isGoogleUser ? "readonly" : "" %>
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none <%= isGoogleUser ? 'opacity-70 cursor-not-allowed' : '' %>"
             >
+
+<% if(isGoogleUser) { %>
+<p class="mt-2 text-xs text-gray-500">
+  Email is managed through your Google account and cannot be changed.
+</p>
+<% } %>
 
 <% if(errors?.email){ %>
 <p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">

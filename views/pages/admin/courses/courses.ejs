@@ -266,8 +266,9 @@
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                           Edit
                         </a>
-                        <form action="/admin-courses/<%= course._id %>/delete" method="POST" onsubmit="return confirm('Delete this course?')">
-                          <button type="submit"
+                        <form id="delCourseForm-<%= course._id %>" action="/admin-courses/<%= course._id %>/delete" method="POST">
+                          <button type="button"
+                            onclick="openConfirmModal({title:'Delete Course?',message:'This will permanently delete \&quot;<%= course.title %>\&quot; and all its content. This action cannot be undone.',form:document.getElementById('delCourseForm-<%= course._id %>')})"
                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
                             <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             Delete
@@ -290,7 +291,7 @@
         <div class="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
           <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">
             Showing
-            <%= ((currentPage - 1) * LIMIT) + 1 %>
+            <%= totalCourses === 0 ? 0 : ((currentPage - 1) * LIMIT) + 1 %>
             to
             <%= Math.min(currentPage * LIMIT, totalCourses) %>
             of
@@ -298,7 +299,6 @@
             courses
           </p>
 
-          <% if(totalPages > 1){ %>
           <div class="flex items-center space-x-2">
             <% const buildCourseQuery = (p) => {
               const qs = new URLSearchParams();
@@ -312,11 +312,16 @@
             }; %>
 
             <% if(currentPage > 1){ %>
-              <a href="<%= buildCourseQuery(currentPage - 1) %>"
-                class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">Previous</a>
+              <a href="<%= buildCourseQuery(currentPage - 1) %>" class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                Previous
+              </a>
+            <% } else { %>
+              <span class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-400 bg-gray-50 cursor-not-allowed">
+                Previous
+              </span>
             <% } %>
 
-            <% for(let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++){ %>
+            <% for(let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages || 1, currentPage + 1); i++){ %>
               <a href="<%= buildCourseQuery(i) %>"
                 class="w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors
                 <%= currentPage === i ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100' %>">
@@ -325,11 +330,15 @@
             <% } %>
 
             <% if(currentPage < totalPages){ %>
-              <a href="<%= buildCourseQuery(currentPage + 1) %>"
-                class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-100">Next</a>
+              <a href="<%= buildCourseQuery(currentPage + 1) %>" class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                Next
+              </a>
+            <% } else { %>
+              <span class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-400 bg-gray-50 cursor-not-allowed">
+                Next
+              </span>
             <% } %>
           </div>
-          <% } %>
         </div>
 
       </div>

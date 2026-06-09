@@ -105,7 +105,7 @@
 user.authProvider === "google"; %>
               <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Full Name</label>
-                <input type="text" name="name" value="<%= (formData && formData.name) || user.name || '' %>"  <%= isGoogleUser ? "disabled" : "" %> class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
+                <input type="text" name="name" value="<%= (formData && formData.name) || user.name || '' %>" class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
 <% if(errors?.name){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
 <%= errors.name %>
@@ -114,7 +114,12 @@ user.authProvider === "google"; %>
               </div>
               <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Email Address</label>
-                <input type="email" name="email" value="<%= formData?.email || user.email || '' %>"   <%= isGoogleUser ? "disabled" : "" %> class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
+                <input type="email" name="email" value="<%= formData?.email || user.email || '' %>"   <%= isGoogleUser ? "readonly disabled" : "" %> class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors <%= isGoogleUser ? 'opacity-70 cursor-not-allowed' : '' %>">
+<% if(isGoogleUser) { %>
+<p class="mt-2 text-xs text-gray-500">
+  Email is managed through your Google account and cannot be changed.
+</p>
+<% } %>
 <% if(errors?.email){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
 <%= errors.email %>
@@ -134,7 +139,7 @@ user.authProvider === "google"; %>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Password</label>
                 <div class="relative">
                   <!-- Usually empty on edit unless they want to change -->
-                  <input type="password" name="password" placeholder="••••••••"  <%= isGoogleUser ? "disabled" : "" %> class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors pr-10">
+                  <input type="password" name="password" placeholder="••••••••"  <%= isGoogleUser ? "readonly disabled" : "" %> class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors pr-10 <%= isGoogleUser ? 'opacity-70 cursor-not-allowed' : '' %>">
 <% if(errors?.password){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
   <%= errors.password %>

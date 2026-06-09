@@ -1,0 +1,72 @@
+<!-- CONFIRM MODAL -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;" aria-modal="true" role="dialog">
+  <!-- Backdrop -->
+  <div id="confirmModalBackdrop" onclick="closeConfirmModal()" style="position:absolute;inset:0;background:rgba(15,23,42,0.45);backdrop-filter:blur(2px);transition:opacity 0.2s;"></div>
+  <!-- Dialog -->
+  <div id="confirmModalBox" style="position:relative;background:#fff;border-radius:1rem;box-shadow:0 20px 60px rgba(0,0,0,0.18);padding:2rem;width:100%;max-width:22rem;margin:1rem;transform:scale(0.95);transition:transform 0.2s;z-index:1;">
+    <!-- Icon -->
+    <div style="display:flex;align-items:center;justify-content:center;width:3rem;height:3rem;background:#FEF2F2;border-radius:50%;margin:0 auto 1rem;">
+      <svg style="width:1.5rem;height:1.5rem;color:#DC2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+    </div>
+    <h3 id="confirmModalTitle" style="font-size:1rem;font-weight:700;color:#111827;text-align:center;margin-bottom:0.5rem;">Are you sure?</h3>
+    <p id="confirmModalMessage" style="font-size:0.875rem;color:#6B7280;text-align:center;margin-bottom:1.5rem;">This action cannot be undone.</p>
+    <div style="display:flex;gap:0.75rem;">
+      <button onclick="closeConfirmModal()" style="flex:1;padding:0.65rem 1rem;border:1.5px solid #E5E7EB;background:#fff;color:#374151;font-weight:600;font-size:0.875rem;border-radius:0.625rem;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
+        Cancel
+      </button>
+      <button id="confirmModalOkBtn" style="flex:1;padding:0.65rem 1rem;background:#DC2626;border:none;color:#fff;font-weight:600;font-size:0.875rem;border-radius:0.625rem;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#B91C1C'" onmouseout="this.style.background='#DC2626'">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // Internal state
+    let _pendingForm   = null;
+    let _pendingCb     = null;
+
+    window.openConfirmModal = function (opts) {
+      // opts: { title, message, onConfirm } (callback mode)
+      //   or: { title, message, form }       (form-submit mode)
+      var modal = document.getElementById('confirmModal');
+      var box   = document.getElementById('confirmModalBox');
+      document.getElementById('confirmModalTitle').textContent   = opts.title   || 'Are you sure?';
+      document.getElementById('confirmModalMessage').textContent = opts.message || 'This action cannot be undone.';
+
+      _pendingForm = opts.form   || null;
+      _pendingCb   = opts.onConfirm || null;
+
+      modal.style.display = 'flex';
+      requestAnimationFrame(function () { box.style.transform = 'scale(1)'; });
+    };
+
+    window.closeConfirmModal = function () {
+      var modal = document.getElementById('confirmModal');
+      var box   = document.getElementById('confirmModalBox');
+      box.style.transform = 'scale(0.95)';
+      setTimeout(function () { modal.style.display = 'none'; }, 150);
+      _pendingForm = null;
+      _pendingCb   = null;
+    };
+
+    document.getElementById('confirmModalOkBtn').addEventListener('click', function () {
+      if (_pendingForm) {
+        // Remove the onsubmit guard so it submits cleanly
+        _pendingForm.onsubmit = null;
+        _pendingForm.submit();
+      } else if (_pendingCb) {
+        _pendingCb();
+      }
+      closeConfirmModal();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeConfirmModal();
+    });
+  })();
+</script>

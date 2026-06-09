@@ -290,7 +290,7 @@ exports.getAdminUsers = async (req, res) => {
 
     // PAGINATION
     const page  = parseInt(req.query.page) || 1;
-    const limit = 6;
+    const limit = 10;
     const skip  = (page - 1) * limit;
 
     // BUILD FILTER
@@ -734,22 +734,10 @@ async (req, res) => {
     } = req.body;
 
     // TRIM
-
-    const trimmedName =
-      name?.trim();
-
-    const trimmedEmail =
-      email?.trim();
-
-    const trimmedPassword =
-      password
-      ? password.trim()
-      : "";
-
-    const trimmedPhone =
-      phone
-      ? String(phone).trim()
-      : "";
+    let trimmedName = name?.trim();
+    let trimmedEmail = email?.trim();
+    let trimmedPassword = password ? password.trim() : "";
+    let trimmedPhone = phone ? String(phone).trim() : "";
 
     // REGEX
 
@@ -785,72 +773,9 @@ async (req, res) => {
     let errors = {};
 
     // GOOGLE ACCOUNT
-
-    if (
-      currentUser.authProvider ===
-      "google"
-    ) {
-
-      if (
-        trimmedPhone &&
-        !phoneRegex.test(
-          trimmedPhone
-        )
-      ) {
-
-        errors.phone =
-          "Enter valid 10 digit phone number";
-
-      }
-
-      if (
-        Object.keys(errors).length > 0
-      ) {
-
-        return res.render(
-          "pages/admin/user-management/edit-user",
-          {
-            title:
-              "Velora - Admin Edit User",
-
-            isLoggedIn: true,
-
-            isAdmin: true,
-
-            user: currentUser,
-
-            errors,
-
-            formData: {
-
-              phone:
-                trimmedPhone,
-
-              status
-
-            }
-          }
-        );
-
-      }
-
-      await User.findByIdAndUpdate(
-
-        req.params.id,
-
-        {
-          phone:
-            trimmedPhone,
-
-          status
-        }
-
-      );
-
-      return res.redirect(
-        "/admin-users"
-      );
-
+    if (currentUser.authProvider === "google") {
+      trimmedEmail = currentUser.email; // Ignore manual email changes
+      trimmedPassword = ""; // Ignore manual password changes
     }
 
     // REQUIRED
@@ -1326,7 +1251,7 @@ const categoriesWithCoursesCount =
 
         sortBy: "newest",
 
-        LIMIT: 12,
+        LIMIT: 10,
 
         success:"",
 
@@ -1578,7 +1503,7 @@ async (req, res) => {
 
     // PAGE
     const page  = Number(req.query.page) || 1;
-    const LIMIT = 12;
+    const LIMIT = 10;
     const skip  = (page - 1) * LIMIT;
 
     // BUILD FILTER
@@ -1665,7 +1590,7 @@ async (req, res) => {
       draftCourses: 0,
       instructorsCount: 0,
       allCategories: [],
-      LIMIT: 12,
+      LIMIT: 10,
       filterStatus: "",
       filterLevel: "",
       filterCategory: "",
