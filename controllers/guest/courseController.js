@@ -1,10 +1,16 @@
-const Course    = require("../models/courseModel");
-const Module    = require("../models/moduleModel");
-const Lesson    = require("../models/lessonModel");
-const Category  = require("../models/categoryModel");
-const mongoose  = require("mongoose");
+const Admin = require('../../models/adminModel');
+const User = require('../../models/userModel');
+const Category = require('../../models/categoryModel');
+const Course = require('../../models/courseModel');
+const Module = require('../../models/moduleModel');
+const Lesson = require('../../models/lessonModel');
+const Resource = require('../../models/resourceModel');
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const passport = require('passport');
+const createTransporter = require('../../config/mail');
 
-// ── Home ─────────────────────────────────────────────────────────────────────
 exports.getHome = (req, res) => {
 
   // if (req.session.user)  return res.redirect("/user-dashboard");
@@ -16,7 +22,6 @@ exports.getHome = (req, res) => {
   });
 };
 
-// ── Courses Listing ───────────────────────────────────────────────────────────
 exports.getCourses = async (req, res) => {
   try {
     const { category, level, price, search } = req.query;
@@ -105,9 +110,6 @@ exports.getCourses = async (req, res) => {
   }
 };
 
-
-
-// ── Course Detail ─────────────────────────────────────────────────────────────
 exports.getCourseDetails = async (req, res) => {
   try {
     const course = await Course.findOne({
@@ -154,3 +156,4 @@ exports.getCourseDetails = async (req, res) => {
     res.redirect("/courses");
   }
 };
+
