@@ -7,7 +7,7 @@ const courseController = require('../controllers/admin/courseController');
 const moduleController = require('../controllers/admin/moduleController');
 const lessonController = require('../controllers/admin/lessonController');
 const resourceController = require('../controllers/admin/resourceController');
-const guestAuthController = require('../controllers/guest/authController');
+const authController = require('../controllers/admin/authController');
 const { isAdmin } = require('../middleware/adminMiddleware');
 const {noCache} = require('../middleware/noCache');
 const {isAdminGuest}=require('../middleware/adminGuestMiddleware');
@@ -92,6 +92,6 @@ router.get('/admin-courses/:courseId/publish', noCache, isAdmin, courseControlle
 router.post('/admin-courses/:courseId/publish', noCache, isAdmin, courseController.postAdminCoursePublish);
 
 // Logout
-router.get("/admin-logout",noCache,guestAuthController.getAdminLogout);
+router.get("/admin-logout",noCache,authController.getAdminLogout);
 
 module.exports=router;

@@ -1,10 +1,10 @@
-exports.getUserLogout = (req, res) => {
-  delete req.session.user;
+exports.getAdminLogout = (req, res) => {
+  delete req.session.admin;
 
   req.session.save((err) => {
     if (err) {
       console.log(err);
-      return res.redirect("/login");
+      return res.redirect("/admin-login");
     }
 
     res.setHeader(
@@ -12,6 +12,6 @@ exports.getUserLogout = (req, res) => {
       "no-store, no-cache, must-revalidate, private"
     );
 
-    res.redirect("/login");
+    res.redirect("/admin-login");
   });
 };

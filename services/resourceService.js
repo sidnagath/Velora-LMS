@@ -1,0 +1,95 @@
+const Module = require('../models/moduleModel');
+const Lesson = require('../models/lessonModel');
+const Resource = require('../models/resourceModel');
+
+function formatBytes(bytes, decimals = 1) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+exports.uploadFile = async (courseId, moduleId, lessonId, file) => {
+  if (!moduleId || !lessonId) return { success: false, error: "Select a module and lesson", status: 400 };
+  if (!file) return { success: false, error: "Please upload a file", status: 400 };
+
+  const module = await Module.findOne({ _id: moduleId, courseId });
+  if (!module) return { success: false, error: "Module not found", status: 404 };
+
+  const lesson = await Lesson.findOne({ _id: lessonId, moduleId });
+  if (!lesson) return { success: false, error: "Lesson not found", status: 404 };
+
+  let resource = await Resource.findOne({ courseId, moduleId, lessonId });
+  if (!resource) {
+    resource = new Resource({ courseId, moduleId, lessonId, files: [], links: [], notes: "" });
+  }
+
+  resource.files.push({
+    name: file.originalname,
+    path: "/uploads/" + file.filename,
+    size: formatBytes(file.size)
+  });
+
+  await resource.save();
+  return { success: true, files: resource.files };
+};
+
+exports.deleteFile = async (courseId, moduleId, lessonId, fileId) => {
+  if (!moduleId || !lessonId || !fileId) return { success: false, error: "Missing required parameters", status: 400 };
+
+  const resource = await Resource.findOne({ courseId, moduleId, lessonId });
+  if (!resource) return { success: false, error: "Resource not found", status: 404 };
+
+  const fileExists = resource.files.some(f => f._id.toString() === fileId.toString());
+  if (!fileExists) return { success: false, error: "File not found", status: 404 };
+
+  resource.files = resource.files.filter(f => f._id.toString() !== fileId.toString());
+  await resource.save();
+
+  return { success: true, files: resource.files };
+};
+
+exports.addLink = async (courseId, moduleId, lessonId, title, url, description) => {
+  const trimmedTitle = title?.trim();
+  const trimmedUrl = url?.trim();
+  const trimmedDesc = description?.trim();
+
+  if (!moduleId || !lessonId) return { success: false, error: "Select a module and lesson", status: 400 };
+  if (!trimmedTitle) return { success: false, error: "Enter link title", status: 400 };
+  if (!trimmedUrl) return { success: false, error: "Enter link URL", status: 400 };
+
+  if (!/^https?:\/\/.+/i.test(trimmedUrl)) return { success: false, error: "Enter a valid URL", status: 400 };
+
+  const module = await Module.findOne({ _id: moduleId, courseId });
+  if (!module) return { success: false, error: "Module not found", status: 404 };
+
+  const lesson = await Lesson.findOne({ _id: lessonId, moduleId });
+  if (!lesson) return { success: false, error: "Lesson not found", status: 404 };
+
+  let resource = await Resource.findOne({ courseId, moduleId, lessonId });
+  if (!resource) {
+    resource = new Resource({ courseId, moduleId, lessonId, files: [], links: [], notes: "" });
+  }
+
+  resource.links.push({ title: trimmedTitle, url: trimmedUrl, description: trimmedDesc || "" });
+  await resource.save();
+
+  return { success: true, links: resource.links };
+};
+
+exports.deleteLink = async (courseId, moduleId, lessonId, linkId) => {
+  if (!moduleId || !lessonId || !linkId) return { success: false, error: "Missing required parameters", status: 400 };
+
+  const resource = await Resource.findOne({ courseId, moduleId, lessonId });
+  if (!resource) return { success: false, error: "Resource not found", status: 404 };
+
+  const linkExists = resource.links.some(l => l._id.toString() === linkId.toString());
+  if (!linkExists) return { success: false, error: "Link not found", status: 404 };
+
+  resource.links = resource.links.filter(l => l._id.toString() !== linkId.toString());
+  await resource.save();
+
+  return { success: true, links: resource.links };
+};
