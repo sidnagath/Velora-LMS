@@ -57,30 +57,24 @@ router.post("/admin-courses/:courseId/delete",noCache,isAdmin,adminController.po
 router.get('/admin-courses/:courseId/modules', noCache, isAdmin, adminController.getAdminCourseModules);
 
 // Add Module
-router.get('/admin-courses/:courseId/modules/create', noCache, isAdmin, adminController.getAdminAddModule);
 router.post('/admin-courses/:courseId/modules/create', noCache, isAdmin, adminController.postAdminAddModule);
 
 // Edit Module
-router.get('/admin-courses/:courseId/modules/:moduleId/edit', noCache, isAdmin, adminController.getAdminEditModule);
 router.post('/admin-courses/:courseId/modules/:moduleId/edit', noCache, isAdmin, adminController.postAdminEditModule);
 
 // Delete Module
 router.post('/admin-courses/:courseId/modules/:moduleId/delete', noCache, isAdmin, adminController.postAdminDeleteModule);
 
 // Add Lesson
-router.get('/admin-courses/:courseId/modules/:moduleId/lessons/create', noCache, isAdmin, adminController.getAdminAddLesson);
 router.post('/admin-courses/:courseId/modules/:moduleId/lessons/create', upload.single("video"), noCache, isAdmin, adminController.postAdminAddLesson);
 
 // Edit Lesson
-router.get('/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/edit', noCache, isAdmin, adminController.getAdminEditLesson);
 router.post("/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/edit",upload.single("video"),noCache,isAdmin,adminController.postAdminEditLesson);
 
 // Delete Lesson
 router.post('/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/delete', noCache, isAdmin, adminController.postAdminDeleteLesson);
 
 // Resources 
-router.get('/admin-courses/:courseId/resources', noCache, isAdmin, adminController.getAdminCourseResources);
-router.get('/admin-courses/:courseId/resources/data', noCache, isAdmin, adminController.getAdminCourseResourcesData);
 router.post('/admin-courses/:courseId/resources/upload-file', upload.single("resourceFile"), noCache, isAdmin, adminController.postAdminCourseResourcesUploadFile);
 router.post('/admin-courses/:courseId/resources/delete-file', noCache, isAdmin, adminController.postAdminCourseResourcesDeleteFile);
 router.post('/admin-courses/:courseId/resources/add-link', noCache, isAdmin, adminController.postAdminCourseResourcesAddLink);
@@ -88,7 +82,6 @@ router.post('/admin-courses/:courseId/resources/delete-link', noCache, isAdmin, 
 // router.post('/admin-courses/:courseId/resources/bulk-save', upload.array("resourceFiles", 10), noCache, isAdmin, adminController.postAdminCourseResourcesBulkSave);
 // router.post('/admin-courses/:courseId/resources/edit-file', noCache, isAdmin, adminController.postAdminCourseResourcesEditFile);
 // router.post('/admin-courses/:courseId/resources/edit-link', noCache, isAdmin, adminController.postAdminCourseResourcesEditLink);
-router.post('/admin-courses/:courseId/resources/save-notes', noCache, isAdmin, adminController.postAdminCourseResourcesSaveNotes);
 
 // Publish Course
 router.get('/admin-courses/:courseId/publish', noCache, isAdmin, adminController.getAdminCoursePublish);
