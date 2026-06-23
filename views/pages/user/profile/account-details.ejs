@@ -52,7 +52,7 @@
             <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             Account Details
           </a>
-          <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+          <a href="/user-address" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             Address
           </a>
@@ -60,7 +60,7 @@
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
             Orders
           </a>
-          <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+          <a href="/user-wishlist" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
             Wishlist
           </a>
@@ -89,8 +89,9 @@
       <!-- HEADER -->
       <div>
         <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Account Details</h2>
-        <p class="text-gray-500 mt-2 text-sm">Manage your personal information and account security.</p>
       </div>
+
+      <%- include('../../../partials/user-banner') %>
 
       <!-- ACCOUNT DETAILS FORM CARD -->
       <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
@@ -264,6 +265,8 @@
 
       </div>
 
+
+<% if(user.authProvider !== "google") { %>      
       <!-- SECURITY SETTINGS CARD -->
       <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
         <div class="flex items-center space-x-3 mb-8">
@@ -279,6 +282,8 @@
   <%= errors.general %>
 </p>
 <% } %>
+
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Current Password</label>
@@ -292,7 +297,7 @@
           </div>
 
           <div class="pt-4">
-  <% if(user.authProvider !== "google") { %>
+  
 <a href="/user-profile/change-password">
 <button
   type="button"
@@ -309,10 +314,10 @@
 
       </div>
       
-      <div class="flex flex-col items-center justify-center pt-8 pb-4 text-center">
+      <!-- <div class="flex flex-col items-center justify-center pt-8 pb-4 text-center">
         <div class="w-12 h-0.5 bg-gray-200 mb-4 rounded-full"></div>
         <p class="text-xs text-gray-500 font-medium">Keep your profile updated for a better experience.</p>
-      </div>
+      </div> -->
 
     </div>
   </div>

@@ -1,0 +1,169 @@
+<%- include('../../../partials/header') %>
+
+<main class="min-h-screen bg-gray-50 py-10 px-4">
+
+  <div class="max-w-3xl mx-auto">
+
+    <!-- HEADER -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+        Edit Address
+      </h1>
+
+      <p class="text-gray-500 mt-2 text-sm">
+        Update your delivery and billing address information.
+      </p>
+    </div>
+
+    <%- include('../../../partials/user-banner') %>
+
+    <!-- CARD -->
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+
+      <form
+        method="POST"
+        action="/user-profile/edit-address"
+        class="space-y-8"
+      >
+<% if(errors?.general){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.general %>
+</p>
+<% } %>
+
+        <!-- FORM GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+              Address Line 1
+            </label>
+
+            <input
+              type="text"
+              name="addressLine1"
+              value="<%= formData?.addressLine1 || '' %>"
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+<% if(errors?.addressLine1){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.addressLine1 %>
+</p>
+<% } %>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+              Address Line 2 <span class="text-gray-400 font-normal normal-case">(Optional)</span>
+            </label>
+
+            <input
+              type="text"
+              name="addressLine2"
+              value="<%= formData?.addressLine2 || '' %>"
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+              City
+            </label>
+
+            <input
+              type="text"
+              name="city"
+              value="<%= formData?.city || '' %>"
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+<% if(errors?.city){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.city %>
+</p>
+<% } %>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+              State
+            </label>
+
+            <input
+              type="text"
+              name="state"
+              value="<%= formData?.state || '' %>"
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+<% if(errors?.state){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.state %>
+</p>
+<% } %>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+              Country
+            </label>
+
+            <input
+              type="text"
+              name="country"
+              value="<%= formData?.country || '' %>"
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+<% if(errors?.country){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.country %>
+</p>
+<% } %>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+              Postal Code
+            </label>
+
+            <input
+              type="text"
+              name="postalCode"
+              value="<%= formData?.postalCode || '' %>"
+              class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+            >
+<% if(errors?.postalCode){ %>
+<p class="mt-1 text-sm font-medium text-red-500" style="color: var(--color-red-500);">
+  <%= errors.postalCode %>
+</p>
+<% } %>
+          </div>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex flex-wrap gap-4 pt-4">
+
+          <button
+            type="submit"
+            class="bg-blue-600 text-white font-bold py-3.5 px-8 rounded-xl shadow-sm hover:bg-blue-700 transition-colors"
+          >
+            Save Address
+          </button>
+      
+          <a
+            href="/user-address"
+            class="bg-gray-100 text-gray-700 font-bold py-3.5 px-8 rounded-xl hover:bg-gray-200 transition-colors flex items-center"
+          >
+            Cancel
+          </a>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</main>
+
+<%- include('../../../partials/footer') %>

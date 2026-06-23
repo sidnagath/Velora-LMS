@@ -389,17 +389,22 @@
           </div>
 
           <!-- Enroll / Cart Button -->
-          
-            <a href="#" class="cd-btn-enroll">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              Add to Cart
-            </a>
-      
+          <% const isInCart = cartCourseIds?.includes(course._id.toString()); %>
+          <button class="cart-btn cd-btn-enroll <%= isInCart ? 'bg-green-600 hover:bg-green-700' : '' %>" data-course-id="<%= course._id %>" style="<%= isInCart ? 'background-color: #059669;' : '' %>">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span class="btn-text"><%= isInCart ? 'Added to Cart' : 'Add to Cart' %></span>
+          </button>
 
           <!-- Wishlist Button -->
-          <button class="cd-btn-wishlist">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-            Add to Wishlist
+          <% const isWishlisted = wishlistCourseIds?.includes(course._id.toString()); %>
+          <button class="wishlist-btn cd-btn-wishlist <%= isWishlisted ? 'bg-purple-50 text-purple-700' : '' %>" data-course-id="<%= course._id %>" style="<%= isWishlisted ? 'background-color: #F5F3FF;' : '' %>">
+            <% if(isWishlisted) { %>
+              <svg width="16" height="16" fill="currentColor" stroke="none" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+              <span class="btn-text">Wishlisted</span>
+            <% } else { %>
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+              <span class="btn-text">Add to Wishlist</span>
+            <% } %>
           </button>
 
           <!-- Course Includes -->
@@ -440,5 +445,74 @@
 
   </div>
 </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const wishlistBtns = document.querySelectorAll(".wishlist-btn");
+  const cartBtns = document.querySelectorAll(".cart-btn");
+
+  wishlistBtns.forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const courseId = btn.getAttribute("data-course-id");
+      try {
+        const response = await fetch("/api/user-wishlist/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId })
+        });
+        const data = await response.json();
+        if (data.success) {
+          const textSpan = btn.querySelector('.btn-text');
+          if (data.isAdded) {
+            btn.style.backgroundColor = '#F5F3FF';
+            if (textSpan) textSpan.textContent = 'Wishlisted';
+            btn.innerHTML = `<svg width="16" height="16" fill="currentColor" stroke="none" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span class="btn-text">Wishlisted</span>`;
+          } else {
+            btn.style.backgroundColor = '#fff';
+            if (textSpan) textSpan.textContent = 'Add to Wishlist';
+            btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg><span class="btn-text">Add to Wishlist</span>`;
+          }
+        } else {
+          if(data.message === "Please log in first") window.location.href = "/login";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+
+  cartBtns.forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const courseId = btn.getAttribute("data-course-id");
+      try {
+        const response = await fetch("/api/user-cart/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId })
+        });
+        const data = await response.json();
+        if (data.success) {
+          const textSpan = btn.querySelector('.btn-text');
+          if (data.isAdded) {
+            btn.style.backgroundColor = '#059669'; // Green indicating added
+            if (textSpan) textSpan.textContent = 'Added to Cart';
+          } else {
+            btn.style.backgroundColor = '#0B5ED7'; // Original blue
+            if (textSpan) textSpan.textContent = 'Add to Cart';
+          }
+        } else {
+          if(data.message === "Please log in first") window.location.href = "/login";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+});
+</script>
 
 <%- include('../../../partials/footer') %>

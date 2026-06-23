@@ -24,7 +24,7 @@ exports.login = async (email, password) => {
 
   const isMatch = await bcrypt.compare(trimmedPassword, user.password);
   if (!isMatch) {
-    return { success: false, errors: { password: "Invalid credentials" } };
+    return { success: false, errors: { password: "Current password is incorrect." } };
   }
 
   if (user.status === "inactive") {
@@ -59,7 +59,7 @@ exports.signup = async (name, email, password, confirmPassword) => {
   else if (trimmedPassword !== trimmedConfirmPassword) errors.confirmPassword = "Passwords do not match";
 
   const existingUser = await User.findOne({ email: trimmedEmail });
-  if (existingUser) errors.email = "User already exists";
+  if (existingUser) errors.email = "Email address is already in use.";
 
   if (Object.keys(errors).length > 0) return { success: false, errors };
 
@@ -87,11 +87,11 @@ exports.verifySignupOtp = async (otp, sessionOtp, sessionExpires, signupData) =>
   if (!otp?.trim()) errors.otp = "OTP is required";
 
   if (!sessionOtp || !sessionExpires || !signupData) {
-    return { success: false, errors: { general: "Session expired. Please signup again." } };
+    return { success: false, errors: { general: "Verification session has expired. Please sign up again." } };
   } else if (Date.now() > sessionExpires) {
-    return { success: false, errors: { general: "OTP has expired. Please resend a new OTP." } };
+    return { success: false, errors: { general: "Verification code has expired. Please request a new one." } };
   } else if (otp.trim() !== sessionOtp) {
-    return { success: false, errors: { otp: "Invalid OTP" } };
+    return { success: false, errors: { otp: "Invalid verification code." } };
   }
 
   if (Object.keys(errors).length > 0) return { success: false, errors };
@@ -170,11 +170,11 @@ exports.verifyForgotOtp = async (otp, sessionOtp, sessionExpires) => {
   if (!otp?.trim()) errors.otp = "OTP is required";
 
   if (!sessionOtp || !sessionExpires) {
-    return { success: false, errors: { general: "Session expired. Please request again." } };
+    return { success: false, errors: { general: "Verification session has expired. Please request again." } };
   } else if (Date.now() > sessionExpires) {
-    return { success: false, errors: { general: "OTP has expired. Please resend." } };
+    return { success: false, errors: { general: "Verification code has expired. Please request a new one." } };
   } else if (otp.trim() !== sessionOtp) {
-    return { success: false, errors: { otp: "Invalid OTP" } };
+    return { success: false, errors: { otp: "Invalid verification code." } };
   }
 
   if (Object.keys(errors).length > 0) return { success: false, errors };

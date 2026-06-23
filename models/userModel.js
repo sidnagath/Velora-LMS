@@ -51,7 +51,30 @@ const userSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false
-    }
+    },
+
+    address: {
+      addressLine1: { type: String, default: "" },
+      addressLine2: { type: String, default: "" },
+      city: { type: String, default: "" },
+      state: { type: String, default: "" },
+      country: { type: String, default: "" },
+      postalCode: { type: String, default: "" }
+    },
+
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course"
+      }
+    ],
+
+    cart: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course"
+      }
+    ]
   },
   {
     timestamps: true

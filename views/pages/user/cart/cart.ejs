@@ -1,0 +1,310 @@
+<%- include('../../../partials/header') %>
+
+<%
+  let subtotal = 0;
+  let totalDiscount = 0;
+  if (cart && cart.length > 0) {
+    cart.forEach(course => {
+      subtotal += course.basePrice || 0;
+      const priceToPay = course.discountPrice > 0 ? course.discountPrice : (course.basePrice || 0);
+      totalDiscount += (course.basePrice || 0) - priceToPay;
+    });
+  }
+  const total = subtotal - totalDiscount;
+%>
+
+<main class="min-h-screen bg-[#F8F9FA] py-12 px-4 sm:px-6 lg:px-8 font-sans">
+  <div class="max-w-7xl mx-auto">
+    
+    <%- include('../../../partials/user-banner') %>
+
+    <% if (!cart || cart.length === 0) { %>
+      <!-- EMPTY STATE -->
+      <div class="flex flex-col items-center justify-center py-20 text-center">
+        <!-- Graphic -->
+        <div class="w-48 h-48 bg-white rounded-[2rem] shadow-sm border border-gray-100 mb-8 flex items-center justify-center">
+          <div class="w-28 h-28 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+              <!-- Small cross to indicate empty -->
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10l6-6m0 6l-6-6" transform="translate(4,4)" opacity="0.3"></path>
+            </svg>
+          </div>
+        </div>
+        
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Your cart is empty</h2>
+        <p class="text-gray-600 mb-1 text-[17px]">Looks like you haven't added any courses yet.</p>
+        <p class="text-xs text-gray-400 mb-8 font-medium">Start exploring and add courses to your cart</p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 mb-16">
+          <a href="/user-courses" class="bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors text-sm text-center">
+            Browse Courses
+          </a>
+          <a href="/user-wishlist" class="bg-transparent hover:bg-gray-100 text-[#0B5ED7] font-bold py-3.5 px-8 rounded-full transition-colors text-sm text-center">
+            View Wishlist
+          </a>
+        </div>
+
+        <!-- Fake tags as seen in design -->
+        <!-- <div class="flex flex-wrap justify-center gap-3">
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-3 flex flex-col items-center">
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">DESIGN</span>
+            <span class="text-[#0B5ED7] font-bold text-sm">UI/UX Art</span>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-3 flex flex-col items-center">
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">DEV</span>
+            <span class="text-[#0B5ED7] font-bold text-sm">Frontend</span>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-3 flex flex-col items-center">
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">BUSINESS</span>
+            <span class="text-[#0B5ED7] font-bold text-sm">Strategy</span>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-3 flex flex-col items-center">
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">GROWTH</span>
+            <span class="text-[#0B5ED7] font-bold text-sm">Marketing</span>
+          </div>
+        </div> -->
+        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-2">Start browsing and add courses to your cart</p>
+      </div>
+    <% } else { %>
+      <!-- POPULATED STATE -->
+      <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 class="text-[40px] font-extrabold text-gray-900 tracking-tight leading-tight mb-1">Shopping Cart</h1>
+          <p class="text-gray-600 text-[15px]">You have <span class="font-bold text-[#0B5ED7]"><%= cart.length %> items</span> in your learning queue</p>
+        </div>
+        
+        <button class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-5 rounded-xl shadow-sm text-sm flex items-center transition-colors w-max">
+          <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+          Sort by: Recently Added
+        </button>
+      </div>
+
+      <style>
+        .cart-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+          width: 100%;
+          align-items: flex-start;
+        }
+        .cart-left-col { width: 100%; }
+        .cart-right-col { width: 100%; }
+        
+        @media (min-width: 1024px) {
+          .cart-grid {
+            flex-direction: row;
+          }
+          .cart-left-col { width: 68%; flex-shrink: 0; }
+          .cart-right-col { width: 32%; flex-shrink: 0; position: sticky; top: 6rem; }
+        }
+
+        /* BYPASS TAILWIND CSS FOR CART ITEM */
+        .cart-card-fixed {
+          background-color: #ffffff;
+          border-radius: 16px;
+          border: 1px solid #f3f4f6;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+          padding: 1.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+          width: 100%;
+          position: relative;
+        }
+        @media (min-width: 640px) {
+          .cart-card-fixed {
+            flex-direction: row;
+            align-items: center;
+          }
+        }
+
+        .cart-card-trash {
+          position: absolute;
+          top: 1.25rem;
+          right: 1.25rem;
+          z-index: 10;
+        }
+
+        .cart-card-wishlist {
+          width: 100%;
+          margin-top: 0.5rem;
+        }
+        @media (min-width: 640px) {
+          .cart-card-wishlist {
+            position: absolute;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            width: auto;
+            margin-top: 0;
+            z-index: 10;
+          }
+        }
+
+        .cart-card-thumb {
+          width: 100%;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          background-color: #2C2C2C;
+          flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+          .cart-card-thumb {
+            width: 180px;
+            height: 120px;
+          }
+        }
+
+        .cart-card-details {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          min-width: 0;
+        }
+        @media (min-width: 640px) {
+          .cart-card-details {
+            padding-right: 180px; /* Pre-allocates space so text never overlaps button */
+          }
+        }
+      </style>
+
+      <!-- Search Bar -->
+      <div class="w-full mb-8 flex gap-3" style="position: relative;">
+          <div class="flex-grow" style="position: relative;">
+              <svg
+                class="text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; pointer-events: none; z-index: 10;"
+              >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+              </svg>
+          
+              <input
+                type="text"
+                name="search"
+                placeholder="Search courses..."
+                class="w-full rounded-xl bg-gray-100 border border-transparent outline-none text-gray-900 placeholder-gray-400"
+                style="padding-left: 3.5rem; padding-right: 1rem; width: 100%; height: 3.5rem;"
+              >
+          </div>
+          <!-- Restore Search Button -->
+          <button type="button" class="px-8 rounded-xl bg-[#0B5ED7] hover:bg-blue-700 text-white font-bold transition flex-shrink-0" style="height: 3.5rem;">
+              Search
+          </button>
+      </div>
+
+      <div class="cart-grid">
+        
+        <!-- Left Column: Cart Items -->
+        <div class="cart-left-col flex flex-col gap-8">
+
+          <!-- Items Container -->
+          <div class="space-y-6 w-full">
+            <% cart.forEach(course => { %>
+              <div class="cart-card-fixed">
+                
+                <!-- Delete Icon -->
+                <form action="/user-cart/remove/<%= course._id %>" method="POST" class="cart-card-trash">
+                  <button type="submit" class="text-gray-400 hover:text-red-500 transition-colors border-0 bg-transparent flex items-center justify-center cursor-pointer p-0">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                  </button>
+                </form>
+
+                <!-- Move to Wishlist Button (Desktop & Mobile) -->
+                <form action="/user-cart/move-to-wishlist/<%= course._id %>" method="POST" class="cart-card-wishlist">
+                  <button type="submit" class="w-full sm:w-auto bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-semibold py-2 px-5 rounded-lg text-[13px] transition-colors shadow-sm whitespace-nowrap border-0 cursor-pointer" style="display: block; width: 100%;">
+                    Move back to Wishlist
+                  </button>
+                </form>
+
+                <!-- 1. Thumbnail -->
+                <div class="cart-card-thumb">
+                  <img src="<%= course.thumbnail ? course.thumbnail : '/images/placeholder.jpg' %>" alt="<%= course.title %>" class="w-full h-full object-cover">
+                </div>
+                
+                <!-- 2. Course Details -->
+                <div class="cart-card-details">
+                    <h3 class="font-bold text-gray-900 mb-0.5 leading-snug truncate" style="font-size: 18px;"><%= course.title %></h3>
+                    <p class="text-gray-500 mb-1.5 truncate" style="font-size: 14px;">by <%= course.instructor || 'Unknown Instructor' %></p>
+                    
+                    <div class="flex items-center font-bold text-gray-900 mb-2" style="font-size: 13px;">
+                      <span class="text-[#6B46C1] mr-1 leading-none" style="font-size: 13px;">★</span> <%= (course.rating || 0).toFixed(1) %>
+                      <span class="text-gray-500 font-medium ml-1.5 font-normal">(<%= course.reviewsCount || 0 %> reviews)</span>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="font-extrabold text-[#0B5ED7] mb-2.5" style="font-size: 20px;">
+                      <%= course.currency === 'USD' ? '$' : '₹' %><%= course.discountPrice > 0 ? course.discountPrice : course.basePrice %>
+                    </div>
+
+                    <!-- Category Pill -->
+                    <div>
+                      <span class="inline-flex items-center justify-center bg-[#D3E3FD] text-[#0B5ED7] font-bold uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap" style="font-size: 11px;">
+                        <%= course.category ? course.category.name : 'Uncategorized' %>
+                      </span>
+                    </div>
+                </div>
+
+              </div>
+            <% }) %>
+          </div>
+        </div>
+
+        <!-- Right Column: Order Summary -->
+        <div class="cart-right-col space-y-6 lg:sticky lg:top-24 h-fit">
+          <div class="bg-white rounded-[20px] shadow-sm border border-gray-100 p-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-6">Order Summary</h3>
+            
+            <div class="space-y-4 mb-6">
+              <div class="flex justify-between text-gray-600">
+                <span>Subtotal</span>
+                <span class="font-medium text-gray-900">₹<%= subtotal.toFixed(2) %></span>
+              </div>
+              <div class="flex justify-between text-gray-600">
+                <span>Discount</span>
+                <span class="font-medium text-gray-500">-₹<%= totalDiscount.toFixed(2) %></span>
+              </div>
+            </div>
+            
+            <div class="border-t border-gray-100 pt-6 mb-8 flex justify-between items-center">
+              <span class="text-lg font-bold text-gray-900">Total</span>
+              <span class="text-[28px] font-extrabold text-[#0B5ED7]">₹<%= total.toFixed(2) %></span>
+            </div>
+            
+            <button class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-4 rounded-xl text-base flex items-center justify-center transition-colors mb-4">
+              Checkout
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+            
+            <p class="text-center text-xs text-gray-500 font-medium">Secure checkout powered by Velora Pay.</p>
+          </div>
+
+          <!-- Guarantee Card -->
+          <div class="bg-[#F3F0FF] rounded-[20px] p-6 flex gap-4 border border-[#E9E1FF]">
+            <div class="shrink-0 pt-0.5">
+              <svg class="w-6 h-6 text-[#6B46C1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-[#6B46C1] text-sm mb-1">Course Guarantee</h4>
+              <p class="text-gray-600 text-xs leading-relaxed">30-day money-back guarantee on all professional courses.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    <% } %>
+
+  </div>
+</main>
+
+<%- include('../../../partials/footer') %>

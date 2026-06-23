@@ -64,6 +64,39 @@ exports.getProfileAccountDetails = async (req, res) => {
   }
 };
 
+exports.getAddressDetails = async (req, res) => {
+  try {
+    const user = await profileService.getUserById(req.session.user?.id);
+
+    if (!user) {
+      return res.render("pages/user/profile/address", {
+        title: "Velora - Address",
+        isLoggedIn: true,
+        user: null,
+        errors: { general: "User not found" },
+        formData: {}
+      });
+    }
+
+    res.render("pages/user/profile/address", {
+      title: "Velora - Address",
+      isLoggedIn: true,
+      user,
+      errors: {},
+      formData: {}
+    });
+  } catch (err) {
+    console.log(err);
+    return res.render("pages/user/profile/address", {
+      title: "Velora - Address",
+      isLoggedIn: true,
+      user: null,
+      errors: { general: "Something went wrong" },
+      formData: {}
+    });
+  }
+};
+
 exports.postUpdateAvatar = async (req, res) => {
   try {
     const result = await profileService.updateAvatar(req.session.user?.id, req.file?.filename);
@@ -78,14 +111,8 @@ exports.postUpdateAvatar = async (req, res) => {
       });
     }
 
-    return res.render("pages/user/profile/account-details", {
-      title: "Velora - Profile",
-      isLoggedIn: true,
-      user: result.user,
-      errors: {},
-      success: { avatar: "Profile picture updated" },
-      formData: {}
-    });
+    req.flash("success", "Profile picture updated successfully.");
+    return res.redirect("/user-profile");
   } catch (err) {
     console.log(err);
     return res.render("pages/user/profile/account-details", {
@@ -150,29 +177,16 @@ exports.postProfileDetails = async (req, res) => {
       req.session.emailChangeOTP = result.otp;
       req.session.emailChangeOTPExpires = result.otpExpires;
       
-      return res.render("pages/user/profile/verify-email-change-otp", {
-        title: "Verify Email Change",
-        isLoggedIn: true,
-        user: result.user,
-        errors: {},
-        success: { general: "OTP sent to new email" },
-        formData: {},
-        otpExpires: req.session.emailChangeOTPExpires || 0
-      });
+      req.flash("success", "Verification code sent to your new email address.");
+      return res.redirect("/verify-email-change-otp");
     }
 
     // UPDATE SESSION
     req.session.user.name = result.user.name;
     req.session.user.email = result.user.email;
 
-    return res.render("pages/user/profile/account-details", {
-      title: "Velora - Profile",
-      isLoggedIn: true,
-      user: result.user,
-      errors: {},
-      success: { general: "Profile updated successfully" },
-      formData: {}
-    });
+    req.flash("success", "Profile updated successfully.");
+    return res.redirect("/user-profile");
   } catch (err) {
     console.log(err);
     const user = await profileService.getUserById(req.session.user?.id);
@@ -228,15 +242,8 @@ exports.postVerifyEmailChangeOtp = async (req, res) => {
     delete req.session.emailChangeOTP;
     delete req.session.emailChangeOTPExpires;
 
-    return res.render("pages/user/profile/account-details", {
-      title: "Velora - Profile",
-      isLoggedIn: true,
-      user: result.user,
-      errors: {},
-      success: { general: "Email updated successfully" },
-      formData: {},
-      otpExpires: req.session.emailChangeOTPExpires || 0
-    });
+    req.flash("success", "Email address updated successfully.");
+    return res.redirect("/user-profile");
   } catch (err) {
     console.log(err);
     return res.render("pages/user/profile/verify-email-change-otp", {
@@ -329,13 +336,11 @@ exports.postUpdatePassword = async (req, res) => {
       });
     }
 
-    return res.render("pages/guest/login", {
-      title: "Velora - Login",
-      isLoggedIn: false,
-      user: result.user,
-      errors: {},
-      success: { general: "Password updated successfully" },
-      formData: {}
+    delete req.session.user;
+    req.session.save((err) => {
+      if (err) console.log(err);
+      req.flash("success", "Password changed successfully. Please log in again.");
+      return res.redirect("/login");
     });
   } catch (err) {
     console.log(err);
@@ -346,6 +351,69 @@ exports.postUpdatePassword = async (req, res) => {
       user,
       errors: { general: "Something went wrong" },
       formData: {}
+    });
+  }
+};
+
+exports.getEditAddress = async (req, res) => {
+  try {
+    const user = await profileService.getUserById(req.session.user?.id);
+
+    if (!user) {
+      return res.render("pages/user/profile/edit-address", {
+        title: "Edit Address",
+        isLoggedIn: true,
+        user: null,
+        errors: { general: "User not found" },
+        formData: {}
+      });
+    }
+
+    res.render("pages/user/profile/edit-address", {
+      title: "Edit Address",
+      isLoggedIn: true,
+      user,
+      errors: {},
+      formData: user.address || {}
+    });
+  } catch (err) {
+    console.log(err);
+    return res.render("pages/user/profile/edit-address", {
+      title: "Edit Address",
+      isLoggedIn: true,
+      user: null,
+      errors: { general: "Something went wrong" },
+      formData: {}
+    });
+  }
+};
+
+exports.postUpdateAddress = async (req, res) => {
+  try {
+    const result = await profileService.updateAddress(req.session.user?.id, req.body);
+    
+    if (!result.success) {
+      return res.render("pages/user/profile/edit-address", {
+        title: "Edit Address",
+        isLoggedIn: true,
+        user: result.user || null,
+        errors: result.errors,
+        formData: result.formData || req.body
+      });
+    }
+
+    const isNew = !result.user.address || !result.user.address.addressLine1;
+    req.flash("success", isNew ? "Address updated successfully." : "Address updated successfully.");
+    return res.redirect("/user-address");
+  } catch (err) {
+    console.log(err);
+    const user = await profileService.getUserById(req.session.user?.id);
+    return res.render("pages/user/profile/edit-address", {
+      title: "Edit Address",
+      isLoggedIn: true,
+      user,
+      errors: { general: "Something went wrong" },
+      formData: req.body
     });
   }
 };

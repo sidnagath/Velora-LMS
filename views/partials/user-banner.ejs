@@ -1,0 +1,49 @@
+<%
+  /* Shared user banner partial.
+     Requires locals:  flashMessages (object from req.flash())
+     Usage: include('partials/user-banner')
+  */
+  
+  let _hasBanner = false;
+  let _isSuccess = false;
+  let _flashMsg = '';
+
+  if (typeof flashMessages !== 'undefined') {
+    if (flashMessages.success && flashMessages.success.length > 0) {
+      _hasBanner = true;
+      _isSuccess = true;
+      _flashMsg = flashMessages.success[0];
+    } else if (flashMessages.error && flashMessages.error.length > 0) {
+      _hasBanner = true;
+      _isSuccess = false;
+      _flashMsg = flashMessages.error[0];
+    }
+  }
+%>
+<% if (_hasBanner) { %>
+<div id="userFlashBanner"
+     class="mb-6 flex items-center gap-3 p-4 rounded-xl text-sm font-semibold shadow-sm transition-all duration-300"
+     style="background:<%= _isSuccess ? '#f0fdf4' : '#fef2f2' %>;
+            border:1px solid <%= _isSuccess ? '#dcfce7' : '#fee2e2' %>;
+            color:<%= _isSuccess ? '#15803d' : '#b91c1c' %>;">
+  <% if (_isSuccess) { %>
+    <svg class="w-5 h-5 shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+  <% } else { %>
+    <svg class="w-5 h-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+  <% } %>
+  <span class="flex-1"><%= _flashMsg %></span>
+  <button onclick="document.getElementById('userFlashBanner').remove()"
+          class="ml-auto bg-transparent border-none cursor-pointer text-base leading-none opacity-60 hover:opacity-100 transition-opacity" 
+          title="Dismiss">✕</button>
+</div>
+<script>
+  setTimeout(function() {
+    var b = document.getElementById('userFlashBanner');
+    if (b) { b.style.opacity = '0'; setTimeout(function(){ if(b) b.remove(); }, 400); }
+  }, 4000);
+</script>
+<% } %>

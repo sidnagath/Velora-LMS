@@ -83,6 +83,12 @@ app.use(session({
 
 }));
 
+const flash = require('connect-flash');
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.flashMessages = req.flash();
+  next();
+});
 
 // PASSPORT
 

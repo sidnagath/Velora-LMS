@@ -1,0 +1,88 @@
+const wishlistService = require("../../services/wishlistService");
+const profileService = require("../../services/profileService"); // To get user data for sidebar
+
+exports.getWishlistPage = async (req, res) => {
+  try {
+    const userId = req.session.user?.id;
+    const [wishlistResult, user] = await Promise.all([
+      wishlistService.getWishlist(userId),
+      profileService.getUserById(userId)
+    ]);
+
+    if (!wishlistResult.success) {
+      req.flash("error", "Failed to load wishlist.");
+      return res.redirect("/user-profile");
+    }
+
+    res.render("pages/user/wishlist/wishlist", {
+      title: "My Wishlist",
+      isLoggedIn: true,
+      user,
+      wishlist: wishlistResult.wishlist
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "An error occurred.");
+    return res.redirect("/user-profile");
+  }
+};
+
+exports.removeCourse = async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    const userId = req.session.user?.id;
+
+    const result = await wishlistService.removeFromWishlist(userId, courseId);
+    if (result.success) {
+      req.flash("success", "Course removed from wishlist.");
+    } else {
+      req.flash("error", "Failed to remove course.");
+    }
+
+    res.redirect("/user-wishlist");
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "An error occurred.");
+    res.redirect("/user-wishlist");
+  }
+};
+
+exports.moveToCart= async (req,res)=>{
+  try{
+   
+    const courseId=req.params.courseId;
+    const userId=req.session.user?.id;
+
+    const result=await wishlistService.moveToCart(userId,courseId);
+    if(result.success){
+      req.flash("success","Course moved to cart");
+    }
+    else{
+      req.flash("error","Failed to move course to cart")
+    }
+
+    res.redirect("/user-wishlist");
+    
+  }catch(err){
+    console.error(err);
+    req.flash("error","An error occured");
+    res.redirect("/user-wishlist")
+  }
+}
+
+exports.toggleWishlist = async (req, res) => {
+  try {
+    const courseId = req.body.courseId;
+    const userId = req.session.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Please log in first" });
+    }
+
+    const result = await wishlistService.toggleWishlist(userId, courseId);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

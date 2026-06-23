@@ -239,20 +239,19 @@
                 <!-- CART -->
 
                 <button
-                  class="cart-btn w-10 h-10 rounded-xl flex items-center justify-center transition-colors group <%= cartCourseIds?.includes(course._id.toString()) ? 'bg-[#8B5CF6] text-white' : 'bg-purple-50 hover:bg-purple-100 text-[#5B21B6]' %>"
+                  class="cart-btn w-10 h-10 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#8B5CF6] flex items-center justify-center transition-colors group"
                   data-course-id="<%= course._id %>"
                 >
-
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      stroke-width="2"
-                    >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L5.4 5M7 13l-1 5h13m-9 0a1 1 0 102 0m4 0a1 1 0 102 0" />
-                    </svg>
-
+                    <% const isCarted = cartCourseIds?.includes(course._id.toString()) %>
+                    <% if(isCarted) { %>
+                        <svg class="w-5 h-5 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
+                    <% } else { %>
+                        <svg class="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L5.4 5M7 13l-1 5h13m-9 0a1 1 0 102 0m4 0a1 1 0 102 0" />
+                        </svg>
+                    <% } %>
                 </button>
 
             </div>
@@ -354,5 +353,66 @@
     </section>
     </form>
 </main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const wishlistBtns = document.querySelectorAll(".wishlist-btn");
+  const cartBtns = document.querySelectorAll(".cart-btn");
+
+  wishlistBtns.forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const courseId = btn.getAttribute("data-course-id");
+      try {
+        const response = await fetch("/api/user-wishlist/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId })
+        });
+        const data = await response.json();
+        if (data.success) {
+          if (data.isAdded) {
+            btn.innerHTML = `<svg class="w-5 h-5 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>`;
+          } else {
+            btn.innerHTML = `<svg class="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`;
+          }
+        } else {
+          if(data.message === "Please log in first") window.location.href = "/login";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+
+  cartBtns.forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const courseId = btn.getAttribute("data-course-id");
+      try {
+        const response = await fetch("/api/user-cart/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseId })
+        });
+        const data = await response.json();
+        if (data.success) {
+          if (data.isAdded) {
+            btn.innerHTML = `<svg class="w-5 h-5 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>`;
+          } else {
+            btn.innerHTML = `<svg class="w-5 h-5 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4m1.6 8L5.4 5M7 13l-1 5h13m-9 0a1 1 0 102 0m4 0a1 1 0 102 0" /></svg>`;
+          }
+        } else {
+          if(data.message === "Please log in first") window.location.href = "/login";
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  });
+});
+</script>
 
 <%- include('../../../partials/footer') %>

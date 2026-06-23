@@ -13,8 +13,8 @@ exports.getCourses = async (req, res) => {
     isLoggedIn,
     user,
     ...result.data,
-    wishlistCourseIds: [],
-    cartCourseIds: []
+    wishlistCourseIds: user ? (user.wishlist || []).map(id => id.toString()) : [],
+    cartCourseIds: user ? (user.cart || []).map(id => id.toString()) : []
   });
 };
 
@@ -29,6 +29,8 @@ exports.getCourseDetails = async (req, res) => {
     title: `Velora - ${result.data.course.title}`,
     isLoggedIn,
     user,
-    ...result.data
+    ...result.data,
+    wishlistCourseIds: user ? (user.wishlist || []).map(id => id.toString()) : [],
+    cartCourseIds: user ? (user.cart || []).map(id => id.toString()) : []
   });
 };

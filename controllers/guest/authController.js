@@ -21,6 +21,7 @@ exports.postLogin = async (req, res) => {
     }
 
     req.session.user = { id: result.user._id, name: result.user.name, email: result.user.email };
+    req.flash("success", "Logged in successfully.");
     res.redirect("/user-dashboard");
   } catch (err) {
     console.log(err);
@@ -68,6 +69,7 @@ exports.googleAuthCallback = (req, res, next) => {
       return res.render("pages/guest/login", { title: "Velora - Login", isLoggedIn: false, errors: { general: info?.message || "Google authentication failed" }, formData: {} });
     }
     req.session.user = { id: user._id, name: user.name, email: user.email };
+    req.flash("success", "Logged in successfully.");
     res.redirect("/user-dashboard");
   })(req, res, next);
 };
@@ -187,7 +189,8 @@ exports.postResetPassword = async (req, res) => {
     delete req.session.forgotOTP;
     delete req.session.forgotOTPExpires;
     delete req.session.isOtpVerified;
-    res.redirect("/password-updated");
+    req.flash("success", "Password reset successfully.");
+    res.redirect("/login");
   } catch (err) {
     console.log(err);
     res.render("pages/guest/reset-password", { title: "Velora - Reset Password", isLoggedIn: false, errors: { general: "Something went wrong" }, formData: {} });

@@ -58,7 +58,7 @@ class ProfileService {
     }
     
     if (trimmedPhone && !phoneRegex.test(trimmedPhone)) {
-      errors.phone = "Enter valid 10 digit phone number";
+      errors.phone = "Please enter a valid phone number.";
     }
 
     if (user.authProvider === "google") {
@@ -76,7 +76,7 @@ class ProfileService {
     });
 
     if (existingUser) {
-      errors.email = "Email already exists";
+      errors.email = "Email address is already in use.";
       return { success: false, errors, user, formData: { name: trimmedName, email: trimmedEmail, phone: trimmedPhone } };
     }
 
@@ -116,11 +116,11 @@ class ProfileService {
 
   async verifyEmailChangeOtp(userId, inputOtp, sessionOtp, sessionExpires, pendingData) {
     if (Date.now() > sessionExpires) {
-      return { success: false, errors: { otp: "OTP expired" } };
+      return { success: false, errors: { otp: "Verification code has expired." } };
     }
 
     if (inputOtp !== sessionOtp) {
-      return { success: false, errors: { otp: "Invalid OTP" } };
+      return { success: false, errors: { otp: "Invalid verification code." } };
     }
 
     const user = await User.findById(userId);
@@ -189,6 +189,45 @@ class ProfileService {
     user.password = hashedPassword;
     await user.save();
 
+    return { success: true, user };
+  }
+
+  async updateAddress(userId, addressData) {
+    const user = await User.findById(userId);
+    if (!user) {
+      return { success: false, errors: { general: "User not found" } };
+    }
+
+    const { addressLine1, addressLine2, city, state, country, postalCode } = addressData;
+    let errors = {};
+
+    const trimmedLine1 = addressLine1?.trim();
+    const trimmedLine2 = addressLine2?.trim() || "";
+    const trimmedCity = city?.trim();
+    const trimmedState = state?.trim();
+    const trimmedCountry = country?.trim();
+    const trimmedPostal = postalCode?.trim();
+
+    if (!trimmedLine1) errors.addressLine1 = "Address Line 1 is required.";
+    if (!trimmedCity) errors.city = "City is required.";
+    if (!trimmedState) errors.state = "State is required.";
+    if (!trimmedCountry) errors.country = "Country is required.";
+    if (!trimmedPostal) errors.postalCode = "Postal Code is required.";
+
+    if (Object.keys(errors).length > 0) {
+      return { success: false, errors, user, formData: addressData };
+    }
+
+    user.address = {
+      addressLine1: trimmedLine1,
+      addressLine2: trimmedLine2,
+      city: trimmedCity,
+      state: trimmedState,
+      country: trimmedCountry,
+      postalCode: trimmedPostal
+    };
+
+    await user.save();
     return { success: true, user };
   }
 }

@@ -11,7 +11,7 @@ exports.getUserLogout = (req, res) => {
       "Cache-Control",
       "no-store, no-cache, must-revalidate, private"
     );
-
+    req.flash("success", "Logged out successfully.");
     res.redirect("/login");
   });
 };
