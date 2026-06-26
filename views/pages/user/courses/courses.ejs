@@ -121,7 +121,8 @@
         <!-- Course Grid Area -->
         <div class="flex-grow w-full">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               <% courses.forEach(course => { %>
+               <% if (courses && courses.length > 0) { %>
+                 <% courses.forEach(course => { %>
 <div onclick="window.location.href='/user-courses/<%= course._id %>'" class="w-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 flex flex-col group" style="height: 450px;">
 
     <!-- IMAGE -->
@@ -204,7 +205,7 @@
                   data-course-id="<%= course._id %>"
                 >
 
-                    <% const isWishlisted = wishlistCourseIds?.includes(course._id.toString()) %>
+                    <% const isWishlisted = typeof wishlistCourseIds !== 'undefined' && wishlistCourseIds?.includes(course._id.toString()) %>
 
                     <!-- FILLED HEART -->
 
@@ -242,7 +243,7 @@
                   class="cart-btn w-10 h-10 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#8B5CF6] flex items-center justify-center transition-colors group"
                   data-course-id="<%= course._id %>"
                 >
-                    <% const isCarted = cartCourseIds?.includes(course._id.toString()) %>
+                    <% const isCarted = typeof cartCourseIds !== 'undefined' && cartCourseIds?.includes(course._id.toString()) %>
                     <% if(isCarted) { %>
                         <svg class="w-5 h-5 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
@@ -261,7 +262,13 @@
 
 </div>
 
-<% }) %>
+                 <% }) %>
+               <% } else { %>
+                 <div class="w-full py-16 text-center text-gray-500 font-medium bg-white rounded-[20px] shadow-sm border border-gray-100 flex flex-col items-center justify-center" style="grid-column: 1 / -1;">
+                   <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                   <p style="font-size: 1.125rem;">No courses found matching your search.</p>
+                 </div>
+               <% } %>
 
               
             </div>

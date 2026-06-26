@@ -10,6 +10,11 @@ const {isUserGuest}=require('../middleware/userGuestMiddleware');
 const {ensureActiveUser}=require('../middleware/ensureActiveUser');
 const upload = require("../config/multer");
 
+const wishlistController = require('../controllers/user/wishlistController');
+const cartController = require('../controllers/user/cartController');
+
+const checkoutController = require('../controllers/user/checkoutController');
+
 
 
 router.get("/user-dashboard", noCache, isUser,ensureActiveUser,profileController.getDashboard);
@@ -45,17 +50,16 @@ router.post("/user-profile/edit-address",isUser,ensureActiveUser,profileControll
 
 router.get("/user-logout",noCache,authController.getUserLogout);
 
-const wishlistController = require('../controllers/user/wishlistController');
 router.get("/user-wishlist", noCache, isUser, ensureActiveUser, wishlistController.getWishlistPage);
 router.post("/user-wishlist/remove/:courseId", isUser, ensureActiveUser, wishlistController.removeCourse);
 router.post("/user-wishlist/move-to-cart/:courseId",isUser,ensureActiveUser,wishlistController.moveToCart);
 router.post("/api/user-wishlist/toggle", isUser, ensureActiveUser, wishlistController.toggleWishlist);
 
-const cartController = require('../controllers/user/cartController');
 router.get("/user-cart", noCache, isUser, ensureActiveUser, cartController.getCartPage);
 router.post("/user-cart/remove/:courseId", isUser, ensureActiveUser, cartController.removeCourse);
 router.post("/user-cart/move-to-wishlist/:courseId", isUser, ensureActiveUser, cartController.moveToWishlist);
 router.post("/api/user-cart/toggle", isUser, ensureActiveUser, cartController.toggleCart);
+router.get("/user-checkout",noCache, isUser, ensureActiveUser, checkoutController.getCheckoutPage);
 
 module.exports=router;
 

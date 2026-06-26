@@ -4,8 +4,9 @@ const profileService = require("../../services/profileService"); // To get user 
 exports.getWishlistPage = async (req, res) => {
   try {
     const userId = req.session.user?.id;
+    const searchQuery = req.query.search || "";
     const [wishlistResult, user] = await Promise.all([
-      wishlistService.getWishlist(userId),
+      wishlistService.getWishlist(userId, searchQuery),
       profileService.getUserById(userId)
     ]);
 
@@ -18,7 +19,8 @@ exports.getWishlistPage = async (req, res) => {
       title: "My Wishlist",
       isLoggedIn: true,
       user,
-      wishlist: wishlistResult.wishlist
+      wishlist: wishlistResult.wishlist,
+      search: searchQuery
     });
   } catch (err) {
     console.error(err);
@@ -55,10 +57,10 @@ exports.moveToCart= async (req,res)=>{
 
     const result=await wishlistService.moveToCart(userId,courseId);
     if(result.success){
-      req.flash("success","Course moved to cart");
+      req.flash("success", result.message);
     }
     else{
-      req.flash("error","Failed to move course to cart")
+      req.flash("error", result.message || "Failed to move course to cart");
     }
 
     res.redirect("/user-wishlist");

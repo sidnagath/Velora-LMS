@@ -2,10 +2,15 @@ const User = require("../models/userModel");
 const Course = require("../models/courseModel");
 
 class WishlistService {
-  async getWishlist(userId) {
+  async getWishlist(userId, searchQuery = "") {
+    const matchQuery = { status: "published", isDeleted: false };
+    if (searchQuery && searchQuery.trim() !== "") {
+      matchQuery.title = { $regex: searchQuery.trim(), $options: "i" };
+    }
+
     const user = await User.findById(userId).populate({
       path: "wishlist",
-      match: { status: "published", isDeleted: false },
+      match: matchQuery,
       populate: {
         path: "category",
         select: "name"
@@ -27,16 +32,21 @@ class WishlistService {
 
     const index = user.wishlist.findIndex(id => id.toString() === courseId.toString());
     let isAdded = false;
+    let message = "";
 
     if (index === -1) {
       user.wishlist.push(courseId);
+      // Prevent course from existing in both lists
+      user.cart = user.cart.filter(id => id.toString() !== courseId.toString());
       isAdded = true;
+      message = "Course added to wishlist.";
     } else {
       user.wishlist.splice(index, 1);
+      message = "Course removed from wishlist.";
     }
 
     await user.save();
-    return { success: true, isAdded };
+    return { success: true, isAdded, message };
   }
 
 
@@ -51,13 +61,14 @@ class WishlistService {
     user.wishlist=user.wishlist.filter(id=>id.toString()!==courseId.toString());
 
     //Add to Cart if not already there
-    if(!user.cart.includes(courseId)){
+    const inCart = user.cart.some(id => id.toString() === courseId.toString());
+    if(!inCart){
       user.cart.push(courseId)
     }
 
     await user.save();
 
-    return {success:true, message:"Moved to Cart"};
+    return {success:true, message:"Course moved to cart."};
 
   }
 

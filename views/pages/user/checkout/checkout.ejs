@@ -1,0 +1,254 @@
+<%- include('../../../partials/header') %>
+
+<main style="background-color: #f8f9fa; min-height: 100vh; padding-bottom: 4rem;">
+  <style>
+    /* BYPASS UNCOMPILED TAILWIND FOR LAYOUT */
+    .checkout-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+      font-family: inherit;
+    }
+    @media (min-width: 1024px) {
+      .checkout-container {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+    }
+    .checkout-left {
+      width: 100%;
+    }
+    @media (min-width: 1024px) {
+      .checkout-left {
+        width: 55%;
+        padding-right: 2rem;
+      }
+    }
+    .checkout-right {
+      width: 100%;
+    }
+    @media (min-width: 1024px) {
+      .checkout-right {
+        width: 45%;
+        position: sticky;
+        top: 6rem;
+      }
+    }
+
+    .payment-card {
+      background: white;
+      border: 2px solid #f3f4f6;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 1rem;
+    }
+    .payment-card.active {
+      border-color: #0B5ED7;
+      background-color: #ffffff;
+      box-shadow: 0 4px 6px -1px rgba(11, 94, 215, 0.1);
+    }
+    .payment-icon-box {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.5rem;
+      background-color: #e8f0fe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0B5ED7;
+    }
+    
+    .summary-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    }
+    .course-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .course-thumb {
+      width: 60px;
+      height: 60px;
+      border-radius: 0.5rem;
+      object-fit: cover;
+      background-color: #e5e7eb;
+    }
+  </style>
+
+  <div class="checkout-container">
+    
+    <!-- LEFT SECTION: PAYMENT -->
+    <div class="checkout-left">
+      <h1 style="font-size: 2.25rem; font-weight: 800; color: #111827; margin-bottom: 0.5rem; letter-spacing: -0.025em;">Secure Checkout</h1>
+      <p style="color: #6b7280; font-size: 1rem; margin-bottom: 3rem;">Complete your purchase to start your learning journey immediately.</p>
+
+      <h3 style="font-size: 1.125rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem;">Select Payment Method</h3>
+
+      <form id="checkout-form" action="/user-checkout/process" method="POST">
+        
+        <!-- RAZORPAY -->
+        <label class="payment-card <%= typeof selectedPaymentMethod !== 'undefined' && selectedPaymentMethod === 'razorpay' ? 'active' : 'active' %>">
+          <input type="radio" name="paymentMethod" value="razorpay" checked style="display: none;">
+          <div class="payment-icon-box">
+            <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+          </div>
+          <div>
+            <h4 style="font-weight: 700; color: #111827; font-size: 1rem; margin: 0;">Razorpay</h4>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">UPI, Cards, and Netbanking</p>
+          </div>
+        </label>
+
+        <!-- PAYPAL (COMMENTED OUT / HIDDEN FOR FUTURE) -->
+        <!--
+        <label class="payment-card">
+          <input type="radio" name="paymentMethod" value="paypal" style="display: none;">
+          <div class="payment-icon-box">
+            <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <div>
+            <h4 style="font-weight: 700; color: #111827; font-size: 1rem; margin: 0;">PayPal</h4>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">Faster, safer way to pay</p>
+          </div>
+        </label>
+        -->
+
+        <!-- WALLET -->
+        <label class="payment-card <%= typeof selectedPaymentMethod !== 'undefined' && selectedPaymentMethod === 'wallet' ? 'active' : '' %>" style="opacity: 0.6; cursor: not-allowed;">
+          <input type="radio" name="paymentMethod" value="wallet" disabled style="display: none;">
+          <div class="payment-icon-box" style="background-color: #f3f4f6; color: #6b7280;">
+            <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <div>
+            <h4 style="font-weight: 700; color: #111827; font-size: 1rem; margin: 0;">Velora Wallet</h4>
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 0;">Balance: <%= typeof walletBalance !== 'undefined' ? '$' + walletBalance : '$0.00' %></p>
+          </div>
+        </label>
+
+        <!-- PAY NOW BUTTON -->
+        <button type="submit" style="width: 100%; background-color: #0B5ED7; color: white; padding: 1.25rem; border-radius: 1rem; font-size: 1.125rem; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 3rem; transition: background-color 0.2s; box-shadow: 0 4px 6px -1px rgba(11, 94, 215, 0.2);">
+          <svg style="width: 20px; height: 20px; margin-right: 0.5rem;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+          Pay Now
+        </button>
+
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; color: #6b7280; font-size: 0.875rem; font-weight: 500;">
+          <svg style="width: 16px; height: 16px; color: #0B5ED7;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+          256-bit SSL Secure Encrypted Payment
+        </div>
+
+      </form>
+    </div>
+
+    <!-- RIGHT SECTION: ORDER SUMMARY -->
+    <div class="checkout-right">
+      <div class="summary-card">
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #111827; margin-bottom: 2rem;">Order Summary</h2>
+
+        <% 
+          let calcSubtotal = 0;
+          let calcCourseDiscount = 0;
+          let calcCouponDiscount = typeof couponDiscount !== 'undefined' ? couponDiscount : 0;
+          
+          if (typeof cart !== 'undefined' && cart.length > 0) {
+            cart.forEach(course => {
+              const bPrice = course.basePrice || course.price || 0;
+              const dPrice = course.discountPrice > 0 ? course.discountPrice : bPrice;
+              
+              calcSubtotal += bPrice;
+              calcCourseDiscount += (bPrice - dPrice);
+            });
+          }
+          
+          let calcTotal = calcSubtotal - calcCourseDiscount - calcCouponDiscount;
+          if (calcTotal < 0) calcTotal = 0;
+        %>
+
+        <!-- Cart Items Loop -->
+        <div style="border-bottom: 1px solid #f3f4f6; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+          <% if (typeof cart !== 'undefined' && cart.length > 0) { %>
+            <% cart.forEach(course => { %>
+              <div class="course-item">
+                <img src="<%= course.thumbnail ? course.thumbnail : '/images/placeholder.jpg' %>" alt="Thumbnail" class="course-thumb">
+                <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                  <h4 style="font-weight: 700; color: #111827; font-size: 0.95rem; margin: 0 0 0.25rem 0; line-height: 1.2;"><%= course.title %></h4>
+                  <p style="color: #6b7280; font-size: 0.8rem; margin: 0 0 0.25rem 0;"><%= course.level || 'Beginner' %> Level &bull; <%= course.modulesCount || 0 %> Modules</p>
+                  <p style="color: #0B5ED7; font-weight: 800; font-size: 0.95rem; margin: 0;">
+                    ₹<%= course.discountPrice > 0 ? course.discountPrice : (course.basePrice || course.price || 0) %>
+                  </p>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0;">No items in checkout.</p>
+          <% } %>
+        </div>
+
+        <!-- Calculations -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #4b5563; font-size: 0.95rem;">
+          <span>Subtotal</span>
+          <span style="font-weight: 600;">₹<%= calcSubtotal.toFixed(2) %></span>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #0B5ED7; font-size: 0.95rem; font-weight: 600;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            Course Discount 
+            <% if (calcCourseDiscount > 0) { %>
+              <span style="background-color: #e8f0fe; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;">SAVE</span>
+            <% } %>
+          </div>
+          <span>-₹<%= calcCourseDiscount.toFixed(2) %></span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; color: #0B5ED7; font-size: 0.95rem; font-weight: 600;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            Coupon Discount 
+          </div>
+          <span>-₹<%= calcCouponDiscount.toFixed(2) %></span>
+        </div>
+
+        <!-- Coupon Input -->
+        <div style="margin-bottom: 2rem;">
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Coupon Code</label>
+          <div style="display: flex; background-color: #f3f4f6; border-radius: 1.5rem; padding: 0.25rem;">
+            <input type="text" placeholder="Enter code" style="background: transparent; border: none; outline: none; padding: 0.75rem 1rem; flex-grow: 1; font-weight: 600; font-size: 0.95rem; color: #111827;">
+            <button type="button" style="background-color: #e5e7eb; color: #111827; font-weight: 700; border: none; border-radius: 1.25rem; padding: 0 1.5rem; cursor: pointer; transition: background-color 0.2s;">Apply</button>
+          </div>
+        </div>
+
+        <div style="border-top: 2px dashed #f3f4f6; margin-bottom: 1.5rem;"></div>
+
+        <!-- Total -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <span style="font-size: 1.125rem; font-weight: 800; color: #111827;">Total Amount</span>
+          <span style="font-size: 1.5rem; font-weight: 900; color: #0B5ED7;">₹<%= calcTotal.toFixed(2) %></span>
+        </div>
+
+        <!-- Guarantee -->
+        <div style="background-color: #f8f9fa; border-radius: 1rem; padding: 1.25rem; display: flex; gap: 1rem; align-items: flex-start;">
+          <div style="color: #0B5ED7; margin-top: 0.125rem;">
+            <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          </div>
+          <div>
+            <h5 style="font-size: 0.85rem; font-weight: 800; color: #111827; margin: 0 0 0.25rem 0;">30-Day Money Back Guarantee</h5>
+            <p style="font-size: 0.75rem; color: #6b7280; margin: 0; line-height: 1.4;">Not satisfied? We'll refund your purchase, no questions asked.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<%- include('../../../partials/footer') %>
