@@ -70,10 +70,10 @@ router.post('/admin-courses/:courseId/modules/:moduleId/edit', noCache, isAdmin,
 router.post('/admin-courses/:courseId/modules/:moduleId/delete', noCache, isAdmin, moduleController.postAdminDeleteModule);
 
 // Add Lesson
-router.post('/admin-courses/:courseId/modules/:moduleId/lessons/create', upload.single("video"), noCache, isAdmin, lessonController.postAdminAddLesson);
+router.post('/admin-courses/:courseId/modules/:moduleId/lessons/create', upload.single("video"),noCache, isAdmin, lessonController.postAdminAddLesson);
 
 // Edit Lesson
-router.post("/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/edit",upload.single("video"),noCache,isAdmin,lessonController.postAdminEditLesson);
+router.post("/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/edit",upload.single("video"), noCache,isAdmin,lessonController.postAdminEditLesson);
 
 // Delete Lesson
 router.post('/admin-courses/:courseId/modules/:moduleId/lessons/:lessonId/delete', noCache, isAdmin, lessonController.postAdminDeleteLesson);

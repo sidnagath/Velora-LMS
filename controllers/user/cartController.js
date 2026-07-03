@@ -5,9 +5,10 @@ exports.getCartPage = async (req, res) => {
   try {
     const userId = req.session.user?.id;
     const searchQuery = req.query.search || "";
-    const [cartResult, user] = await Promise.all([
+    const [cartResult, user,cartCount] = await Promise.all([
       cartService.getCart(userId, searchQuery),
-      profileService.getUserById(userId)
+      profileService.getUserById(userId),
+      cartService.getCartCount(userId)
     ]);
 
     if (!cartResult.success) {
@@ -20,7 +21,8 @@ exports.getCartPage = async (req, res) => {
       isLoggedIn: true,
       user,
       cart: cartResult.cart,
-      search: searchQuery
+      search: searchQuery,
+      cartCount: cartCount.success ? cartCount.count : 0
     });
   } catch (err) {
     console.error(err);

@@ -2,7 +2,7 @@ const Course = require('../models/courseModel');
 const Module = require('../models/moduleModel');
 const Lesson = require('../models/lessonModel');
 
-exports.addLesson = async (courseId, moduleId, title, description, duration, videoFile) => {
+exports.addLesson = async (courseId, moduleId, title, description, duration, videoFile, fileValidationErrors) => {
   const trimmedTitle = title?.trim();
   const trimmedDesc = description?.trim();
   const trimmedDuration = duration?.toString().trim();
@@ -11,16 +11,28 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
   if (!module) return { success: false, status: 404 };
 
   let errors = {};
+  if (fileValidationErrors) {
+    Object.assign(errors, fileValidationErrors);
+  }
   if (!trimmedTitle) errors.title = "Enter lesson title";
   else if (trimmedTitle.length < 3) errors.title = "Lesson title must be at least 3 characters";
 
   if (!trimmedDesc) errors.description = "Enter lesson description";
 
-  if (!videoFile) errors.video = "Upload lesson video";
+  if (!trimmedDuration) {
+    errors.duration = "Enter lesson duration";
+  } else {
+    const durNum = Number(trimmedDuration);
+    if (isNaN(durNum) || durNum <= 0 || durNum > 600) {
+      errors.duration = "Duration must be between 1 and 600 minutes";
+    }
+  }
+
+  if (!videoFile && !errors.video) errors.video = "Upload lesson video";
   
   if (videoFile) {
     const allowedVideoTypes = ["video/mp4", "video/quicktime"];
-    if (!allowedVideoTypes.includes(videoFile.mimetype)) errors.video = "Video must be MP4 or MOV";
+    if (!allowedVideoTypes.includes(videoFile.mimetype) && !errors.video) errors.video = "Video must be MP4 or MOV";
     const maxVideoSize = 500 * 1024 * 1024;
     if (videoFile.size > maxVideoSize) errors.video = "Video exceeds 500MB";
   }
@@ -40,7 +52,7 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
   return { success: true, lesson: newLesson };
 };
 
-exports.editLesson = async (courseId, moduleId, lessonId, title, description, duration, videoFile) => {
+exports.editLesson = async (courseId, moduleId, lessonId, title, description, duration, videoFile, fileValidationErrors) => {
   const trimmedTitle = title?.trim();
   const trimmedDesc = description?.trim();
   const trimmedDuration = duration?.toString().trim();
@@ -52,14 +64,26 @@ exports.editLesson = async (courseId, moduleId, lessonId, title, description, du
   if (!course || !module || !lesson) return { success: false, status: 404 };
 
   let errors = {};
+  if (fileValidationErrors) {
+    Object.assign(errors, fileValidationErrors);
+  }
   if (!trimmedTitle) errors.title = "Enter lesson title";
   else if (trimmedTitle.length < 3) errors.title = "Lesson title must be at least 3 characters";
 
   if (!trimmedDesc) errors.description = "Enter lesson description";
 
+  if (!trimmedDuration) {
+    errors.duration = "Enter lesson duration";
+  } else {
+    const durNum = Number(trimmedDuration);
+    if (isNaN(durNum) || durNum <= 0 || durNum > 600) {
+      errors.duration = "Duration must be between 1 and 600 minutes";
+    }
+  }
+
   if (videoFile) {
     const allowedVideoTypes = ["video/mp4", "video/quicktime"];
-    if (!allowedVideoTypes.includes(videoFile.mimetype)) errors.video = "Video must be MP4 or MOV";
+    if (!allowedVideoTypes.includes(videoFile.mimetype) && !errors.video) errors.video = "Video must be MP4 or MOV";
     const maxVideoSize = 500 * 1024 * 1024;
     if (videoFile.size > maxVideoSize) errors.video = "Video exceeds 500MB";
   }
@@ -68,7 +92,7 @@ exports.editLesson = async (courseId, moduleId, lessonId, title, description, du
 
   lesson.title = trimmedTitle;
   lesson.description = trimmedDesc;
-  if (trimmedDuration) lesson.duration = trimmedDuration;
+  lesson.duration = trimmedDuration;
   if (videoFile) lesson.video = "/uploads/" + videoFile.filename;
 
   await lesson.save();

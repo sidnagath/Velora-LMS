@@ -312,6 +312,12 @@
     JPG, PNG or WEBP. Max 2MB.
   </p>
 
+<% if(errors?.avatar){ %>
+<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;text-align:center;">
+  <%= errors.avatar %>
+</p>
+<% } %>
+
 </div>
 
 <script>

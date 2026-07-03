@@ -11,7 +11,8 @@ function formatBytes(bytes, decimals = 1) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-exports.uploadFile = async (courseId, moduleId, lessonId, file) => {
+exports.uploadFile = async (courseId, moduleId, lessonId, file, fileValidationErrors) => {
+  if (fileValidationErrors && fileValidationErrors.resourceFile) return { success: false, error: fileValidationErrors.resourceFile, status: 400 };
   if (!moduleId || !lessonId) return { success: false, error: "Select a module and lesson", status: 400 };
   if (!file) return { success: false, error: "Please upload a file", status: 400 };
 

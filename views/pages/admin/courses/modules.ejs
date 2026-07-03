@@ -99,7 +99,8 @@
                             data-title="<%= lesson.title %>" 
                             data-desc="<%= lesson.description || '' %>" 
                             data-duration="<%= lesson.duration || '' %>" 
-                            onclick="event.stopPropagation(); openLessonPanel(this.dataset.moduleId, this.dataset.id, this.dataset.title, this.dataset.desc, this.dataset.duration)" 
+                            data-video="<%= lesson.video || '' %>" 
+                            onclick="event.stopPropagation(); openLessonPanel(this.dataset.moduleId, this.dataset.id, this.dataset.title, this.dataset.desc, this.dataset.duration, this.dataset.video)" 
                             class="p-2 text-gray-400 hover:text-blue-600 transition-colors bg-white rounded border border-gray-100 shadow-sm" title="Edit Lesson"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
                           <button type="button" onclick="event.stopPropagation(); deleteLesson('<%= module._id %>', '<%= lesson._id %>', '<%= lesson.title.replace(/'/g, "'") %>')" class="p-2 text-gray-400 hover:text-red-600 transition-colors bg-white rounded border border-gray-100 shadow-sm" title="Delete Lesson"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                           <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-300 accordion-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -278,11 +279,14 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Duration (minutes)</label>
-          <input type="number" id="lessonDurationInput" name="duration" min="1" max="600" oninput="markDirty(); clearError('lessonDurationError')" class="w-full px-5 py-4 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none" placeholder="e.g. 15">
+          <input type="number" id="lessonDurationInput" name="duration" oninput="markDirty(); clearError('lessonDurationError')" class="w-full px-5 py-4 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none" placeholder="e.g. 15">
           <p id="lessonDurationError" style="display:none; margin-top:6px; font-size:12px; color:#ef4444; font-weight:600;"></p>
         </div>
         <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Video *</label>
+          <div class="flex justify-between items-end mb-2">
+            <label id="lessonVideoLabel" class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Video *</label>
+            <span id="currentLessonVideo" class="text-xs font-bold text-blue-600 hidden"></span>
+          </div>
           <input type="file" id="lessonVideoInput" name="video" accept="video/mp4,video/quicktime" onchange="markDirty(); clearError('lessonVideoError')" class="w-full px-5 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
           <p id="lessonVideoError" style="display:none; margin-top:6px; font-size:12px; color:#ef4444; font-weight:600;"></p>
           <p class="text-[10px] text-gray-400 mt-2">MP4 or MOV, max 500MB</p>
@@ -591,13 +595,29 @@
   }
 
   // --- Lesson Panel Setup ---
-  function openLessonPanel(moduleId, lessonId = '', title = '', desc = '', duration = '') {
+  function openLessonPanel(moduleId, lessonId = '', title = '', desc = '', duration = '', video = '') {
     document.getElementById('lessonModuleIdInput').value = moduleId;
     document.getElementById('lessonIdInput').value = lessonId;
     document.getElementById('lessonTitleInput').value = title;
     document.getElementById('lessonDescInput').value = desc;
     document.getElementById('lessonDurationInput').value = duration;
     document.getElementById('lessonPanelTitle').innerText = lessonId ? 'Edit Lesson' : 'Add Lesson';
+    
+    // Clear video input
+    document.getElementById('lessonVideoInput').value = '';
+    
+    const videoLabel = document.getElementById('lessonVideoLabel');
+    const currentVideo = document.getElementById('currentLessonVideo');
+    if (lessonId && video) {
+      videoLabel.innerText = "Video (Optional, upload to replace)";
+      const fileName = video.split('/').pop();
+      currentVideo.innerText = "Current: " + fileName;
+      currentVideo.style.display = 'block';
+    } else {
+      videoLabel.innerText = "Video *";
+      currentVideo.style.display = 'none';
+    }
+
     // Clear all errors on open
     clearAllErrors('lessonTitleError', 'lessonDescError', 'lessonDurationError', 'lessonVideoError');
     openPanel('lessonPanel');
@@ -638,8 +658,8 @@
       valid = false;
     }
 
-    // Video required always
-    if (!videoFile) {
+    // Video required only for new lessons
+    if (!videoFile && !lessonId) {
       showFieldError('lessonVideoError', 'Please upload a video for this lesson.');
       valid = false;
     }
@@ -667,8 +687,15 @@
         const msg = lessonId ? "Lesson '" + lessonTitle + "' updated successfully" : "Lesson '" + lessonTitle + "' added successfully";
         window.location.href = window.location.pathname + '?flashType=success&flashMsg=' + encodeURIComponent(msg);
       } else {
-        const lessonTitle = document.getElementById('lessonTitleInput') ? document.getElementById('lessonTitleInput').value.trim() : 'Lesson';
-        showToast(data.error || "Failed to " + (lessonId ? "update" : "create") + " lesson '" + lessonTitle + "'", 'error');
+        if (data.errors && Object.keys(data.errors).length > 0) {
+          if (data.errors.title) showFieldError('lessonTitleError', data.errors.title);
+          if (data.errors.description) showFieldError('lessonDescError', data.errors.description);
+          if (data.errors.duration) showFieldError('lessonDurationError', data.errors.duration);
+          if (data.errors.video) showFieldError('lessonVideoError', data.errors.video);
+        } else {
+          const lessonTitle = document.getElementById('lessonTitleInput') ? document.getElementById('lessonTitleInput').value.trim() : 'Lesson';
+          showToast(data.error || "Failed to " + (lessonId ? "update" : "create") + " lesson '" + lessonTitle + "'", 'error');
+        }
       }
     })
     .catch(err => {

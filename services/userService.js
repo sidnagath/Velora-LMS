@@ -61,7 +61,7 @@ exports.getUsersList = async (queryParams) => {
   }
 };
 
-exports.createUser = async (userData, avatarPath) => {
+exports.createUser = async (userData, avatarPath, fileValidationErrors) => {
   try {
     const { name, email, phone, password, confirmPassword, status } = userData;
 
@@ -77,6 +77,9 @@ exports.createUser = async (userData, avatarPath) => {
     const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
 
     let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
 
     if (!trimmedName) {
       errors.name = "Name is required";
@@ -109,6 +112,10 @@ exports.createUser = async (userData, avatarPath) => {
     const existingUser = await User.findOne({ email: trimmedEmail });
     if (existingUser) {
       errors.email = "Email already exists";
+    }
+
+    if (status !== "active" && status !== "inactive") {
+      errors.status = "Invalid status value";
     }
 
     const formData = {
@@ -158,7 +165,7 @@ exports.getUserById = async (id) => {
   }
 };
 
-exports.updateUser = async (id, userData, avatarPath) => {
+exports.updateUser = async (id, userData, avatarPath, fileValidationErrors) => {
   try {
     const { name, email, phone, status, password } = userData;
 
@@ -178,6 +185,9 @@ exports.updateUser = async (id, userData, avatarPath) => {
     }
 
     let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
 
     if (currentUser.authProvider === "google") {
       trimmedEmail = currentUser.email;
@@ -211,6 +221,10 @@ exports.updateUser = async (id, userData, avatarPath) => {
     const existingUser = await User.findOne({ email: trimmedEmail, _id: { $ne: id } });
     if (existingUser) {
       errors.email = "Email already exists";
+    }
+
+    if (status !== "active" && status !== "inactive") {
+      errors.status = "Invalid status value";
     }
 
     const formData = {

@@ -64,7 +64,7 @@ exports.getAdminAddCategory = (req, res) => {
 };
 
 exports.postAdminAddCategory = async (req, res) => {
-  const result = await categoryService.createCategory(req.body, req.file);
+  const result = await categoryService.createCategory(req.body, req.file, req.fileValidationError);
 
   if (result.success) {
     res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + result.name + "' created successfully."));
@@ -97,7 +97,7 @@ exports.getAdminEditCategory = async (req, res) => {
 };
 
 exports.postAdminEditCategory = async (req, res) => {
-  const result = await categoryService.updateCategory(req.params.categoryId, req.body, req.file);
+  const result = await categoryService.updateCategory(req.params.categoryId, req.body, req.file, req.fileValidationError);
 
   if (result.success) {
     res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + result.name + "' updated successfully."));

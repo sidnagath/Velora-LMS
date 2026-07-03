@@ -13,13 +13,23 @@ class ProfileService {
     return await User.findById(userId);
   }
 
-  async updateAvatar(userId, filename) {
+  async updateAvatar(userId, filename, fileValidationErrors) {
     const user = await User.findById(userId);
     if (!user) {
       return { success: false, errors: { general: "User not found" } };
     }
-    if (!filename) {
-      return { success: false, errors: { avatar: "Please select an image" }, user };
+    
+    let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
+    
+    if (!filename && Object.keys(errors).length === 0) {
+      errors.avatar = "Please select an image";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return { success: false, errors, user };
     }
 
     user.avatar = "/uploads/" + filename;

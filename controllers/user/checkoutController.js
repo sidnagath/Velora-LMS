@@ -1,16 +1,17 @@
 const checkoutService=require("../../services/checkoutService.js");
 const profileService = require("../../services/profileService"); 
-
+const cartService = require("../../services/cartService"); // Import cartService
 
 exports.getCheckoutPage=async (req,res)=>{
-
-// //get user id
-// //get checkoutdata and user from service
-// //if failure
-// //render checkout page
+  
 try{
   const userId=req.session.user?.id;
-  const checkoutResult=await checkoutService.getCheckoutData(userId);
+  
+  // Fetch checkout data and cart count concurrently
+  const [checkoutResult, cartCount] = await Promise.all([
+    checkoutService.getCheckoutData(userId),
+    cartService.getCartCount(userId)
+  ]);
    
   if(!checkoutResult.success){
     req.flash("error","Failed to load checkout.");
@@ -22,7 +23,8 @@ try{
     isLoggedIn:true,
     cart:checkoutResult.cart,
     subtotal:checkoutResult.subtotal,
-    total:checkoutResult.total
+    total:checkoutResult.total,
+    cartCount: cartCount.success ? cartCount.count : 0 // Pass cart count for header badge
     })
 }catch (err) {
     console.error(err);

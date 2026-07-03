@@ -60,7 +60,8 @@ exports.getAdminCreateCourse = async (req, res) => {
 };
 
 exports.postAdminCreateCourse = async (req, res) => {
-  const result = await courseService.createCourse(req.body, req.files);
+
+  const result = await courseService.createCourse(req.body, req.files, req.fileValidationError);
 
   if (!result.success) {
     if (result.errors.general === "Failed to create course.") {
@@ -77,6 +78,8 @@ exports.postAdminCreateCourse = async (req, res) => {
       formData: req.body
     });
   }
+
+  console.log(req.fileValidationError);
 
   const courseTitle = result.data.course.title;
   res.redirect(`/admin-courses/${result.data.course._id}/modules?flashType=success&flashMsg=` + encodeURIComponent("Course '" + courseTitle + "' created successfully"));
@@ -112,7 +115,7 @@ exports.getAdminEditCourse = async (req, res) => {
 };
 
 exports.postAdminEditCourse = async (req, res) => {
-  const result = await courseService.updateCourse(req.params.courseId, req.body, req.files);
+  const result = await courseService.updateCourse(req.params.courseId, req.body, req.files, req.fileValidationError);
 
   if (!result.success) {
     if (result.errors.general === "Course not found") {

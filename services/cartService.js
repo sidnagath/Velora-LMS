@@ -79,6 +79,14 @@ class CartService {
     await user.save();
     return { success: true, message: "Course moved to wishlist." };
   }
+
+  async getCartCount(userId){
+    const user=await User.findById(userId);
+       if (!user) {
+      return { success: false, message: "User not found" };
+    }
+     return {success:true,count:user.cart.length};
+  }
 }
 
 module.exports = new CartService();

@@ -44,7 +44,7 @@ exports.getAdminCreateUser = (req, res) => {
 
 exports.postAdminCreateUser = async (req, res) => {
   const avatarPath = req.file ? "/uploads/" + req.file.filename : "";
-  const result = await userService.createUser(req.body, avatarPath);
+  const result = await userService.createUser(req.body, avatarPath, req.fileValidationError);
 
   if (!result.success) {
     return res.render("pages/admin/user-management/create-user", {
@@ -77,7 +77,7 @@ exports.getAdminEditUser = async (req, res) => {
 
 exports.postAdminEditUser = async (req, res) => {
   const avatarPath = req.file ? "/uploads/" + req.file.filename : "";
-  const result = await userService.updateUser(req.params.id, req.body, avatarPath);
+  const result = await userService.updateUser(req.params.id, req.body, avatarPath, req.fileValidationError);
 
   if (!result.success) {
     if (result.error === "User not found") {

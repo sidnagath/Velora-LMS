@@ -53,36 +53,18 @@ const fileFilter =
   // =========================
 
   if (
-
     file.fieldname === "thumbnail" ||
-
     file.fieldname === "avatar"
-
   ) {
 
-    if (
-
-      allowedImageTypes.includes(
-        file.mimetype
-      )
-
-    ) {
-
+    if (allowedImageTypes.includes(file.mimetype)) {
       return cb(null, true);
-
     }
 
-
-
-    return cb(
-      new Error(
-        "Only image files allowed"
-      )
-    );
-
+    req.fileValidationError = req.fileValidationError || {};
+    req.fileValidationError[file.fieldname] = "Only image files allowed";
+    return cb(null, false);
   }
-
-
 
   // =========================
   // TRAILER VIDEO
@@ -91,30 +73,14 @@ const fileFilter =
   if (
     file.fieldname === "trailer" || file.fieldname === "video"
   ) {
-
-    if (
-
-      allowedVideoTypes.includes(
-        file.mimetype
-      )
-
-    ) {
-
+    if (allowedVideoTypes.includes(file.mimetype)) {
       return cb(null, true);
-
     }
 
-
-
-    return cb(
-      new Error(
-        "Only MP4 or MOV videos allowed"
-      )
-    );
-
+    req.fileValidationError = req.fileValidationError || {};
+    req.fileValidationError[file.fieldname] = "Only MP4 or MOV videos allowed";
+    return cb(null, false);
   }
-
-
 
   // =========================
   // COURSE MATERIALS
@@ -144,22 +110,18 @@ const fileFilter =
       return cb(null, true);
     }
 
-    return cb(
-      new Error(
-        "Invalid file type for resources. Allowed: PDF, ZIP, DOCX, TXT, Images, Videos"
-      )
-    );
+    req.fileValidationError = req.fileValidationError || {};
+    req.fileValidationError[file.fieldname] = "Invalid file type for resources. Allowed: PDF, ZIP, DOCX, TXT, Images, Videos";
+    return cb(null, false);
   }
 
   // =========================
   // DEFAULT BLOCK
   // =========================
 
-  cb(
-    new Error(
-      "Invalid file type"
-    )
-  );
+  req.fileValidationError = req.fileValidationError || {};
+  req.fileValidationError[file.fieldname] = "Invalid file type";
+  return cb(null, false);
 
 };
 

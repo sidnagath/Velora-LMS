@@ -3,7 +3,7 @@ const resourceService = require('../../services/resourceService');
 exports.postAdminCourseResourcesUploadFile = async (req, res) => {
   try {
     const { moduleId, lessonId } = req.body;
-    const result = await resourceService.uploadFile(req.params.courseId, moduleId, lessonId, req.file);
+    const result = await resourceService.uploadFile(req.params.courseId, moduleId, lessonId, req.file, req.fileValidationError);
 
     if (!result.success) {
       return res.status(result.status || 400).json({ success: false, error: result.error });

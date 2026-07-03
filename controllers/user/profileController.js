@@ -1,8 +1,11 @@
+const cartService = require('../../services/cartService');
 const profileService = require('../../services/profileService');
 
 exports.getDashboard = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
+
+    const cartCount= await cartService.getCartCount(req.session.user.id);
 
     if (!user) {
       return res.render("pages/guest/login", {
@@ -18,7 +21,8 @@ exports.getDashboard = async (req, res) => {
       isLoggedIn: true,
       user,
       errors: {},
-      formData: {}
+      formData: {},
+      cartCount:cartCount.success?cartCount.count:0
     });
   } catch (err) {
     console.log(err);
@@ -35,6 +39,8 @@ exports.getProfileAccountDetails = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
 
+    const cartCount= await cartService.getCartCount(req.session.user.id);
+
     if (!user) {
       return res.render("pages/user/profile/account-details", {
         title: "Velora - Profile",
@@ -50,7 +56,8 @@ exports.getProfileAccountDetails = async (req, res) => {
       isLoggedIn: true,
       user,
       errors: {},
-      formData: {}
+      formData: {},
+      cartCount:cartCount.success?cartCount.count:0
     });
   } catch (err) {
     console.log(err);
@@ -68,6 +75,8 @@ exports.getAddressDetails = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
 
+    const cartCount= await cartService.getCartCount(req.session.user.id);
+
     if (!user) {
       return res.render("pages/user/profile/address", {
         title: "Velora - Address",
@@ -83,7 +92,8 @@ exports.getAddressDetails = async (req, res) => {
       isLoggedIn: true,
       user,
       errors: {},
-      formData: {}
+      formData: {},
+      cartCount:cartCount.success?cartCount.count:0
     });
   } catch (err) {
     console.log(err);
@@ -99,9 +109,13 @@ exports.getAddressDetails = async (req, res) => {
 
 exports.postUpdateAvatar = async (req, res) => {
   try {
-    const result = await profileService.updateAvatar(req.session.user?.id, req.file?.filename);
+    const filename = req.file ? req.file.filename : null;
+    const result = await profileService.updateAvatar(req.session.user?.id, filename, req.fileValidationError);
 
     if (!result.success) {
+      if (result.errors.general === "User not found") {
+        return res.redirect("/login");
+      }
       return res.render("pages/user/profile/account-details", {
         title: "Velora - Profile",
         isLoggedIn: true,
@@ -128,6 +142,7 @@ exports.postUpdateAvatar = async (req, res) => {
 exports.getEditProfile = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
+    const cartCount= await cartService.getCartCount(req.session.user.id);
 
     if (!user) {
       return res.render("pages/user/profile/edit-profile", {
@@ -135,7 +150,8 @@ exports.getEditProfile = async (req, res) => {
         isLoggedIn: true,
         user: null,
         errors: { general: "User not found" },
-        formData: {}
+        formData: {},
+        cartCount:cartCount.success?cartCount.count:0
       });
     }
 

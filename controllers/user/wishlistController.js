@@ -1,13 +1,15 @@
 const wishlistService = require("../../services/wishlistService");
 const profileService = require("../../services/profileService"); // To get user data for sidebar
+const cartService = require("../../services/cartService");
 
 exports.getWishlistPage = async (req, res) => {
   try {
     const userId = req.session.user?.id;
     const searchQuery = req.query.search || "";
-    const [wishlistResult, user] = await Promise.all([
+    const [wishlistResult, user, cartCount] = await Promise.all([
       wishlistService.getWishlist(userId, searchQuery),
-      profileService.getUserById(userId)
+      profileService.getUserById(userId),
+      cartService.getCartCount(userId)
     ]);
 
     if (!wishlistResult.success) {
@@ -20,7 +22,8 @@ exports.getWishlistPage = async (req, res) => {
       isLoggedIn: true,
       user,
       wishlist: wishlistResult.wishlist,
-      search: searchQuery
+      search: searchQuery,
+      cartCount:cartCount.success?cartCount.count:0
     });
   } catch (err) {
     console.error(err);

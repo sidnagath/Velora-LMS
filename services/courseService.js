@@ -100,7 +100,7 @@ exports.getAdminCreateCourseData = async () => {
   }
 };
 
-exports.createCourse = async (data, files) => {
+exports.createCourse = async (data, files, fileValidationErrors) => {
   try {
     let { title, description, category, instructor, level } = data;
 
@@ -114,6 +114,9 @@ exports.createCourse = async (data, files) => {
     const trailerFile = files?.trailer?.[0];
 
     let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
 
     if (!title) errors.title = "Enter course title";
     if (!description) errors.description = "Enter course description";
@@ -124,8 +127,8 @@ exports.createCourse = async (data, files) => {
     }
     if (!instructor) errors.instructor = "Enter instructor name";
     if (!level) errors.level = "Select course level";
-    if (!thumbnailFile) errors.thumbnail = "Upload thumbnail";
-    if (!trailerFile) errors.trailer = "Upload trailer";
+    if (!thumbnailFile && !errors.thumbnail) errors.thumbnail = "Upload thumbnail";
+    if (!trailerFile && !errors.trailer) errors.trailer = "Upload trailer";
 
     if (Object.keys(errors).length > 0) {
       const categories = await Category.find({ status: "active" }).sort({ name: 1 });
@@ -167,7 +170,7 @@ exports.getAdminEditCourseData = async (courseId) => {
   }
 };
 
-exports.updateCourse = async (courseId, data, files) => {
+exports.updateCourse = async (courseId, data, files, fileValidationErrors) => {
   try {
     let { title, description, category, instructor, level } = data;
 
@@ -186,6 +189,9 @@ exports.updateCourse = async (courseId, data, files) => {
     }
 
     let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
 
     if (!title) errors.title = "Enter course title";
     if (!description) errors.description = "Enter course description";
@@ -197,8 +203,8 @@ exports.updateCourse = async (courseId, data, files) => {
     if (!instructor) errors.instructor = "Enter instructor name";
     if (!level) errors.level = "Select course level";
 
-    if (!thumbnailFile && !existingCourse.thumbnail) errors.thumbnail = "Upload thumbnail image";
-    if (!trailerFile && !existingCourse.trailer) errors.trailer = "Upload trailer video";
+    if (!thumbnailFile && !existingCourse.thumbnail && !errors.thumbnail) errors.thumbnail = "Upload thumbnail image";
+    if (!trailerFile && !existingCourse.trailer && !errors.trailer) errors.trailer = "Upload trailer video";
 
     if (title && title.length < 5) errors.title = "Title must be minimum 5 characters";
 
@@ -213,12 +219,12 @@ exports.updateCourse = async (courseId, data, files) => {
     }
 
     const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (thumbnailFile && !allowedImageTypes.includes(thumbnailFile.mimetype)) {
+    if (thumbnailFile && !allowedImageTypes.includes(thumbnailFile.mimetype) && !errors.thumbnail) {
       errors.thumbnail = "Thumbnail must be JPG, PNG or WEBP";
     }
 
     const allowedVideoTypes = ["video/mp4", "video/quicktime"];
-    if (trailerFile && !allowedVideoTypes.includes(trailerFile.mimetype)) {
+    if (trailerFile && !allowedVideoTypes.includes(trailerFile.mimetype) && !errors.trailer) {
       errors.trailer = "Trailer must be MP4 or MOV";
     }
 
@@ -312,10 +318,26 @@ exports.publishCourse = async (courseId, data) => {
     const modules = await Module.find({ courseId });
     const lessons = await Lesson.find({ moduleId: { $in: modules.map(m => m._id) } });
 
-    const { pricingType, currency, basePrice, discountPrice, lifetimeAccess, downloadableResources, completionCertificate, publishStatus } = data;
+    let { pricingType, currency, basePrice, discountPrice, lifetimeAccess, downloadableResources, completionCertificate, publishStatus } = data;
 
+    pricingType = pricingType?.trim() || "paid";
+    currency = currency?.trim() || "INR";
     const isPublishing = publishStatus === "Published (Live Now)";
     let errors = {};
+
+    let bPrice = pricingType === "free" ? 0 : Number(basePrice || 0);
+    let dPrice = pricingType === "free" ? 0 : Number(discountPrice || 0);
+
+    if (pricingType !== "free") {
+      if (isNaN(bPrice) || bPrice <= 0) {
+        errors.basePrice = "Base price must be greater than 0";
+      }
+      if (isNaN(dPrice) || dPrice < 0) {
+        errors.discountPrice = "Discount price must be a valid positive number";
+      } else if (bPrice > 0 && dPrice >= bPrice) {
+        errors.discountPrice = "Discount price must be less than base price";
+      }
+    }
 
     if (isPublishing) {
       if (modules.length === 0) errors.general = "Add at least one module before publishing";
@@ -330,10 +352,10 @@ exports.publishCourse = async (courseId, data) => {
       return { success: false, errors, data: { course, modules, lessons } };
     }
 
-    course.pricingType = pricingType || "paid";
-    course.currency = currency || "INR";
-    course.basePrice = pricingType === "free" ? 0 : Number(basePrice || 0);
-    course.discountPrice = pricingType === "free" ? 0 : Number(discountPrice || 0);
+    course.pricingType = pricingType;
+    course.currency = currency;
+    course.basePrice = bPrice;
+    course.discountPrice = dPrice;
     course.lifetimeAccess = lifetimeAccess === "on" || lifetimeAccess === true;
     course.downloadableResources = downloadableResources === "on" || downloadableResources === true;
     course.completionCertificate = completionCertificate === "on" || completionCertificate === true;

@@ -4,7 +4,7 @@ const Module = require('../../models/moduleModel');
 exports.postAdminAddLesson = async (req, res) => {
   try {
     const { title, description, duration } = req.body;
-    const result = await lessonService.addLesson(req.params.courseId, req.params.moduleId, title, description, duration, req.file);
+    const result = await lessonService.addLesson(req.params.courseId, req.params.moduleId, title, description, duration, req.file, req.fileValidationError);
 
     if (!result.success) {
       if (result.status === 404) return res.redirect("/admin-courses");
@@ -50,7 +50,7 @@ exports.postAdminAddLesson = async (req, res) => {
 exports.postAdminEditLesson = async (req, res) => {
   try {
     const { title, description, duration } = req.body;
-    const result = await lessonService.editLesson(req.params.courseId, req.params.moduleId, req.params.lessonId, title, description, duration, req.file);
+    const result = await lessonService.editLesson(req.params.courseId, req.params.moduleId, req.params.lessonId, title, description, duration, req.file, req.fileValidationError);
 
     if (!result.success) {
       if (result.status === 404) return res.redirect(`/admin-courses/${req.params.courseId}/modules`);

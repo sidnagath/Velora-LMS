@@ -83,7 +83,7 @@ exports.getCategoriesData = async (query) => {
   }
 };
 
-exports.createCategory = async (body, file) => {
+exports.createCategory = async (body, file, fileValidationErrors) => {
   try {
     let { name, description, status } = body;
 
@@ -92,6 +92,9 @@ exports.createCategory = async (body, file) => {
     status = status?.trim() || "active";
 
     let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
 
     if (!name) {
       errors.name = "Category name is required";
@@ -110,6 +113,10 @@ exports.createCategory = async (body, file) => {
       if (existing) {
         errors.name = "A category with this name already exists";
       }
+    }
+
+    if (status !== "active" && status !== "inactive") {
+      errors.status = "Invalid status value";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -138,7 +145,7 @@ exports.getCategoryById = async (categoryId) => {
   }
 };
 
-exports.updateCategory = async (categoryId, body, file) => {
+exports.updateCategory = async (categoryId, body, file, fileValidationErrors) => {
   try {
     let { name, description, status } = body;
 
@@ -150,6 +157,9 @@ exports.updateCategory = async (categoryId, body, file) => {
     if (!category) return { success: false, notFound: true };
 
     let errors = {};
+    if (fileValidationErrors) {
+      Object.assign(errors, fileValidationErrors);
+    }
 
     if (!name) {
       errors.name = "Category name is required";
@@ -169,6 +179,10 @@ exports.updateCategory = async (categoryId, body, file) => {
       if (existing) {
         errors.name = "A category with this name already exists";
       }
+    }
+
+    if (status !== "active" && status !== "inactive") {
+      errors.status = "Invalid status value";
     }
 
     if (Object.keys(errors).length > 0) {
