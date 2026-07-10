@@ -116,6 +116,15 @@
                             Add Resource
                           </button>
                         </div>
+                        
+                        <!-- Video Preview -->
+                        <% if (lesson.video) { %>
+                          <div class="mb-6">
+                            <h5 class="font-bold text-xs text-gray-500 uppercase tracking-widest mb-3">Lesson Video</h5>
+                            <video src="<%= lesson.video %>" controls class="w-full rounded-xl border border-gray-200 shadow-sm bg-black" style="max-height: 350px; object-fit: contain;"></video>
+                          </div>
+                        <% } %>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <!-- Files -->
                           <div>
@@ -245,6 +254,7 @@
        <button type="button" onclick="closeActivePanel()" class="px-6 py-4 border border-gray-200 bg-white text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition w-1/3 text-center">Cancel</button>
       <button
   type="button"
+  id="saveModuleBtn"
   onclick="document.getElementById('moduleForm').requestSubmit()"
   class="px-6 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-center"
 >
@@ -279,7 +289,7 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Duration (minutes)</label>
-          <input type="number" id="lessonDurationInput" name="duration" oninput="markDirty(); clearError('lessonDurationError')" class="w-full px-5 py-4 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none" placeholder="e.g. 15">
+          <input type="number" step="any" id="lessonDurationInput" name="duration" oninput="markDirty(); clearError('lessonDurationError')" class="w-full px-5 py-4 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none" placeholder="e.g. 15">
           <p id="lessonDurationError" style="display:none; margin-top:6px; font-size:12px; color:#ef4444; font-weight:600;"></p>
         </div>
         <div>
@@ -287,8 +297,9 @@
             <label id="lessonVideoLabel" class="block text-xs font-bold text-gray-500 uppercase tracking-widest">Video *</label>
             <span id="currentLessonVideo" class="text-xs font-bold text-blue-600 hidden"></span>
           </div>
-          <input type="file" id="lessonVideoInput" name="video" accept="video/mp4,video/quicktime" onchange="markDirty(); clearError('lessonVideoError')" class="w-full px-5 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+          <input type="file" id="lessonVideoInput" name="video" accept="video/mp4,video/quicktime" onchange="handleLessonVideoPreview(this); markDirty(); clearError('lessonVideoError')" class="w-full px-5 py-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
           <p id="lessonVideoError" style="display:none; margin-top:6px; font-size:12px; color:#ef4444; font-weight:600;"></p>
+          <video id="lessonVideoPreview" controls class="hidden w-full mt-3 rounded-xl border border-gray-200" style="max-height: 220px; object-fit: contain; background: #000;"></video>
           <p class="text-[10px] text-gray-400 mt-2">MP4 or MOV, max 500MB</p>
         </div>
         <button type="submit" class="hidden">Submit</button>
@@ -298,6 +309,7 @@
        <button type="button" onclick="closeActivePanel()" class="px-6 py-4 border border-gray-200 bg-white text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition w-1/3 text-center">Cancel</button>
 <button
   type="button"
+  id="saveLessonBtn"
   onclick="document.getElementById('lessonForm').requestSubmit()"
   class="px-6 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-center"
 >
@@ -515,8 +527,10 @@
     openPanel('modulePanel');
   }
 
+  let isSubmittingModule = false;
   function submitModule(e) {
     e.preventDefault();
+    if (isSubmittingModule) return;
     clearAllErrors('moduleTitleError', 'moduleDescError');
 
     const title = document.getElementById('moduleTitleInput').value.trim();
@@ -541,6 +555,15 @@
 
     if (!valid) return;
 
+    isSubmittingModule = true;
+    const btn = document.getElementById('saveModuleBtn');
+    const originalText = btn ? btn.innerText : 'Save Module';
+    if (btn) {
+      btn.innerText = 'Saving...';
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
     const id = document.getElementById('moduleIdInput').value;
     const url = id 
       ? `/admin-courses/${courseId}/modules/${id}/edit`
@@ -561,11 +584,23 @@
         const msg = id ? "Module '" + title + "' updated successfully" : "Module '" + title + "' added successfully";
         window.location.href = window.location.pathname + '?flashType=success&flashMsg=' + encodeURIComponent(msg);
       } else {
+        isSubmittingModule = false;
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
         showToast(data.error || "Failed to " + (id ? "update" : "create") + " module '" + title + "'", 'error');
       }
     })
     .catch(err => {
       console.error(err);
+      isSubmittingModule = false;
+      if (btn) {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
       showToast('Error saving module', 'error');
     });
   }
@@ -595,6 +630,33 @@
   }
 
   // --- Lesson Panel Setup ---
+  function handleLessonVideoPreview(input) {
+    const preview = document.getElementById('lessonVideoPreview');
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const validTypes = ['video/mp4', 'video/quicktime'];
+      
+      if (validTypes.includes(file.type) || file.name.toLowerCase().endsWith('.mp4') || file.name.toLowerCase().endsWith('.mov')) {
+        const url = URL.createObjectURL(file);
+        preview.src = url;
+        preview.classList.remove('hidden');
+      } else {
+        preview.src = '';
+        preview.classList.add('hidden');
+        showFieldError('lessonVideoError', 'Invalid video file. Only MP4 and MOV are allowed.');
+        input.value = ''; // clear invalid file
+      }
+    } else {
+      if (preview.dataset.originalSrc) {
+        preview.src = preview.dataset.originalSrc;
+        preview.classList.remove('hidden');
+      } else {
+        preview.src = '';
+        preview.classList.add('hidden');
+      }
+    }
+  }
+
   function openLessonPanel(moduleId, lessonId = '', title = '', desc = '', duration = '', video = '') {
     document.getElementById('lessonModuleIdInput').value = moduleId;
     document.getElementById('lessonIdInput').value = lessonId;
@@ -608,14 +670,24 @@
     
     const videoLabel = document.getElementById('lessonVideoLabel');
     const currentVideo = document.getElementById('currentLessonVideo');
+    const videoPreview = document.getElementById('lessonVideoPreview');
+    
     if (lessonId && video) {
       videoLabel.innerText = "Video (Optional, upload to replace)";
       const fileName = video.split('/').pop();
       currentVideo.innerText = "Current: " + fileName;
       currentVideo.style.display = 'block';
+      
+      videoPreview.src = '';
+      videoPreview.classList.add('hidden');
+      videoPreview.dataset.originalSrc = '';
     } else {
       videoLabel.innerText = "Video *";
       currentVideo.style.display = 'none';
+      
+      videoPreview.src = '';
+      videoPreview.classList.add('hidden');
+      videoPreview.dataset.originalSrc = '';
     }
 
     // Clear all errors on open
@@ -623,8 +695,10 @@
     openPanel('lessonPanel');
   }
 
+  let isSubmittingLesson = false;
   function submitLesson(e) {
     e.preventDefault();
+    if (isSubmittingLesson) return;
     clearAllErrors('lessonTitleError', 'lessonDescError', 'lessonDurationError', 'lessonVideoError');
 
     const lessonId = document.getElementById('lessonIdInput').value;
@@ -666,6 +740,15 @@
 
     if (!valid) return;
 
+    isSubmittingLesson = true;
+    const btn = document.getElementById('saveLessonBtn');
+    const originalText = btn ? btn.innerText : 'Save Lesson';
+    if (btn) {
+      btn.innerText = 'Saving...';
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
     const moduleId = document.getElementById('lessonModuleIdInput').value;
     const form = document.getElementById('lessonForm');
     const formData = new FormData(form);
@@ -687,6 +770,12 @@
         const msg = lessonId ? "Lesson '" + lessonTitle + "' updated successfully" : "Lesson '" + lessonTitle + "' added successfully";
         window.location.href = window.location.pathname + '?flashType=success&flashMsg=' + encodeURIComponent(msg);
       } else {
+        isSubmittingLesson = false;
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
         if (data.errors && Object.keys(data.errors).length > 0) {
           if (data.errors.title) showFieldError('lessonTitleError', data.errors.title);
           if (data.errors.description) showFieldError('lessonDescError', data.errors.description);
@@ -700,6 +789,12 @@
     })
     .catch(err => {
       console.error(err);
+      isSubmittingLesson = false;
+      if (btn) {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
       showToast('Error saving lesson', 'error');
     });
   }
@@ -846,8 +941,11 @@
     if(activeResourceType === 'file') isFormDirty = false;
   }
 
+  let isSubmittingFileResource = false;
   function submitFileResource(e) {
     e.preventDefault();
+    if (isSubmittingFileResource) return;
+    
     const moduleId = document.getElementById('fileModuleIdInput').value;
     const lessonId = document.getElementById('fileLessonIdInput').value;
     const inputEl = document.getElementById('realFileInput');
@@ -858,6 +956,7 @@
       return;
     }
 
+    isSubmittingFileResource = true;
     const formData = new FormData();
     formData.append('moduleId', moduleId);
     formData.append('lessonId', lessonId);
@@ -867,6 +966,7 @@
     const originalText = btn.innerText;
     btn.innerText = 'Uploading...';
     btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
 
     fetch(`/admin-courses/${courseId}/resources/upload-file`, {
       method: 'POST',
@@ -874,21 +974,25 @@
     })
     .then(res => res.json())
     .then(data => {
-      btn.innerText = originalText;
-      btn.disabled = false;
       if (data.success) {
         isFormDirty = false;
         const uploadedFileName = file ? file.name : 'File';
         const msg = "Resource '" + uploadedFileName + "' added successfully";
         window.location.href = window.location.pathname + '?flashType=success&flashMsg=' + encodeURIComponent(msg);
       } else {
+        isSubmittingFileResource = false;
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
         const uploadedFileName = file ? file.name : 'File';
         showToast(data.error || "Failed to add resource '" + uploadedFileName + "'", 'error');
       }
     })
     .catch(err => {
+      isSubmittingFileResource = false;
       btn.innerText = originalText;
       btn.disabled = false;
+      btn.classList.remove('opacity-50', 'cursor-not-allowed');
       const uploadedFileName = file ? file.name : 'File';
       showToast("Failed to add resource '" + uploadedFileName + "'", 'error');
     });
@@ -923,13 +1027,25 @@
   }
 
   // Link Logic
+  let isSubmittingLinkResource = false;
   function submitLinkResource(e) {
     e.preventDefault();
+    if (isSubmittingLinkResource) return;
+    
     const moduleId = document.getElementById('linkModuleIdInput').value;
     const lessonId = document.getElementById('linkLessonIdInput').value;
     const title = document.getElementById('linkTitleInput').value;
     const url = document.getElementById('linkUrlInput').value;
     const description = document.getElementById('linkDescInput').value;
+
+    isSubmittingLinkResource = true;
+    const btn = document.getElementById('saveResourceBtn');
+    const originalText = btn ? btn.innerText : 'Save Link';
+    if (btn) {
+      btn.innerText = 'Saving...';
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
 
     fetch(`/admin-courses/${courseId}/resources/add-link`, {
       method: 'POST',
@@ -943,10 +1059,22 @@
         const msg = "Resource '" + title + "' added successfully";
         window.location.href = window.location.pathname + '?flashType=success&flashMsg=' + encodeURIComponent(msg);
       } else {
+        isSubmittingLinkResource = false;
+        if (btn) {
+          btn.innerText = originalText;
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
         showToast(data.error || "Failed to add resource '" + title + "'", 'error');
       }
     })
     .catch(() => {
+      isSubmittingLinkResource = false;
+      if (btn) {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
       showToast("Failed to add resource '" + title + "'", 'error');
     });
   }

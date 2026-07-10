@@ -120,7 +120,7 @@
 
     class="hidden"
 
-    onchange="document.getElementById('avatarForm').submit()"
+    onchange="initImageCrop(this, null, 1, 'avatarForm')"
   >
 
   <!-- PROFILE IMAGE -->
@@ -323,4 +323,5 @@
   </div>
 </main>
 
+<%- include('../../../partials/cropper-modal') %>
 <%- include('../../../partials/footer') %>

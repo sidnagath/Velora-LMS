@@ -306,6 +306,7 @@
     name="avatar"
     accept="image/*"
     class="hidden"
+    onchange="initImageCrop(this, 'imagePreview', 1)"
   >
 
   <p class="text-xs text-gray-500">
@@ -459,5 +460,5 @@
   });
 
 </script>
-
+<%- include('../../../partials/cropper-modal') %>
 <%- include('../../../partials/footer') %>

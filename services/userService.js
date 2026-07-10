@@ -61,7 +61,9 @@ exports.getUsersList = async (queryParams) => {
   }
 };
 
-exports.createUser = async (userData, avatarPath, fileValidationErrors) => {
+const cloudinaryUtil = require('../config/cloudinary');
+
+exports.createUser = async (userData, avatarFile, fileValidationErrors) => {
   try {
     const { name, email, phone, password, confirmPassword, status } = userData;
 
@@ -126,7 +128,16 @@ exports.createUser = async (userData, avatarPath, fileValidationErrors) => {
     };
 
     if (Object.keys(errors).length > 0) {
+      // If validation fails, we shouldn't keep the uploaded temp file.
+      // We can rely on a cleanup function or just delete it here.
+      // But we can also let OS clean it up or clean it explicitly.
       return { success: false, errors, formData };
+    }
+
+    let finalAvatarPath = "";
+    if (avatarFile) {
+      const uploadResult = await cloudinaryUtil.uploadToCloudinary(avatarFile.path, 'avatars', 'image');
+      finalAvatarPath = uploadResult ? uploadResult.secure_url : "";
     }
 
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
@@ -137,7 +148,7 @@ exports.createUser = async (userData, avatarPath, fileValidationErrors) => {
       phone: trimmedPhone,
       password: hashedPassword,
       status,
-      avatar: avatarPath || ""
+      avatar: finalAvatarPath
     });
 
     return { success: true, trimmedName };
@@ -165,7 +176,7 @@ exports.getUserById = async (id) => {
   }
 };
 
-exports.updateUser = async (id, userData, avatarPath, fileValidationErrors) => {
+exports.updateUser = async (id, userData, avatarFile, fileValidationErrors) => {
   try {
     const { name, email, phone, status, password } = userData;
 
@@ -245,8 +256,11 @@ exports.updateUser = async (id, userData, avatarPath, fileValidationErrors) => {
       status
     };
 
-    if (avatarPath) {
-      updateData.avatar = avatarPath;
+    if (avatarFile) {
+      const uploadResult = await cloudinaryUtil.uploadToCloudinary(avatarFile.path, 'avatars', 'image');
+      if (uploadResult) {
+        updateData.avatar = uploadResult.secure_url;
+      }
     }
 
     if (trimmedPassword) {

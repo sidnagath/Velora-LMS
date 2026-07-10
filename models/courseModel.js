@@ -94,12 +94,12 @@ const courseSchema = new mongoose.Schema(
 
     rating: {
       type: Number,
-      default: 0
+      default: 4.8
     },
 
     reviewsCount: {
      type: Number,
-     default: 0
+     default: 780
    }
   },
 

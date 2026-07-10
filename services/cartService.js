@@ -80,12 +80,20 @@ class CartService {
     return { success: true, message: "Course moved to wishlist." };
   }
 
-  async getCartCount(userId){
-    const user=await User.findById(userId);
-       if (!user) {
+  async getCartCount(userId) {
+    const user = await User.findById(userId);
+    if (!user) {
       return { success: false, message: "User not found" };
     }
-     return {success:true,count:user.cart.length};
+    
+    // Only count active/published courses in the cart
+    const count = await Course.countDocuments({
+      _id: { $in: user.cart },
+      status: "published",
+      isDeleted: false
+    });
+    
+    return { success: true, count };
   }
 }
 

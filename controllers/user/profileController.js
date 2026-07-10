@@ -109,8 +109,7 @@ exports.getAddressDetails = async (req, res) => {
 
 exports.postUpdateAvatar = async (req, res) => {
   try {
-    const filename = req.file ? req.file.filename : null;
-    const result = await profileService.updateAvatar(req.session.user?.id, filename, req.fileValidationError);
+    const result = await profileService.updateAvatar(req.session.user?.id, req.file, req.fileValidationError);
 
     if (!result.success) {
       if (result.errors.general === "User not found") {

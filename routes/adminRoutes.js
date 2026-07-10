@@ -90,6 +90,7 @@ router.post('/admin-courses/:courseId/resources/delete-link', noCache, isAdmin, 
 // Publish Course
 router.get('/admin-courses/:courseId/publish', noCache, isAdmin, courseController.getAdminCoursePublish);
 router.post('/admin-courses/:courseId/publish', noCache, isAdmin, courseController.postAdminCoursePublish);
+router.post('/admin-courses/:courseId/toggle-status', noCache, isAdmin, courseController.postAdminToggleCourseStatus);
 
 // Logout
 router.get("/admin-logout",noCache,authController.getAdminLogout);

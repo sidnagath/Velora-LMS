@@ -7,13 +7,15 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+const cloudinaryUtil = require('../config/cloudinary');
+
 class ProfileService {
   async getUserById(userId) {
     if (!userId) return null;
     return await User.findById(userId);
   }
 
-  async updateAvatar(userId, filename, fileValidationErrors) {
+  async updateAvatar(userId, avatarFile, fileValidationErrors) {
     const user = await User.findById(userId);
     if (!user) {
       return { success: false, errors: { general: "User not found" } };
@@ -24,7 +26,7 @@ class ProfileService {
       Object.assign(errors, fileValidationErrors);
     }
     
-    if (!filename && Object.keys(errors).length === 0) {
+    if (!avatarFile && Object.keys(errors).length === 0) {
       errors.avatar = "Please select an image";
     }
 
@@ -32,7 +34,8 @@ class ProfileService {
       return { success: false, errors, user };
     }
 
-    user.avatar = "/uploads/" + filename;
+    const uploadResult = await cloudinaryUtil.uploadToCloudinary(avatarFile.path, 'avatars', 'image');
+    user.avatar = uploadResult ? uploadResult.secure_url : user.avatar;
     await user.save();
     return { success: true, user };
   }
@@ -163,18 +166,32 @@ class ProfileService {
   }
 
   async updatePassword(userId, passwordData) {
-    const { newPassword, confirmPassword } = passwordData;
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
     const user = await User.findById(userId);
 
     if (!user) {
       return { success: false, errors: { general: "User not found" } };
     }
 
+    const trimmedCurrent = currentPassword?.trim();
     const trimmedPassword = newPassword?.trim();
     const trimmedConfirmPassword = confirmPassword?.trim();
     const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
 
     let errors = {};
+
+    if (user.authProvider === "google") {
+      errors.general = "Google accounts cannot change password";
+    }
+
+    if (!trimmedCurrent && user.authProvider !== "google") {
+      errors.currentPassword = "Current password is required";
+    } else if (trimmedCurrent && user.authProvider !== "google") {
+      const isMatch = await bcrypt.compare(trimmedCurrent, user.password);
+      if (!isMatch) {
+        errors.currentPassword = "Current password is incorrect";
+      }
+    }
 
     if (!trimmedPassword) errors.newPassword = "Password is required";
     if (!trimmedConfirmPassword) errors.confirmPassword = "Confirm password is required";
@@ -185,10 +202,6 @@ class ProfileService {
 
     if (trimmedPassword && !passwordRegex.test(trimmedPassword)) {
       errors.newPassword = "Password must contain uppercase letter, number and minimum 6 characters";
-    }
-
-    if (user.authProvider === "google") {
-      errors.general = "Google accounts cannot change password";
     }
 
     if (Object.keys(errors).length > 0) {

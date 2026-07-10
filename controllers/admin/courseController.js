@@ -79,8 +79,6 @@ exports.postAdminCreateCourse = async (req, res) => {
     });
   }
 
-  console.log(req.fileValidationError);
-
   const courseTitle = result.data.course.title;
   res.redirect(`/admin-courses/${result.data.course._id}/modules?flashType=success&flashMsg=` + encodeURIComponent("Course '" + courseTitle + "' created successfully"));
 };
@@ -181,6 +179,7 @@ exports.getAdminCoursePublish = async (req, res) => {
     course: result.data.course,
     modules: result.data.modules,
     lessons: result.data.lessons,
+    totalDurationFormatted: result.data.totalDurationFormatted,
     errors: {},
     canPublish: result.data.canPublish
   });
@@ -202,6 +201,7 @@ exports.postAdminCoursePublish = async (req, res) => {
       course: result.data.course,
       modules: result.data.modules,
       lessons: result.data.lessons,
+      totalDurationFormatted: result.data.totalDurationFormatted,
       canPublish: false,
       errors: result.errors,
       formData: req.body
@@ -213,4 +213,31 @@ exports.postAdminCoursePublish = async (req, res) => {
     : "Course '" + result.data.courseTitle + "' moved back to draft";
     
   res.redirect("/admin-courses?flashType=success&flashMsg=" + encodeURIComponent(successMsg));
+};
+
+exports.postAdminToggleCourseStatus = async (req, res) => {
+  const result = await courseService.toggleCourseStatus(req.params.courseId);
+  let redirectUrl = req.body.redirectUrl || '/admin-courses';
+
+  try {
+    const urlObj = new URL(redirectUrl, 'http://localhost');
+    urlObj.searchParams.delete('flashType');
+    urlObj.searchParams.delete('flashMsg');
+    redirectUrl = urlObj.pathname + urlObj.search;
+  } catch (err) {
+    redirectUrl = '/admin-courses';
+  }
+
+  if (!result.success) {
+    const errorMsg = Object.values(result.errors)[0] || "Failed to change course status";
+    const separator = redirectUrl.includes('?') ? '&' : '?';
+    return res.redirect(`${redirectUrl}${separator}flashType=error&flashMsg=${encodeURIComponent(errorMsg)}`);
+  }
+
+  const successMsg = result.data.isPublishing
+    ? "Course '" + result.data.courseTitle + "' published successfully"
+    : "Course '" + result.data.courseTitle + "' moved back to draft";
+    
+  const separator = redirectUrl.includes('?') ? '&' : '?';
+  res.redirect(`${redirectUrl}${separator}flashType=success&flashMsg=${encodeURIComponent(successMsg)}`);
 };

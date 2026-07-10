@@ -229,12 +229,16 @@
 
                   <!-- 1. Thumbnail -->
                   <div class="cart-card-thumb">
-                    <img src="<%= course.thumbnail ? course.thumbnail : '/images/placeholder.jpg' %>" alt="<%= course.title %>" class="w-full h-full object-cover">
+                    <a href="/user-courses/<%= course._id %>">
+                      <img src="<%= course.thumbnail ? course.thumbnail : '/images/placeholder.jpg' %>" alt="<%= course.title %>" class="w-full h-full object-cover">
+                    </a>
                   </div>
                   
                   <!-- 2. Course Details -->
                   <div class="cart-card-details">
-                      <h3 class="font-bold text-gray-900 mb-0.5 leading-snug truncate" style="font-size: 18px;"><%= course.title %></h3>
+                      <h3 class="font-bold text-gray-900 mb-0.5 leading-snug truncate" style="font-size: 18px;">
+                        <a href="/user-courses/<%= course._id %>" class="hover:text-blue-600 transition-colors"><%= course.title %></a>
+                      </h3>
                       <p class="text-gray-500 mb-1.5 truncate" style="font-size: 14px;">by <%= course.instructor || 'Unknown Instructor' %></p>
                       
                       <div class="flex items-center font-bold text-gray-900 mb-2" style="font-size: 13px;">

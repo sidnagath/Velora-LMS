@@ -1,6 +1,7 @@
 const Course = require('../models/courseModel');
 const Module = require('../models/moduleModel');
 const Lesson = require('../models/lessonModel');
+const cloudinaryUtil = require('../config/cloudinary');
 
 exports.addLesson = async (courseId, moduleId, title, description, duration, videoFile, fileValidationErrors) => {
   const trimmedTitle = title?.trim();
@@ -39,13 +40,19 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
 
   if (Object.keys(errors).length > 0) return { success: false, errors };
 
+  let videoUrl = "";
+  if (videoFile) {
+    const uploadResult = await cloudinaryUtil.uploadToCloudinary(videoFile.path, 'lesson_videos', 'video');
+    videoUrl = uploadResult ? uploadResult.secure_url : "";
+  }
+
   const lessonCount = await Lesson.countDocuments({ moduleId });
   const newLesson = await Lesson.create({
     moduleId,
     title: trimmedTitle,
     description: trimmedDesc,
     duration: trimmedDuration || null,
-    video: "/uploads/" + videoFile.filename,
+    video: videoUrl,
     order: lessonCount + 1
   });
 
@@ -93,7 +100,13 @@ exports.editLesson = async (courseId, moduleId, lessonId, title, description, du
   lesson.title = trimmedTitle;
   lesson.description = trimmedDesc;
   lesson.duration = trimmedDuration;
-  if (videoFile) lesson.video = "/uploads/" + videoFile.filename;
+  
+  if (videoFile) {
+    const uploadResult = await cloudinaryUtil.uploadToCloudinary(videoFile.path, 'lesson_videos', 'video');
+    if (uploadResult) {
+      lesson.video = uploadResult.secure_url;
+    }
+  }
 
   await lesson.save();
 

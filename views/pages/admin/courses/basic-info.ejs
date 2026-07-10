@@ -59,8 +59,7 @@
 </p>
 
 <% } %>
-
-            <form action="<%= isEdit? `/admin-courses/${course._id}/edit`: `/admin-courses/create`%>" method="POST"enctype="multipart/form-data">
+            <form action="<%= isEdit ? `/admin-courses/${course._id}/edit` : `/admin-courses/create` %>" method="POST" enctype="multipart/form-data">
               <!-- COURSE DETAILS CARD -->
               <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm mb-8">
                 <div class="flex items-center space-x-3 mb-8">
@@ -251,44 +250,34 @@
                       class="border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center bg-gray-50 group hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer relative overflow-hidden">
 
 
-                      <% if(course?.thumbnail) { %>
-
-                        <img id="existingThumbnail" src="<%= course.thumbnail %>" class="w-full h-56 object-cover rounded-xl mb-4 border">
-
-                       <p id="thumbnailPlaceholderText" class="text-sm font-medium text-gray-500 mb-1">
-                          Replace current thumbnail
-                        </p>
-
+                      <div class="preview-placeholder text-center w-full flex flex-col items-center">
+                        <% if(course?.thumbnail) { %>
+                          <img id="existingThumbnail" src="<%= course.thumbnail %>" class="w-full h-56 object-cover rounded-xl mb-4 border">
+                          <p id="thumbnailPlaceholderText" class="text-sm font-medium text-gray-500 mb-1">
+                            Replace current thumbnail
+                          </p>
                         <% } else { %>
-
-                          <div id="thumbnailPlaceholderIcon" class="p-4 bg-blue-100/50 text-blue-600 rounded-full mb-4">
-
+                          <div id="thumbnailPlaceholderIcon" class="p-4 bg-blue-100/50 text-blue-600 rounded-full mb-4 inline-block">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                               </path>
-
                             </svg>
-
                           </div>
-
                           <p id="thumbnailPlaceholderText" class="text-sm font-medium text-gray-500 mb-1">
                             JPG, PNG up to 5MB
                           </p>
+                        <% } %>
+                      </div>
 
-                          <% } %>
+                      <img id="thumbnailPreview" class="hidden w-full h-56 object-cover rounded-xl mb-4 border"/>   
 
+                      <button type="button" onclick="document.getElementById('thumbnailInput').click()"
+                        class="mt-4 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-all shadow-md">
+                        Upload image
+                      </button>
 
-                          <img id="thumbnailPreview" class="hidden w-full h-56 object-cover rounded-xl mb-4 border"/>   
-
-                            <button type="button" onclick="document.getElementById('thumbnailInput').click()"
-                              class="mt-4 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-all shadow-md">
-                              Upload image
-                            </button>
-
-
-                            <input type="file" name="thumbnail" id="thumbnailInput" class="hidden">
+                      <input type="file" name="thumbnail" id="thumbnailInput" class="hidden" accept="image/*" onchange="initImageCrop(this, 'thumbnailPreview', 16/9)">
 <% if(errors?.thumbnail){ %>
 <p class="input-error">
   <%= errors.thumbnail %>
@@ -420,93 +409,6 @@
 
 <script>
 
-const thumbnailInput =
-  document.getElementById(
-    "thumbnailInput"
-  );
-
-const thumbnailPreview =
-  document.getElementById(
-    "thumbnailPreview"
-  );
-
-const existingThumbnail =
-  document.getElementById(
-    "existingThumbnail"
-  );
-
-const thumbnailPlaceholderIcon =
-  document.getElementById(
-    "thumbnailPlaceholderIcon"
-  );
-
-const thumbnailPlaceholderText =
-  document.getElementById(
-    "thumbnailPlaceholderText"
-  );
-
-
-
-thumbnailInput.addEventListener(
-
-  "change",
-
-  function () {
-
-    const file =
-      this.files[0];
-
-
-
-    if (file) {
-
-      thumbnailPreview.src =
-
-        URL.createObjectURL(
-          file
-        );
-
-
-
-      thumbnailPreview
-      .classList
-      .remove("hidden");
-
-
-      // HIDE OLD IMAGE
-
-      if (existingThumbnail) {
-
-        existingThumbnail
-        .style.display = "none";
-
-      }
-
-
-      // HIDE PLACEHOLDER
-
-      if (thumbnailPlaceholderIcon) {
-
-        thumbnailPlaceholderIcon
-        .style.display = "none";
-
-      }
-
-
-
-      if (thumbnailPlaceholderText) {
-
-        thumbnailPlaceholderText
-        .style.display = "none";
-
-      }
-
-    }
-
-  }
-
-);
-
 const trailerInput =
   document.getElementById(
     "trailerInput"
@@ -594,5 +496,5 @@ trailerInput.addEventListener(
 
 
 </script>
-
-  <%- include('../../../partials/footer') %>
+<%- include('../../../partials/cropper-modal') %>
+<%- include('../../../partials/footer') %>

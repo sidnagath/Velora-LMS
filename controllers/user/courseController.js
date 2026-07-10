@@ -39,3 +39,5 @@ exports.getCourseDetails = async (req, res) => {
     cartCount:cartCount.success?cartCount.count:0
   });
 };
+
+

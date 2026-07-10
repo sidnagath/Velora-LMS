@@ -66,28 +66,7 @@
             </span>
             <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-4 line-clamp-2"><%= course.title %></h2>
             
-            <% 
-              // Sum durations entered by the admin (stored as strings like "45" or "1:30")
-              let totalSeconds = 0;
-              lessons.forEach(function(l) {
-                if (l.duration) {
-                  const raw = String(l.duration).trim();
-                  if (raw.indexOf(':') !== -1) {
-                    // Format: mm:ss or hh:mm:ss
-                    const parts = raw.split(':').map(Number);
-                    if (parts.length === 3) totalSeconds += parts[0]*3600 + parts[1]*60 + parts[2];
-                    else if (parts.length === 2) totalSeconds += parts[0]*60 + parts[1];
-                  } else {
-                    // Plain number — treat as minutes
-                    const n = parseFloat(raw);
-                    if (!isNaN(n)) totalSeconds += n * 60;
-                  }
-                }
-              });
-              const totalMin = Math.floor(totalSeconds / 60);
-              const hr = Math.floor(totalMin / 60);
-              const mn = totalMin % 60;
-              const durStr = totalSeconds === 0 ? 'N/A' : (hr > 0 ? `${hr}h ${mn}m Total` : `${mn}m Total`);
+            <%
               const moduleCount = modules ? modules.length : 0;
             %>
             <div class="flex flex-wrap items-center gap-6 text-blue-100 text-sm font-medium mt-4">
@@ -101,7 +80,7 @@
               </span>
               <span class="flex items-center">
                 <svg class="w-4 h-4 mr-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <%= durStr %>
+                <%= totalDurationFormatted %> Total
               </span>
               <span class="flex items-center">
                 <img src="https://ui-avatars.com/api/?name=<%= encodeURIComponent(course.instructor || 'Marcus Sterling') %>&background=0284c7&color=fff" class="w-6 h-6 rounded-full mr-2 border border-white/20">

@@ -63,6 +63,41 @@
       }
     }
   });
+
+  // Global validation error clearer for all input types
+  function clearValidationErrorsFor(target) {
+    let current = target;
+    
+    // Walk up the DOM tree up to 4 levels
+    for (let i = 0; i < 4; i++) {
+      if (!current || current === document.body) break;
+      
+      let sibling = current.nextElementSibling;
+      while (sibling) {
+        if (sibling.matches('.input-error, .text-red-500, [style*="color: #EF4444"], [style*="color:#EF4444"]')) {
+          sibling.style.display = 'none';
+        }
+        sibling = sibling.nextElementSibling;
+      }
+      
+      current = current.parentElement;
+    }
+
+    // Remove error classes from the input itself
+    if (target.classList && target.classList.contains('border-red-400')) {
+      target.classList.remove('border-red-400', 'bg-red-50');
+      target.classList.add('border-gray-200', 'bg-gray-50/50');
+    }
+  }
+
+  function handleValidationEvent(e) {
+    if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+      clearValidationErrorsFor(e.target);
+    }
+  }
+
+  document.addEventListener('input', handleValidationEvent);
+  document.addEventListener('change', handleValidationEvent);
 </script>
 </body>
 </html>

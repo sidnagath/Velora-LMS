@@ -1,11 +1,12 @@
 const multer = require("multer");
 const path = require("path");
+const os = require("os");
 
 const storage = multer.diskStorage({
 
   destination: (req, file, cb) => {
-
-    cb(null, "public/uploads");
+    // Save to OS temp directory instead of public/uploads
+    cb(null, os.tmpdir());
 
   },
 

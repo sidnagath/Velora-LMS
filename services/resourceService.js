@@ -1,6 +1,7 @@
 const Module = require('../models/moduleModel');
 const Lesson = require('../models/lessonModel');
 const Resource = require('../models/resourceModel');
+const cloudinaryUtil = require('../config/cloudinary');
 
 function formatBytes(bytes, decimals = 1) {
   if (bytes === 0) return '0 Bytes';
@@ -27,9 +28,15 @@ exports.uploadFile = async (courseId, moduleId, lessonId, file, fileValidationEr
     resource = new Resource({ courseId, moduleId, lessonId, files: [], links: [], notes: "" });
   }
 
+  let fileUrl = "";
+  if (file) {
+    const uploadResult = await cloudinaryUtil.uploadToCloudinary(file.path, 'course_resources', 'auto');
+    fileUrl = uploadResult ? uploadResult.secure_url : "";
+  }
+
   resource.files.push({
     name: file.originalname,
-    path: "/uploads/" + file.filename,
+    path: fileUrl,
     size: formatBytes(file.size)
   });
 

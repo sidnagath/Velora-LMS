@@ -4,7 +4,36 @@ const Course = require('../models/courseModel');
 const Module = require('../models/moduleModel');
 const Lesson = require('../models/lessonModel');
 const Resource = require('../models/resourceModel');
+const User = require('../models/userModel');
+const cloudinaryUtil = require('../config/cloudinary');
 
+const calculateTotalDuration = (lessons) => {
+  let totalMinutes = 0;
+  lessons.forEach(l => {
+    if (l.duration) {
+      const raw = String(l.duration).trim();
+      if (raw.includes(':')) {
+        const parts = raw.split(':').map(Number);
+        if (parts.length === 3) totalMinutes += (parts[0]*60) + parts[1] + (parts[2]/60);
+        else if (parts.length === 2) totalMinutes += parts[0] + (parts[1]/60);
+      } else {
+        const n = parseFloat(raw);
+        if (!isNaN(n)) totalMinutes += n;
+      }
+    }
+  });
+  return totalMinutes;
+};
+
+const formatDuration = (totalMinutes) => {
+  if (!totalMinutes || totalMinutes <= 0) return '0 min';
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  // Handle decimal minutes like 32.5 gracefully
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+};
 exports.getAdminCoursesList = async (query) => {
   try {
     // SEARCH
@@ -118,8 +147,16 @@ exports.createCourse = async (data, files, fileValidationErrors) => {
       Object.assign(errors, fileValidationErrors);
     }
 
-    if (!title) errors.title = "Enter course title";
-    if (!description) errors.description = "Enter course description";
+    if (!title) {errors.title = "Enter course title";
+    } else if (title.length < 5) {
+    errors.title = "Title must be at least 5 characters";
+} else if (title.length > 100) {
+    errors.title = "Title cannot exceed 100 characters";
+}
+    if (!description) {errors.description = "Enter course description";
+    } else if (description.length < 10) {
+    errors.description = "Description must be at least 10 characters";
+}
     if (!category) {
       errors.category = "Select category";
     } else if (!mongoose.Types.ObjectId.isValid(category)) {
@@ -135,8 +172,17 @@ exports.createCourse = async (data, files, fileValidationErrors) => {
       return { success: false, errors, data: { categories } };
     }
 
-    const thumbnailPath = "/uploads/" + thumbnailFile.filename;
-    const trailerPath = "/uploads/" + trailerFile.filename;
+    let thumbnailPath = "";
+    if (thumbnailFile) {
+      const thumbResult = await cloudinaryUtil.uploadToCloudinary(thumbnailFile.path, 'course_thumbnails', 'image');
+      thumbnailPath = thumbResult ? thumbResult.secure_url : "";
+    }
+
+    let trailerPath = "";
+    if (trailerFile) {
+      const trailerResult = await cloudinaryUtil.uploadToCloudinary(trailerFile.path, 'course_trailers', 'video');
+      trailerPath = trailerResult ? trailerResult.secure_url : "";
+    }
 
     const course = await Course.create({
       title,
@@ -207,6 +253,7 @@ exports.updateCourse = async (courseId, data, files, fileValidationErrors) => {
     if (!trailerFile && !existingCourse.trailer && !errors.trailer) errors.trailer = "Upload trailer video";
 
     if (title && title.length < 5) errors.title = "Title must be minimum 5 characters";
+    if (description && description.length < 10) errors.description = "Description must be minimum 10 characters";
 
     const instructorRegex = /^[A-Za-z ]{3,30}$/;
     if (instructor && !instructorRegex.test(instructor)) {
@@ -239,8 +286,17 @@ exports.updateCourse = async (courseId, data, files, fileValidationErrors) => {
       return { success: false, errors, data: { course: existingCourse, categories } };
     }
 
-    const thumbnailPath = thumbnailFile ? "/uploads/" + thumbnailFile.filename : existingCourse.thumbnail;
-    const trailerPath = trailerFile ? "/uploads/" + trailerFile.filename : existingCourse.trailer;
+    let thumbnailPath = existingCourse.thumbnail;
+    if (thumbnailFile) {
+      const thumbResult = await cloudinaryUtil.uploadToCloudinary(thumbnailFile.path, 'course_thumbnails', 'image');
+      if (thumbResult) thumbnailPath = thumbResult.secure_url;
+    }
+    
+    let trailerPath = existingCourse.trailer;
+    if (trailerFile) {
+      const trailerResult = await cloudinaryUtil.uploadToCloudinary(trailerFile.path, 'course_trailers', 'video');
+      if (trailerResult) trailerPath = trailerResult.secure_url;
+    }
 
     const course = await Course.findByIdAndUpdate(
       courseId,
@@ -299,9 +355,12 @@ exports.getAdminCoursePublishData = async (courseId) => {
     const modules = await Module.find({ courseId });
     const lessons = await Lesson.find({ moduleId: { $in: modules.map(m => m._id) } });
 
+    const totalMinutes = calculateTotalDuration(lessons);
+    const totalDurationFormatted = formatDuration(totalMinutes);
+
     const canPublish = modules.length > 0 && lessons.length > 0 && course.title && course.description && course.thumbnail && course.trailer;
 
-    return { success: true, data: { course, modules, lessons, canPublish } };
+    return { success: true, data: { course, modules, lessons, canPublish, totalDurationFormatted } };
   } catch (err) {
     console.log(err);
     return { success: false, errors: { general: "Failed to load course publish data" } };
@@ -349,7 +408,9 @@ exports.publishCourse = async (courseId, data) => {
     }
 
     if (Object.keys(errors).length > 0) {
-      return { success: false, errors, data: { course, modules, lessons } };
+      const totalMinutes = calculateTotalDuration(lessons);
+      const totalDurationFormatted = formatDuration(totalMinutes);
+      return { success: false, errors, data: { course, modules, lessons, totalDurationFormatted } };
     }
 
     course.pricingType = pricingType;
@@ -370,9 +431,34 @@ exports.publishCourse = async (courseId, data) => {
   }
 };
 
+exports.toggleCourseStatus = async (courseId) => {
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) return { success: false, errors: { general: "Course not found" } };
+
+    const newPublishStatus = course.status === "published" ? "Draft" : "Published (Live Now)";
+
+    const data = {
+      pricingType: course.pricingType,
+      currency: course.currency,
+      basePrice: course.basePrice,
+      discountPrice: course.discountPrice,
+      lifetimeAccess: course.lifetimeAccess,
+      downloadableResources: course.downloadableResources,
+      completionCertificate: course.completionCertificate,
+      publishStatus: newPublishStatus
+    };
+
+    return await exports.publishCourse(courseId, data);
+  } catch (err) {
+    console.log(err);
+    return { success: false, errors: { general: "Failed to toggle status" } };
+  }
+};
+
 exports.getPublishedCourses = async (query) => {
   try {
-    const { category, level, price, search } = query;
+    const { category, level, sortBy, search } = query;
     const page = Number(query.page) || 1;
     const limit = 6;
     const skip = (page - 1) * limit;
@@ -391,30 +477,30 @@ exports.getPublishedCourses = async (query) => {
       if (selectedCategoryDoc) selectedCategoryId = selectedCategoryDoc._id;
     }
 
-    if (!selectedCategoryDoc && allCategories.length > 0) {
-      selectedCategoryDoc = allCategories[0];
-      selectedCategoryId = selectedCategoryDoc._id;
-    }
+    // Do not force select the first category
+    // if (!selectedCategoryDoc && allCategories.length > 0) {
+    //   selectedCategoryDoc = allCategories[0];
+    //   selectedCategoryId = selectedCategoryDoc._id;
+    // }
 
     const filter = { status: "published", isDeleted: false };
 
     if (selectedCategoryId) filter.category = selectedCategoryId;
     if (level) filter.level = { $regex: new RegExp(`^${level}$`, "i") };
     
-    // Allow query to determine logic based on price formatting
-    // userController uses pricingType, guest uses basePrice. Let's do both to be safe.
-    if (price === "free") {
-        filter.$or = [{ pricingType: "free" }, { basePrice: 0 }];
-    } else if (price === "paid") {
-        filter.$or = [{ pricingType: "paid" }, { basePrice: { $gt: 0 } }];
-    }
-
     if (search) filter.title = { $regex: search, $options: "i" };
+
+    const sortMap = {
+      priceLowToHigh: { basePrice: 1, _id: -1 },
+      priceHighToLow: { basePrice: -1, _id: -1 },
+      newest: { rating: -1, reviewsCount: -1, createdAt: -1, _id: -1 }
+    };
+    const sort = sortMap[sortBy] || sortMap.newest;
 
     const [courses, totalCourses] = await Promise.all([
       Course.find(filter)
         .populate("category")
-        .sort({ rating: -1, reviewsCount: -1, createdAt: -1, _id: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -433,7 +519,8 @@ exports.getPublishedCourses = async (query) => {
         selectedCategoryDoc,
         selectedCategoryId: selectedCategoryId ? selectedCategoryId.toString() : null,
         selectedLevel: level || "",
-        selectedPrice: price || "",
+        selectedPrice: query.price || "",
+        sortBy: sortBy || "newest",
         search: search || ""
       }
     };
@@ -457,14 +544,27 @@ exports.getCourseDetails = async (courseId) => {
 
     const modules = await Module.find({ courseId: course._id }).sort({ order: 1 }).lean();
 
+    let allLessons = [];
     const modulesWithLessons = await Promise.all(
       modules.map(async (mod) => {
         const lessons = await Lesson.find({ moduleId: mod._id }).sort({ order: 1 }).lean();
-        return { ...mod, lessons };
+        allLessons = allLessons.concat(lessons);
+        
+        const moduleMinutes = calculateTotalDuration(lessons);
+        const moduleDurationFormatted = formatDuration(moduleMinutes);
+        
+        return { ...mod, lessons, moduleDurationFormatted };
       })
     );
 
-    const totalLessons = modulesWithLessons.reduce((sum, m) => sum + m.lessons.length, 0);
+    const totalLessons = allLessons.length;
+    
+    // Calculate Duration
+    const totalMinutes = calculateTotalDuration(allLessons);
+    const totalDurationFormatted = formatDuration(totalMinutes);
+    
+    // Count Resources
+    const totalResourcesCount = await Resource.countDocuments({ courseId: course._id });
 
     const categoryId = course.category ? (course.category._id || course.category) : new mongoose.Types.ObjectId();
     const relatedCourses = await Course.find({
@@ -480,6 +580,8 @@ exports.getCourseDetails = async (courseId) => {
         course,
         modulesWithLessons,
         totalLessons,
+        totalDurationFormatted,
+        totalResourcesCount,
         relatedCourses
       }
     };

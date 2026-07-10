@@ -1,5 +1,6 @@
 const Category = require('../models/categoryModel');
 const Course = require('../models/courseModel');
+const cloudinaryUtil = require('../config/cloudinary');
 
 exports.getCategoriesData = async (query) => {
   try {
@@ -123,7 +124,11 @@ exports.createCategory = async (body, file, fileValidationErrors) => {
       return { success: false, errors, formData: { name, description, status } };
     }
 
-    const thumbnail = file ? "/uploads/" + file.filename : "";
+    let thumbnail = "";
+    if (file) {
+      const uploadResult = await cloudinaryUtil.uploadToCloudinary(file.path, 'category_thumbnails', 'image');
+      thumbnail = uploadResult ? uploadResult.secure_url : "";
+    }
 
     await Category.create({ name, description, thumbnail, status });
 
@@ -193,7 +198,10 @@ exports.updateCategory = async (categoryId, body, file, fileValidationErrors) =>
     category.description = description;
     category.status = status;
     if (file) {
-      category.thumbnail = "/uploads/" + file.filename;
+      const uploadResult = await cloudinaryUtil.uploadToCloudinary(file.path, 'category_thumbnails', 'image');
+      if (uploadResult) {
+        category.thumbnail = uploadResult.secure_url;
+      }
     }
 
     await category.save();
