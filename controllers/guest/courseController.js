@@ -1,9 +1,13 @@
 const courseService = require('../../services/courseService');
 
-exports.getHome = (req, res) => {
+exports.getHome = async (req, res) => {
+  const result = await courseService.getPublishedCourses({ limit: 4 });
+  const featuredCourses = result.success ? result.data.courses : [];
+
   res.render("pages/guest/home", {
     title: "Home - Velora",
-    isLoggedIn: false
+    isLoggedIn: false,
+    featuredCourses
   });
 };
 

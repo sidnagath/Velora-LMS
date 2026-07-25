@@ -460,10 +460,11 @@ exports.getPublishedCourses = async (query) => {
   try {
     const { category, level, sortBy, search } = query;
     const page = Number(query.page) || 1;
-    const limit = 6;
+    const limit = Number(query.limit) || 6;
     const skip = (page - 1) * limit;
 
     const allCategories = await Category.find({ status: "active" }).sort({ name: 1 }).lean();
+    const activeCategoryIds = allCategories.map(c => c._id);
 
     let selectedCategoryDoc = null;
     let selectedCategoryId = null;
@@ -477,15 +478,13 @@ exports.getPublishedCourses = async (query) => {
       if (selectedCategoryDoc) selectedCategoryId = selectedCategoryDoc._id;
     }
 
-    // Do not force select the first category
-    // if (!selectedCategoryDoc && allCategories.length > 0) {
-    //   selectedCategoryDoc = allCategories[0];
-    //   selectedCategoryId = selectedCategoryDoc._id;
-    // }
-
     const filter = { status: "published", isDeleted: false };
 
-    if (selectedCategoryId) filter.category = selectedCategoryId;
+    if (selectedCategoryId) {
+      filter.category = selectedCategoryId;
+    } else {
+      filter.category = { $in: activeCategoryIds };
+    }
     if (level) filter.level = { $regex: new RegExp(`^${level}$`, "i") };
     
     if (search) filter.title = { $regex: search, $options: "i" };
@@ -530,16 +529,25 @@ exports.getPublishedCourses = async (query) => {
   }
 };
 
-exports.getCourseDetails = async (courseId) => {
+exports.getCourseDetails = async (courseId, isAdmin = false) => {
   try {
-    const course = await Course.findOne({
+    const query = {
       _id: courseId,
-      status: "published",
       isDeleted: false
-    }).populate("category").lean();
+    };
+    if (!isAdmin) {
+      query.status = "published";
+    }
+    const course = await Course.findOne(query).populate("category").lean();
 
     if (!course) {
       return { success: false, errors: { general: "Course not found" } };
+    }
+
+    if (!isAdmin && course.category) {
+      if (course.category.status !== "active") {
+        return { success: false, errors: { general: "Course unavailable" } };
+      }
     }
 
     const modules = await Module.find({ courseId: course._id }).sort({ order: 1 }).lean();
@@ -588,5 +596,18 @@ exports.getCourseDetails = async (courseId) => {
   } catch (err) {
     console.log(err);
     return { success: false, errors: { general: "Failed to get course details" } };
+  }
+};
+
+exports.getMyCoursesData = async (userId) => {
+  try {
+    const Enrollment = require('../models/enrollmentModel');
+    const enrollments = await Enrollment.find({ userId })
+      .populate('courseId')
+      .sort({ createdAt: -1 });
+    return { success: true, enrollments };
+  } catch (err) {
+    console.error(err);
+    return { success: false, message: "Error fetching user courses" };
   }
 };

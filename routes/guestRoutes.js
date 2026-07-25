@@ -8,8 +8,8 @@ const {noCache} = require('../middleware/noCache');
 const {isUserGuest}=require('../middleware/userGuestMiddleware');
 const {isAdminGuest}=require('../middleware/adminGuestMiddleware');
 
-router.get("/",noCache,guestCourseController.getHome);
-router.get("/home",noCache,guestCourseController.getHome);
+router.get("/", noCache, isUserGuest, guestCourseController.getHome);
+router.get("/home", noCache, isUserGuest, guestCourseController.getHome);
 
 router.get("/courses",noCache,guestCourseController.getCourses);
 router.get("/courses/:courseId",noCache,guestCourseController.getCourseDetails);

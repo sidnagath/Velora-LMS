@@ -1,11 +1,14 @@
 const cartService = require('../../services/cartService');
 const profileService = require('../../services/profileService');
+const courseService = require('../../services/courseService');
 
 exports.getDashboard = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
 
     const cartCount= await cartService.getCartCount(req.session.user.id);
+    const result = await courseService.getPublishedCourses({ limit: 3 });
+    const featuredCourses = result.success ? result.data.courses : [];
 
     if (!user) {
       return res.render("pages/guest/login", {
@@ -16,12 +19,21 @@ exports.getDashboard = async (req, res) => {
       });
     }
 
+    let enrolledCourseIds = [];
+    if (user) {
+      const Enrollment = require('../../models/enrollmentModel');
+      const enrollments = await Enrollment.find({ userId: req.session.user.id, status: { $ne: 'cancelled' } }).lean();
+      enrolledCourseIds = enrollments.map(e => e.courseId.toString());
+    }
+
     res.render("pages/user/home/dashboard", {
       title: "Velora - Dashboard",
       isLoggedIn: true,
       user,
       errors: {},
       formData: {},
+      featuredCourses,
+      enrolledCourseIds,
       cartCount:cartCount.success?cartCount.count:0
     });
   } catch (err) {
@@ -104,6 +116,32 @@ exports.getAddressDetails = async (req, res) => {
       errors: { general: "Something went wrong" },
       formData: {}
     });
+  }
+};
+
+exports.getMyCoupons = async (req, res) => {
+  try {
+    const user = await profileService.getUserById(req.session.user?.id);
+    const cartCount = await cartService.getCartCount(req.session.user?.id);
+    const couponService = require('../../services/couponService');
+    const result = await couponService.getActiveCoupons();
+
+    if (!user) {
+      return res.redirect("/login");
+    }
+
+    res.render("pages/user/profile/my-coupons", {
+      title: "Velora - My Coupons",
+      isLoggedIn: true,
+      user,
+      coupons: result.success ? result.coupons : [],
+      errors: {},
+      formData: {},
+      cartCount: cartCount.success ? cartCount.count : 0
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send(err.stack || err.toString());
   }
 };
 

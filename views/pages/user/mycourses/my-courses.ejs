@@ -1,0 +1,124 @@
+<%- include('../../../partials/header') %>
+
+<main class="bg-[#F8F9FA] min-h-screen font-sans pb-20">
+  
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+    <!-- Header Section -->
+    <div class="mb-10">
+      
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">My Courses</h1>
+      <p class="text-[#555] text-lg">Continue your learning journey and track your progress</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="w-full mb-8 flex gap-3" style="position: relative;">
+      <div class="flex-grow" style="position: relative;">
+        <svg class="text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; pointer-events: none; z-index: 10;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        <input type="text" class="w-full h-16 rounded-2xl bg-gray-100 border border-transparent focus:border-[#0B5ED7] focus:ring-2 focus:ring-[#0B5ED7]/20 outline-none text-gray-900 placeholder-gray-400" style="padding-left: 3.5rem; padding-right: 1rem; width: 100%; height: 4rem;" placeholder="Search courses...">
+      </div>
+      <button type="submit" class="h-16 px-8 rounded-2xl bg-[#0B5ED7] hover:bg-blue-700 text-white font-bold transition flex-shrink-0" style="height: 4rem;">
+        Search
+      </button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex border-b border-gray-200 mb-10">
+      <button class="px-2 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 mr-8">All Courses</button>
+      <button class="px-2 py-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors mr-8">In Progress</button>
+      <button class="px-2 py-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">Completed</button>
+    </div>
+
+    <!-- Course Grid -->
+    <% if (enrollments && enrollments.length > 0) { %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <% enrollments.forEach(enrollment => { %>
+          <% const course = enrollment.courseId; %>
+          <% 
+             // Determine category label
+             let categoryName = "COURSE";
+             if (course.category && course.category.name) categoryName = course.category.name;
+             else if (typeof course.category === 'string') categoryName = course.category;
+             
+             // Fake lesson completion for visual match if progress exists (since we don't track lessons in enrollment yet)
+             // We'll calculate a dummy "8 of 12" based on progress percentage, or default to 0 of 10.
+             const totalLessons = 15;
+             const completedLessons = Math.round((enrollment.progress / 100) * totalLessons);
+          %>
+          
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+            
+            <!-- Thumbnail & Category Badge -->
+            <div class="relative w-full h-52 bg-gray-100 overflow-hidden">
+              <% if (course.thumbnail) { %>
+                <img src="<%= course.thumbnail %>" alt="<%= course.title %>" class="w-full h-full object-cover" />
+              <% } else { %>
+                <div class="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+              <% } %>
+              
+              <!-- Category Badge on Image Top Left -->
+              <div class="absolute top-4 left-4 bg-[#0a58ca] text-white text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded">
+                <%= categoryName %>
+              </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-6 flex flex-col flex-grow">
+              
+              <!-- Course Title -->
+              <h3 class="text-xl font-bold text-[#1a1a1a] mb-6 line-clamp-2 leading-tight">
+                <%= course.title %>
+              </h3>
+              
+              <div class="mt-auto">
+                <!-- Progress Text Row -->
+                <div class="flex justify-between items-end mb-2">
+                  <span class="text-[13px] text-gray-500 font-medium"><%= completedLessons %> of <%= totalLessons %> lessons completed</span>
+                  <span class="text-[13px] font-bold text-blue-600"><%= enrollment.progress %>%</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-[#E5E0FF] rounded-full h-1.5 mb-6 overflow-hidden">
+                  <div class="bg-[#5b52ff] h-1.5 rounded-full" style="width: <%= enrollment.progress %>%"></div>
+                </div>
+
+                <!-- Action Button -->
+                <% if (enrollment.progress === 100) { %>
+                  <a href="/course/<%= course._id %>" class="block w-full py-3 px-4 bg-[#F2F3F5] hover:bg-gray-200 text-[#4a4a4a] font-bold text-sm text-center rounded-lg transition-colors">
+                    Review Course
+                  </a>
+                <% } else { %>
+                  <a href="/course/<%= course._id %>" class="block w-full py-3 px-4 bg-[#0a58ca] hover:bg-blue-700 text-white font-bold text-sm text-center rounded-lg transition-colors">
+                    Continue Learning
+                  </a>
+                <% } %>
+              </div>
+
+            </div>
+          </div>
+        <% }) %>
+      </div>
+
+      <!-- Load More -->
+      <div class="mt-12 flex justify-center">
+        <button class="bg-white hover:bg-gray-50 text-gray-800 font-bold py-3 px-8 rounded-full border border-gray-200 shadow-sm transition-colors text-sm">
+          Load More Courses
+        </button>
+      </div>
+
+    <% } else { %>
+      <!-- Empty State (Fallback if no courses) -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center max-w-2xl mx-auto mt-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-3">No Courses Yet</h2>
+        <p class="text-gray-500 mb-8 max-w-md mx-auto">You haven't enrolled in any courses yet. Browse our catalog to find the perfect course to start your learning journey.</p>
+        <a href="/" class="inline-flex items-center justify-center bg-[#0a58ca] hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+          Browse Courses
+        </a>
+      </div>
+    <% } %>
+
+  </div>
+</main>
+
+<%- include('../../../partials/footer') %>

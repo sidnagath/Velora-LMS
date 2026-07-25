@@ -1,0 +1,338 @@
+<%- include('../../../partials/header') %>
+
+<style>
+  /* ── Course Detail Layout ── */
+  .cd-wrapper {
+    width: 100%;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .cd-wrapper {
+      grid-template-columns: 1fr 380px;
+    }
+  }
+
+  /* ── Sidebar Sticky ── */
+  .cd-sidebar {
+    position: static;
+  }
+  @media (min-width: 1024px) {
+    .cd-sidebar {
+      position: sticky;
+      top: 2rem;
+    }
+  }
+
+  /* ── Hero badge + rating row ── */
+  .cd-meta-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .cd-level-badge {
+    display: inline-block;
+    background: #A78BFA;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .cd-rating-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #0B5ED7;
+  }
+  .cd-rating-row .star { font-size: 1rem; }
+  .cd-rating-row .reviews { color: #6B7280; font-size: 0.75rem; font-weight: 500; margin-left: 0.25rem; }
+
+  /* ── Card shared ── */
+  .cd-card {
+    background: #fff;
+    border-radius: 1rem;
+    border: 1px solid #F1F0F5;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+
+  /* ── Sidebar card ── */
+  .cd-sidebar-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    border: 1px solid #EEE;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+    overflow: hidden;
+  }
+  .cd-video-thumb {
+    position: relative;
+    height: 220px;
+    background: #0F0F0F;
+    padding: 1rem;
+  }
+  .cd-video-thumb img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 0.75rem; opacity: 0.92;
+  }
+
+  .cd-sidebar-body { padding: 1.75rem; }
+  .cd-price-row {
+    display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 1.25rem;
+  }
+  .cd-price-main { font-size: 2.25rem; font-weight: 900; color: #111; }
+  .cd-price-orig { font-size: 0.85rem; color: #9CA3AF; text-decoration: line-through; }
+
+  .cd-includes-title { font-weight: 700; font-size: 0.85rem; color: #111; margin-bottom: 0.85rem; }
+  .cd-includes-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+  .cd-includes-list li { display: flex; align-items: center; gap: 0.65rem; font-size: 0.78rem; color: #4B5563; font-weight: 500; }
+  .cd-includes-list li svg { flex-shrink: 0; color: #9CA3AF; }
+
+  /* ── Learn grid ── */
+  .cd-learn-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 600px) { .cd-learn-grid { grid-template-columns: 1fr; } }
+  .cd-learn-item {
+    background: #fff; border: 1px solid #F1F0F5; border-radius: 1rem;
+    padding: 1.1rem; display: flex; align-items: flex-start; gap: 0.75rem;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .cd-learn-icon {
+    background: #EFF6FF; color: #0B5ED7; border-radius: 50%;
+    padding: 0.35rem; flex-shrink: 0; margin-top: 0.05rem;
+  }
+  .cd-learn-item span { font-size: 0.82rem; color: #4B5563; font-weight: 500; line-height: 1.5; }
+
+  /* ── Curriculum ── */
+  .cd-mod-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 1.25rem; cursor: pointer;
+  }
+  .cd-mod-header-left { display: flex; align-items: center; gap: 0.7rem; }
+  .cd-mod-header h3 { font-weight: 700; font-size: 0.875rem; color: #111; margin: 0; }
+  .cd-lesson-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.85rem 1.25rem 0.85rem 3rem;
+    border-top: 1px solid #F9FAFB; font-size: 0.82rem;
+  }
+  .cd-lesson-row-left { display: flex; align-items: center; gap: 0.6rem; color: #374151; font-weight: 500; }
+</style>
+
+<main class="flex min-h-screen bg-gray-50 font-sans">
+  <%- include('../../../partials/admin-sidebar', { activePage: 'courses' }) %>
+
+  <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+    <%- include('../../../partials/admin-header', { searchPlaceholder: 'Search courses' }) %>
+
+    <!-- Header Actions -->
+    <div class="px-8 pt-8 max-w-7xl mx-auto w-full flex justify-between items-center">
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">View Course</h1>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold <%= course.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>">
+            <%= course.status === 'published' ? 'Published' : 'Draft' %>
+          </span>
+        </div>
+        <p class="text-gray-500 mt-2 text-sm max-w-2xl">Read-only view of course details and curriculum.</p>
+      </div>
+      <a href="/admin-courses" class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-colors">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Courses
+      </a>
+    </div>
+
+    <div class="cd-wrapper max-w-7xl">
+      <!-- ═══════════════════════════ LEFT COLUMN ═══════════════════════════ -->
+      <div>
+        <!-- 1. Hero -->
+        <div style="margin-bottom:2.5rem;">
+          <div class="cd-meta-row">
+            <span class="cd-level-badge"><%= course.level ? course.level : 'ALL LEVELS' %></span>
+            <div class="cd-rating-row">
+              <span class="star" style="color:#F59E0B;">★</span>
+              <span><%= course.rating || '0.0' %></span>
+              <span class="reviews">(<%= course.reviewsCount || 0 %> reviews)</span>
+            </div>
+            <span class="text-xs font-bold text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full uppercase tracking-wider">
+              <%= (course.category && course.category.name) ? course.category.name : 'Unknown Category' %>
+            </span>
+          </div>
+
+          <h1 style="font-size:2.5rem;font-weight:900;color:#111;line-height:1.15;letter-spacing:-0.02em;margin:0 0 1rem;"><%= course.title %></h1>
+
+          <p style="color:#6B7280;font-size:1.05rem;line-height:1.7;margin:0 0 2rem;max-width:38rem;">
+            <%= course.description || 'Learn the core fundamentals and advanced concepts in this comprehensive course.' %>
+          </p>
+
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <img src="https://ui-avatars.com/api/?name=<%= encodeURIComponent(course.instructor || 'Instructor') %>&background=0D8ABC&color=fff&rounded=true"
+                 alt="<%= course.instructor %>"
+                 style="width:3rem;height:3rem;border-radius:50%;border:2px solid #E5E7EB;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div>
+              <div style="font-weight:700;font-size:0.9rem;color:#111;"><%= course.instructor || 'Course Instructor' %></div>
+              <div style="font-size:0.75rem;color:#9CA3AF;font-weight:500;">Instructor</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. What you'll learn -->
+        <div style="margin-bottom:3rem;">
+          <h2 style="font-size:1.5rem;font-weight:800;color:#111;margin:0 0 1.25rem;">What you will learn</h2>
+          <div class="cd-learn-grid">
+            <div class="cd-learn-item">
+              <div class="cd-learn-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <span>Understand semantic HTML structure for modern web apps.</span>
+            </div>
+            <div class="cd-learn-item">
+              <div class="cd-learn-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <span>Build accessible web pages that work for everyone.</span>
+            </div>
+            <div class="cd-learn-item">
+              <div class="cd-learn-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <span>Improve SEO ranking with proper hierarchical tags.</span>
+            </div>
+            <div class="cd-learn-item">
+              <div class="cd-learn-icon"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+              <span>Write clean and meaningful markup for better dev collaboration.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Curriculum -->
+        <div style="margin-bottom:3.5rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+            <h2 style="font-size:1.5rem;font-weight:800;color:#111;margin:0;">Course Curriculum</h2>
+            <div style="display:flex;align-items:center;gap:0.35rem;font-size:0.78rem;color:#9CA3AF;font-weight:600;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <%= totalLessons || 0 %> Lessons &bull; <%= totalDurationFormatted || '0m' %>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:0.6rem;">
+            <% if (modulesWithLessons && modulesWithLessons.length > 0) { %>
+              <% modulesWithLessons.forEach(function(mod, index) { %>
+                <div class="cd-card">
+                  <div class="cd-mod-header" onclick="toggleModule(this)" style="transition: background-color 0.2s;">
+                    <div class="cd-mod-header-left">
+                      <svg width="18" height="18" fill="none" stroke="#0B5ED7" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                      <h3>Module <%= index + 1 %>: <%= mod.title %></h3>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                      <span style="font-size: 0.75rem; color: #6B7280; font-weight: 500;">
+                        <%= mod.lessons ? mod.lessons.length : 0 %> lessons &bull; <%= mod.moduleDurationFormatted %>
+                      </span>
+                      <svg class="cd-mod-icon" style="transition: transform 0.3s; transform: rotate(180deg);" width="18" height="18" fill="none" stroke="#9CA3AF" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                  </div>
+                  <!-- Open by default for admin -->
+                  <div class="cd-mod-content" style="display: block;">
+                    <% if (mod.lessons && mod.lessons.length > 0) { %>
+                      <% mod.lessons.forEach(function(lesson) { %>
+                        <div class="cd-lesson-row" style="display: block;">
+                          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div class="cd-lesson-row-left">
+                              <svg style="flex-shrink: 0; margin-top: 2px;" width="14" height="14" fill="none" stroke="#9CA3AF" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                              <div>
+                                <div style="font-weight: 600;"><%= lesson.title %></div>
+                                <% if (lesson.description) { %>
+                                  <div style="font-size: 0.75rem; color: #6B7280; margin-top: 0.3rem; font-weight: 400; line-height: 1.4;"><%= lesson.description %></div>
+                                <% } %>
+                              </div>
+                            </div>
+                            <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.duration ? lesson.duration + ' min' : '10:00' %></span>
+                          </div>
+                        </div>
+                      <% }); %>
+                    <% } else { %>
+                      <div class="cd-lesson-row">
+                        <span style="font-size: 0.78rem; color: #9CA3AF; font-style: italic;">No lessons in this module.</span>
+                      </div>
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <p style="color:#9CA3AF;font-size:0.9rem;">Curriculum is empty.</p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════ RIGHT SIDEBAR ═══════════════════════════ -->
+      <div class="cd-sidebar">
+        <div class="cd-sidebar-card">
+          <!-- Video Preview -->
+          <div class="cd-video-thumb">
+            <img src="<%= course.thumbnail || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' %>" alt="Preview">
+          </div>
+
+          <!-- Sidebar Body -->
+          <div class="cd-sidebar-body">
+            <!-- Price -->
+            <div class="cd-price-row">
+              <% if (course.pricingType === 'free') { %>
+                <span class="cd-price-main">Free</span>
+              <% } else { %>
+                <span class="cd-price-main">₹<%= (course.discountPrice || course.basePrice || 0).toFixed(2) %></span>
+                <% if (course.discountPrice && course.discountPrice < course.basePrice) { %>
+                  <span class="cd-price-orig">₹<%= (course.basePrice || 0).toFixed(2) %></span>
+                <% } %>
+              <% } %>
+            </div>
+
+            <!-- Course Includes -->
+            <div class="cd-includes-title">Course contents:</div>
+            <ul class="cd-includes-list">
+              <li>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                <%= totalDurationFormatted || '0m' %> total duration
+              </li>
+              <li>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <%= totalResourcesCount || 0 %> downloadable resource<%= totalResourcesCount === 1 ? '' : 's' %>
+              </li>
+              <li>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <%= modulesWithLessons ? modulesWithLessons.length : 0 %> modules
+              </li>
+              <li>
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                <%= course.status === 'published' ? 'Published' : 'Draft Status' %>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  function toggleModule(headerEl) {
+    const content = headerEl.nextElementSibling;
+    const icon = headerEl.querySelector('.cd-mod-icon');
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      icon.style.transform = 'rotate(180deg)';
+      headerEl.style.backgroundColor = '#F9FAFB';
+    } else {
+      content.style.display = 'none';
+      icon.style.transform = 'rotate(0deg)';
+      headerEl.style.backgroundColor = 'transparent';
+    }
+  }
+</script>

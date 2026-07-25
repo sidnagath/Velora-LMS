@@ -12,8 +12,8 @@ const upload = require("../config/multer");
 
 const wishlistController = require('../controllers/user/wishlistController');
 const cartController = require('../controllers/user/cartController');
-
 const checkoutController = require('../controllers/user/checkoutController');
+const userOrderController = require('../controllers/user/userOrderController');
 
 
 
@@ -60,6 +60,21 @@ router.post("/user-cart/remove/:courseId", isUser, ensureActiveUser, cartControl
 router.post("/user-cart/move-to-wishlist/:courseId", isUser, ensureActiveUser, cartController.moveToWishlist);
 router.post("/api/user-cart/toggle", isUser, ensureActiveUser, cartController.toggleCart);
 router.get("/user-checkout",noCache, isUser, ensureActiveUser, checkoutController.getCheckoutPage);
+router.post("/api/user-checkout/apply-coupon", isUser, ensureActiveUser, checkoutController.applyCoupon);
+
+// Razorpay endpoints
+router.post("/api/create-order", isUser, ensureActiveUser, checkoutController.createRazorpayOrder);
+router.post("/api/verify-payment", isUser, ensureActiveUser, checkoutController.verifyPayment);
+router.get("/payment-success/:orderId", noCache, isUser, ensureActiveUser, checkoutController.getPaymentSuccess);
+
+router.get("/user-orders", noCache, isUser, ensureActiveUser, userOrderController.getUserOrders);
+router.post("/payment/cancel", isUser, ensureActiveUser, userOrderController.cancelPayment);
+router.post("/payment/failed", isUser, ensureActiveUser, userOrderController.failPayment);
+router.post("/api/retry-payment", isUser, ensureActiveUser, userOrderController.retryPayment);
+
+router.get("/user-profile/my-coupons", noCache, isUser, ensureActiveUser, profileController.getMyCoupons);
+router.get("/my-courses", noCache, isUser, ensureActiveUser, courseController.getMyCourses);
+router.get("/user-courses", noCache, isUser, ensureActiveUser, courseController.getCourses);
 
 module.exports=router;
 

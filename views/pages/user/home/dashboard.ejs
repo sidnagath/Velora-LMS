@@ -111,70 +111,31 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Course 1 -->
-                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col h-full">
-                    <div class="h-40 bg-gray-900 relative">
-                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Instructor" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
-                        <span class="absolute bottom-3 left-3 bg-[#0B5ED7] text-white text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded">Advanced</span>
-                    </div>
-                    <div class="p-5 flex-grow flex flex-col">
-                        <h3 class="font-bold text-gray-900 mb-4 flex-grow text-sm">Why Semantic HTML Matters</h3>
-                        <div>
-                            <div class="flex justify-between items-center text-[10px] font-semibold text-[#0B5ED7] mb-2 uppercase tracking-wide">
-                                <span>Overall Progress</span>
-                                <span>65%</span>
+                <% if (typeof featuredCourses !== 'undefined' && featuredCourses.length > 0) { %>
+                  <% featuredCourses.forEach(course => { %>
+                    <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col h-full cursor-pointer" onclick="window.location.href='/user-courses/<%= course._id %>'">
+                        <div class="h-40 bg-gray-900 relative">
+                            <img src="<%= course.thumbnail %>" alt="Thumbnail" class="w-full h-full object-cover opacity-80 mix-blend-luminosity">
+                            <span class="absolute bottom-3 left-3 bg-[#0B5ED7] text-white text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded"><%= course.level %></span>
+                        </div>
+                        <div class="p-5 flex-grow flex flex-col">
+                            <h3 class="font-bold text-gray-900 mb-4 flex-grow text-sm"><%= course.title %></h3>
+                            <div>
+                                <div class="flex justify-between items-center text-[10px] font-semibold text-[#0B5ED7] mb-2 uppercase tracking-wide">
+                                    <span>Course Progress</span>
+                                    <span>0%</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4 overflow-hidden">
+                                    <div class="bg-[#0B5ED7] h-1.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <button class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-medium py-2 rounded-md transition-colors text-sm">Start Course</button>
                             </div>
-                            <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4 overflow-hidden">
-                                <div class="bg-[#0B5ED7] h-1.5 rounded-full" style="width: 65%"></div>
-                            </div>
-                            <button class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-medium py-2 rounded-md transition-colors text-sm">Resume Lesson</button>
                         </div>
                     </div>
-                </div>
-
-                <!-- Course 2 -->
-                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col h-full">
-                    <div class="h-40 bg-[#1e293b] relative flex items-center justify-center">
-                         <svg class="w-20 h-20 text-blue-400 opacity-50" fill="currentColor" viewBox="0 0 24 24"><path d="M2.5 4h19c.8 0 1.5.7 1.5 1.5v13c0 .8-.7 1.5-1.5 1.5h-19C1.7 20 1 19.3 1 18.5v-13C1 4.7 1.7 4 2.5 4zM2 18.5c0 .3.2.5.5.5h19c.3 0 .5-.2.5-.5v-13c0-.3-.2-.5-.5-.5h-19c-.3 0-.5.2-.5.5v13z"/></svg>
-                        <span class="absolute bottom-3 left-3 bg-purple-600 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded">Intermediate</span>
-                    </div>
-                    <div class="p-5 flex-grow flex flex-col">
-                        <h3 class="font-bold text-gray-900 mb-4 flex-grow text-sm">Full Stack Development with Modern JS</h3>
-                        <div>
-                            <div class="flex justify-between items-center text-[10px] font-semibold text-[#0B5ED7] mb-2 uppercase tracking-wide">
-                                <span>Overall Progress</span>
-                                <span>32%</span>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4 overflow-hidden">
-                                <div class="bg-[#0B5ED7] h-1.5 rounded-full" style="width: 32%"></div>
-                            </div>
-                            <button class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-medium py-2 rounded-md transition-colors text-sm">Resume Lesson</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Course 3 -->
-                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 flex flex-col h-full">
-                    <div class="h-40 bg-gray-900 relative flex items-center justify-center">
-                        <div class="w-20 h-20 bg-gradient-to-br from-teal-400 to-blue-500 rounded-xl rotate-12 opacity-80 flex items-center justify-center">
-                            <span class="text-white font-bold text-xl -rotate-12">Py</span>
-                        </div>
-                        <span class="absolute bottom-3 left-3 bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded">Mastery</span>
-                    </div>
-                    <div class="p-5 flex-grow flex flex-col">
-                        <h3 class="font-bold text-gray-900 mb-4 flex-grow text-sm">Data Science & AI foundations with Python</h3>
-                        <div>
-                            <div class="flex justify-between items-center text-[10px] font-semibold text-[#0B5ED7] mb-2 uppercase tracking-wide">
-                                <span>Overall Progress</span>
-                                <span>88%</span>
-                            </div>
-                            <div class="w-full bg-gray-100 rounded-full h-1.5 mb-4 overflow-hidden">
-                                <div class="bg-[#0B5ED7] h-1.5 rounded-full" style="width: 88%"></div>
-                            </div>
-                            <button class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-medium py-2 rounded-md transition-colors text-sm">Resume Lesson</button>
-                        </div>
-                    </div>
-                </div>
+                  <% }) %>
+                <% } else { %>
+                  <div class="col-span-3 text-center py-12 text-gray-500 font-semibold">No recommended courses available right now.</div>
+                <% } %>
             </div>
         </div>
 

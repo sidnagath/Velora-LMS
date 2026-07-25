@@ -210,20 +210,30 @@
           <span>-₹<%= calcCourseDiscount.toFixed(2) %></span>
         </div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; color: #0B5ED7; font-size: 0.95rem; font-weight: 600;">
+        <div id="couponDiscountRow" style="display: <%= calcCouponDiscount > 0 ? 'flex' : 'none' %>; justify-content: space-between; margin-bottom: 1.5rem; color: #0B5ED7; font-size: 0.95rem; font-weight: 600;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            Coupon Discount 
+            Coupon Discount <span id="appliedCouponCode" style="background-color: #e8f0fe; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;"></span>
           </div>
-          <span>-₹<%= calcCouponDiscount.toFixed(2) %></span>
+          <span id="couponDiscountAmount">-₹<%= calcCouponDiscount.toFixed(2) %></span>
         </div>
 
         <!-- Coupon Input -->
         <div style="margin-bottom: 2rem;">
-          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Coupon Code</label>
+          <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Select a Coupon</label>
           <div style="display: flex; background-color: #f3f4f6; border-radius: 1.5rem; padding: 0.25rem;">
-            <input type="text" placeholder="Enter code" style="background: transparent; border: none; outline: none; padding: 0.75rem 1rem; flex-grow: 1; font-weight: 600; font-size: 0.95rem; color: #111827;">
-            <button type="button" style="background-color: #e5e7eb; color: #111827; font-weight: 700; border: none; border-radius: 1.25rem; padding: 0 1.5rem; cursor: pointer; transition: background-color 0.2s;">Apply</button>
+            <select id="couponSelect" style="background: transparent; border: none; outline: none; padding: 0.75rem 1rem; flex-grow: 1; font-weight: 600; font-size: 0.95rem; color: #111827; cursor: pointer; appearance: none;">
+              <option value="">-- Choose a Coupon --</option>
+              <% if (typeof coupons !== 'undefined' && coupons.length > 0) { %>
+                <% coupons.forEach(c => { %>
+                  <option value="<%= c._id %>">
+                    <%= c.code %> - <%= c.discountType === 'percentage' ? c.discountValue + '% off' : '₹' + c.discountValue + ' off' %>
+                  </option>
+                <% }) %>
+              <% } %>
+            </select>
+            <button type="button" id="applyCouponBtn" style="background-color: #e5e7eb; color: #111827; font-weight: 700; border: none; border-radius: 1.25rem; padding: 0 1.5rem; cursor: pointer; transition: background-color 0.2s;">Apply</button>
           </div>
+          <div id="couponMessage" style="margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600; text-align: center; display: none;"></div>
         </div>
 
         <div style="border-top: 2px dashed #f3f4f6; margin-bottom: 1.5rem;"></div>
@@ -231,7 +241,7 @@
         <!-- Total -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
           <span style="font-size: 1.125rem; font-weight: 800; color: #111827;">Total Amount</span>
-          <span style="font-size: 1.5rem; font-weight: 900; color: #0B5ED7;">₹<%= calcTotal.toFixed(2) %></span>
+          <span id="finalTotalAmount" style="font-size: 1.5rem; font-weight: 900; color: #0B5ED7;">₹<%= calcTotal.toFixed(2) %></span>
         </div>
 
         <!-- Guarantee -->
@@ -240,7 +250,7 @@
             <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
           </div>
           <div>
-            <h5 style="font-size: 0.85rem; font-weight: 800; color: #111827; margin: 0 0 0.25rem 0;">30-Day Money Back Guarantee</h5>
+            <h5 style="font-size: 0.85rem; font-weight: 800; color: #111827; margin: 0 0 0.25rem 0;">5-Day Money Back Guarantee</h5>
             <p style="font-size: 0.75rem; color: #6b7280; margin: 0; line-height: 1.4;">Not satisfied? We'll refund your purchase, no questions asked.</p>
           </div>
         </div>
@@ -249,6 +259,203 @@
     </div>
 
   </div>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const applyBtn = document.getElementById("applyCouponBtn");
+      const couponSelect = document.getElementById("couponSelect");
+      const msgDiv = document.getElementById("couponMessage");
+      const discountRow = document.getElementById("couponDiscountRow");
+      const codeSpan = document.getElementById("appliedCouponCode");
+      const discountAmountSpan = document.getElementById("couponDiscountAmount");
+      const finalTotalAmount = document.getElementById("finalTotalAmount");
+      
+      const cartSubtotal = parseFloat("<%= calcSubtotal %>") || 0;
+      const currentCourseDiscount = parseFloat("<%= calcCourseDiscount %>") || 0;
+      const amountBeforeCoupon = cartSubtotal - currentCourseDiscount;
+      
+      // Keep track of the final total in JS to avoid parsing DOM strings
+      let currentTotal = amountBeforeCoupon;
+      
+      applyBtn.addEventListener("click", async () => {
+        const couponId = couponSelect.value;
+        if (!couponId) {
+          msgDiv.style.display = "block";
+          msgDiv.style.color = "#dc2626";
+          msgDiv.textContent = "Please select a coupon first.";
+          return;
+        }
+        
+        applyBtn.textContent = "Applying...";
+        applyBtn.disabled = true;
+        
+        try {
+          const res = await fetch("/api/user-checkout/apply-coupon", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            // Pass the amount after course discounts to the backend for coupon validation
+            body: JSON.stringify({ couponId, cartSubtotal: amountBeforeCoupon })
+          });
+          
+          const data = await res.json();
+          msgDiv.style.display = "block";
+          
+          if (data.success) {
+            msgDiv.style.color = "#16a34a";
+            msgDiv.textContent = data.message;
+            
+            // Update UI
+            discountRow.style.display = "flex";
+            codeSpan.textContent = data.couponCode;
+            discountAmountSpan.textContent = "-₹" + data.discountAmount.toFixed(2);
+            finalTotalAmount.textContent = "₹" + data.finalTotal.toFixed(2);
+            
+            // Update JS variable
+            currentTotal = data.finalTotal;
+            
+            // Pass the applied coupon back to backend via hidden input in the form
+            let hiddenInput = document.getElementById("hiddenAppliedCoupon");
+            if (!hiddenInput) {
+              hiddenInput = document.createElement("input");
+              hiddenInput.type = "hidden";
+              hiddenInput.id = "hiddenAppliedCoupon";
+              hiddenInput.name = "appliedCouponId";
+              document.getElementById("checkout-form").appendChild(hiddenInput);
+            }
+            hiddenInput.value = data.couponId;
+            
+          } else {
+            msgDiv.style.color = "#dc2626";
+            msgDiv.textContent = data.message;
+            
+            // Revert UI if error
+            discountRow.style.display = "none";
+            finalTotalAmount.textContent = "₹" + amountBeforeCoupon.toFixed(2);
+            currentTotal = amountBeforeCoupon;
+            
+            const hiddenInput = document.getElementById("hiddenAppliedCoupon");
+            if (hiddenInput) hiddenInput.value = "";
+          }
+        } catch (error) {
+          msgDiv.style.display = "block";
+          msgDiv.style.color = "#dc2626";
+          msgDiv.textContent = "An error occurred. Please try again.";
+        } finally {
+          applyBtn.textContent = "Apply";
+          applyBtn.disabled = false;
+        }
+      });
+      
+      // Razorpay Checkout Logic
+      const checkoutForm = document.getElementById("checkout-form");
+      
+      checkoutForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = "Processing...";
+        submitBtn.disabled = true;
+
+        try {
+          // 2. Call backend to create order securely
+          const hiddenInput = document.getElementById("hiddenAppliedCoupon");
+          const appliedCouponId = hiddenInput ? hiddenInput.value : null;
+
+          const orderRes = await fetch("/api/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ appliedCouponId })
+          });
+          
+          const orderData = await orderRes.json();
+          if (!orderData.success) {
+            alert(orderData.message || "Failed to create order");
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+          }
+
+          // 3. Open Razorpay Checkout Modal
+          const options = {
+            key: "<%= razorpayKeyId %>", 
+            amount: orderData.order.amount,
+            currency: orderData.order.currency,
+            name: "Velora",
+            description: "Course Purchase",
+            order_id: orderData.order.id,
+            handler: async function (response) {
+              // 4. Verify Payment on Backend
+              const verifyRes = await fetch("/api/verify-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  dbOrderId: orderData.dbOrderId
+                })
+              });
+              
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) {
+                // Redirect to success page
+                window.location.href = "/payment-success/" + verifyData.orderId;
+              } else {
+                alert("Payment verification failed. Please contact support.");
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+              }
+            },
+            modal: {
+              ondismiss: async function() {
+                // Handle dismiss
+                await fetch("/payment/cancel", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ dbOrderId: orderData.dbOrderId })
+                });
+                alert("Payment cancelled.");
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+              }
+            },
+            prefill: {
+              name: "Student",
+              email: "student@example.com",
+              contact: "9999999999"
+            },
+            theme: {
+              color: "#0B5ED7"
+            }
+          };
+
+          const rzp = new Razorpay(options);
+          rzp.on('payment.failed', async function (response){
+             // Handle payment failure
+             await fetch("/payment/failed", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                  dbOrderId: orderData.dbOrderId, 
+                  reason: response.error.description 
+                })
+             });
+             alert("Payment Failed: " + response.error.description);
+             submitBtn.innerHTML = originalText;
+             submitBtn.disabled = false;
+          });
+          rzp.open();
+          
+        } catch (error) {
+          console.error(error);
+          alert("An error occurred during checkout.");
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
 </main>
 
 <%- include('../../../partials/footer') %>

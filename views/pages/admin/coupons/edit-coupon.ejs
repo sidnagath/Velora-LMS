@@ -1,0 +1,217 @@
+<%- include('../../../partials/header') %>
+
+<main class="flex min-h-screen bg-gray-50 font-sans">
+
+  <%- include('../../../partials/admin-sidebar', { activePage: 'coupons' }) %>
+
+  <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+
+    <%- include('../../../partials/admin-header', { searchPlaceholder: 'Search coupons' }) %>
+
+    <div class="p-8 max-w-5xl mx-auto w-full">
+      
+      <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Edit Coupon</h1>
+        <p class="text-gray-500 mt-2 text-sm max-w-2xl">
+          Modify the parameters for <%= coupon.description || 'this promotional code' %>.
+        </p>
+      </div>
+
+      <%- include('../../../partials/admin-banner') %>
+
+      <!-- FORM CARD -->
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.03)] p-8 mb-8 relative">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-20 rounded-t-3xl"></div>
+
+        <form action="/admin-coupons/<%= coupon._id %>/edit" method="POST" id="editCouponForm" class="space-y-8">
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Coupon Code -->
+            <div class="space-y-2">
+              <label for="code" class="block text-xs font-bold text-gray-900 uppercase tracking-widest">Coupon Code</label>
+              <input type="text" id="code" name="code" 
+                class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl px-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.code ? 'border-red-400 bg-red-50' : '' %>"
+                placeholder="e.g. VELORA2024" value="<%= coupon.code %>">
+              <% if (errors?.code) { %>
+                <p class="input-error"><%= errors.code %></p>
+              <% } else { %>
+                <p class="text-[11px] text-gray-400 mt-1 font-medium">Use uppercase letters and numbers for clarity.</p>
+              <% } %>
+            </div>
+
+            <!-- Discount Type -->
+            <div class="space-y-2">
+              <label for="discountType" class="block text-xs font-bold text-gray-900 uppercase tracking-widest">Discount Type</label>
+              <div class="relative">
+                <select id="discountType" name="discountType" 
+                  class="w-full appearance-none bg-gray-100 border border-transparent text-gray-900 rounded-xl px-5 py-3.5 pr-10 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.discountType ? 'border-red-400 bg-red-50' : '' %>">
+                  <option value="percentage" <%= coupon.discountType === 'percentage' ? 'selected' : '' %>>Percentage (%)</option>
+                  <option value="flat" <%= coupon.discountType === 'flat' ? 'selected' : '' %>>Flat Amount (₹)</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
+              <% if (errors?.discountType) { %><p class="input-error"><%= errors.discountType %></p><% } %>
+            </div>
+
+            <!-- Value -->
+            <div class="space-y-2 relative">
+              <label for="discountValue" class="block text-xs font-bold text-gray-900 uppercase tracking-widest">Value</label>
+              <div class="relative">
+                <input type="number" id="discountValue" name="discountValue" step="0.01"
+                  class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl px-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.discountValue ? 'border-red-400 bg-red-50' : '' %>"
+                  placeholder="0" value="<%= coupon.discountValue %>">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-5">
+                  <span class="text-gray-400 font-bold text-sm" id="valIcon"><%= coupon.discountType === 'percentage' ? '%' : '$' %></span>
+                </div>
+              </div>
+              <% if (errors?.discountValue) { %><p class="input-error"><%= errors.discountValue %></p><% } %>
+            </div>
+
+            <!-- Minimum Order Value -->
+            <div class="space-y-2">
+              <label for="minOrderValue" class="block text-xs font-bold text-gray-900 uppercase tracking-widest">Minimum Order Value</label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
+                  <span class="text-gray-400 font-bold text-sm">₹</span>
+                </div>
+                <input type="number" id="minOrderValue" name="minOrderValue" step="0.01"
+                  class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl pl-10 pr-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.minOrderValue ? 'border-red-400 bg-red-50' : '' %>"
+                  placeholder="0.00" value="<%= coupon.minOrderValue %>">
+              </div>
+              <% if (errors?.minOrderValue) { %><p class="input-error"><%= errors.minOrderValue %></p><% } %>
+            </div>
+
+            <!-- Maximum Discount Amount -->
+            <div class="space-y-2" id="maxDiscountDiv">
+              <label for="maxDiscountAmount" class="block text-xs font-bold text-gray-900 uppercase tracking-widest">Max Discount Amount <span class="text-gray-400 lowercase normal-case tracking-normal font-medium">(optional)</span></label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
+                  <span class="text-gray-400 font-bold text-sm">₹</span>
+                </div>
+                <input type="number" id="maxDiscountAmount" name="maxDiscountAmount" step="0.01"
+                  class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl pl-10 pr-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.maxDiscountAmount ? 'border-red-400 bg-red-50' : '' %>"
+                  placeholder="0.00" value="<%= coupon.maxDiscount || '' %>">
+              </div>
+              <% if (errors?.maxDiscountAmount) { %><p class="input-error"><%= errors.maxDiscountAmount %></p><% } %>
+            </div>
+
+            <!-- Expiry Date -->
+            <div class="space-y-2">
+              <label for="expiryDate" class="block text-xs font-bold text-gray-900 uppercase tracking-widest">Expiry Date</label>
+              <div class="relative">
+                <input type="date" id="expiryDate" name="expiryDate" 
+                  class="w-full appearance-none bg-gray-100 border border-transparent text-gray-900 rounded-xl px-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.expiryDate ? 'border-red-400 bg-red-50' : '' %>"
+                  value="<%= coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : '' %>">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+              </div>
+              <% if (errors?.expiryDate) { %><p class="input-error"><%= errors.expiryDate %></p><% } %>
+            </div>
+
+            <!-- Coupon Status -->
+            <div class="space-y-2">
+              <label class="block text-xs font-bold text-gray-900 uppercase tracking-widest mb-3">Coupon Status</label>
+              <div class="flex items-center space-x-3 p-1 bg-gray-50 rounded-xl w-fit">
+                <label class="cursor-pointer">
+                  <input type="radio" name="status" value="active" class="sr-only peer" <%= coupon.status === 'active' ? 'checked' : '' %>>
+                  <div class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all peer-checked:bg-blue-600 peer-checked:text-white peer-checked:shadow-sm text-gray-400 hover:text-gray-600">
+                    Active
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="status" value="inactive" class="sr-only peer" <%= coupon.status === 'inactive' ? 'checked' : '' %>>
+                  <div class="px-6 py-2.5 rounded-lg font-bold text-sm transition-all peer-checked:bg-blue-600 peer-checked:text-white peer-checked:shadow-sm text-gray-400 hover:text-gray-600">
+                    Inactive
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+          </div>
+          
+          <div class="pt-8 flex items-center justify-end gap-4 border-t border-gray-100 mt-10">
+            <a href="/admin-coupons" class="text-sm font-bold text-gray-600 hover:text-gray-900 px-4 py-2 transition-colors">Cancel</a>
+            <button type="submit" class="inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-sm font-bold rounded-full shadow-sm text-white bg-[#0B5ED7] hover:bg-[#0A58CA] transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 w-48">
+              <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- BOTTOM CARDS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Smart Suggestions -->
+        <div class="bg-purple-50 rounded-3xl p-6 border border-purple-100 flex flex-col justify-center">
+          <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mb-4 text-purple-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+          </div>
+          <h3 class="text-lg font-extrabold text-gray-900 mb-2">Smart Suggestions</h3>
+          <p class="text-sm text-gray-600 font-medium leading-relaxed">Coupons with 20% discount see the highest conversion rate on Velora.</p>
+        </div>
+
+        <!-- Coupon Preview -->
+        <div class="bg-[#EAEAEA] rounded-3xl p-6 border border-gray-200 flex flex-col justify-center">
+          <div class="flex justify-between items-start">
+            <div class="max-w-[12rem]">
+              <h3 class="text-lg font-extrabold text-gray-900 mb-2">Coupon Preview</h3>
+              <p class="text-sm text-gray-600 font-medium leading-relaxed">This is how your coupon will appear to students at checkout.</p>
+            </div>
+            
+            <div class="flex flex-col items-end pt-2">
+              <div class="border-2 border-dashed border-blue-400 bg-white rounded-lg px-4 py-2 flex items-center gap-2 mb-2">
+                <span class="font-extrabold text-blue-600 text-sm tracking-widest" id="previewCode"><%= coupon.code %></span>
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              </div>
+              <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500">VALID UNTIL <span id="previewDate">DEC 31</span></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+  const discountTypeEl = document.getElementById('discountType');
+  const maxDiscountDiv = document.getElementById('maxDiscountDiv');
+  const maxDiscountInput = document.getElementById('maxDiscountAmount');
+
+  function toggleMaxDiscount() {
+    if (discountTypeEl.value === 'percentage') {
+      maxDiscountDiv.style.display = 'block';
+    } else {
+      maxDiscountDiv.style.display = 'none';
+      maxDiscountInput.value = '';
+    }
+  }
+
+  discountTypeEl.addEventListener('change', function(e) {
+    document.getElementById('valIcon').innerText = e.target.value === 'percentage' ? '%' : '₹';
+    toggleMaxDiscount();
+  });
+  toggleMaxDiscount();
+
+  document.getElementById('code').addEventListener('input', function(e) {
+    const val = e.target.value.toUpperCase();
+    document.getElementById('previewCode').innerText = val || 'COUPON_CODE';
+  });
+</script>
+<style>
+  .input-error {
+    color: #EF4444 !important;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: block;
+  }
+</style>
+</body>
+</html>

@@ -97,6 +97,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
+// DISABLE CACHE TO PREVENT BACK BUTTON ISSUES
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+});
 
 // ROUTES
 

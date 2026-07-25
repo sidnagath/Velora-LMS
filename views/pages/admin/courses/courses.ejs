@@ -249,9 +249,13 @@
                     </td>
                     <td class="px-6 py-4 text-gray-500"><%= course.level %></td>
                     <td class="px-6 py-4">
-                      <form action="/admin-courses/<%= course._id %>/toggle-status" method="POST" class="inline-flex items-center" onsubmit="this.querySelector('input[name=\'redirectUrl\']').value = window.location.pathname + window.location.search;">
+                      <%
+                        const modalTitle = course.status === 'published' ? 'Move to Draft?' : 'Publish Course?';
+                        const modalMsg = course.status === 'published' ? 'Are you sure you want to unpublish this course? It will no longer be visible to students.' : 'Are you sure you want to publish this course? It will immediately become live for students.';
+                      %>
+                      <form id="statusCourseForm-<%= course._id %>" action="/admin-courses/<%= course._id %>/toggle-status" method="POST" class="inline-flex items-center">
                         <input type="hidden" name="redirectUrl" value="">
-                        <button type="submit" class="group flex items-center gap-2 focus:outline-none hover:opacity-80 transition-opacity" title="Toggle Status">
+                        <button type="button" onclick="const f = document.getElementById('statusCourseForm-<%= course._id %>'); f.querySelector('input[name=\'redirectUrl\']').value = window.location.pathname + window.location.search; openConfirmModal({ title: '<%= modalTitle %>', message: '<%= modalMsg %>', confirmText: 'Update', confirmColor: 'blue', form: f });" class="group flex items-center gap-2 focus:outline-none hover:opacity-80 transition-opacity" title="Toggle Status">
                           <div class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 <%= course.status === 'published' ? 'bg-green-500' : 'bg-red-600' %>">
                             <span class="inline-block h-3.5 w-3.5 rounded-full shadow transition-transform duration-200 bg-white" style="<%= course.status === 'published' ? 'transform: translateX(18px);' : 'transform: translateX(3px);' %>"></span>
                           </div>
@@ -263,6 +267,11 @@
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
+                        <a href="/admin-courses/<%= course._id %>/view"
+                          class="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-semibold rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                          <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                          View
+                        </a>
                         <a href="/admin-courses/<%= course._id %>/edit"
                           class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>

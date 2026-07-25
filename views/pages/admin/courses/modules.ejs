@@ -523,6 +523,7 @@
     document.getElementById('moduleTitleInput').value = title;
     document.getElementById('moduleDescInput').value = desc;
     document.getElementById('modulePanelTitle').innerText = id ? 'Edit Module' : 'Add Module';
+    document.getElementById('saveModuleBtn').innerText = id ? 'Update Module' : 'Save Module';
     
     openPanel('modulePanel');
   }
@@ -664,6 +665,7 @@
     document.getElementById('lessonDescInput').value = desc;
     document.getElementById('lessonDurationInput').value = duration;
     document.getElementById('lessonPanelTitle').innerText = lessonId ? 'Edit Lesson' : 'Add Lesson';
+    document.getElementById('saveLessonBtn').innerText = lessonId ? 'Update Lesson' : 'Save Lesson';
     
     // Clear video input
     document.getElementById('lessonVideoInput').value = '';

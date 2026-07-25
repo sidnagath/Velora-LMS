@@ -17,11 +17,11 @@
         <div class="flex items-center space-x-12">
             <a href="/" class="text-2xl font-bold text-[#0B5ED7]">Velora</a>
             <div class="hidden md:flex space-x-8 text-sm font-medium text-gray-600">
-               <a href="<%= typeof isLoggedIn !== 'undefined' && isLoggedIn ? '/user-dashboard' : '/' %>" class="<%= typeof title !== 'undefined' && title.toLowerCase().includes('home') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Home</a>
-               <a href="<%= typeof isLoggedIn !== 'undefined' && isLoggedIn ? '/user-courses' : '/courses' %>"  class="<%= typeof title !== 'undefined' && title.toLowerCase().includes('course') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Courses</a>
+               <a href="<%= typeof isLoggedIn !== 'undefined' && isLoggedIn ? '/user-dashboard' : '/' %>" class="<%= typeof title !== 'undefined' && (title.toLowerCase().includes('home') || title.toLowerCase().includes('dashboard')) ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Home</a>
+               <a href="<%= typeof isLoggedIn !== 'undefined' && isLoggedIn ? '/user-courses' : '/courses' %>"  class="<%= typeof title !== 'undefined' && title.toLowerCase().includes('course') && !title.toLowerCase().includes('my course') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Courses</a>
                 <% if (typeof isLoggedIn !== 'undefined' && isLoggedIn) { %>
                     <a href="/user-wishlist" class="<%= typeof title !== 'undefined' && title.toLowerCase().includes('wishlist') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">Wishlist</a>
-                    <a href="#" class="hover:text-[#0B5ED7] pb-1">My Courses</a>
+                    <a href="/my-courses" class="<%= typeof title !== 'undefined' && title.toLowerCase().includes('my course') ? 'text-[#0B5ED7] border-b-2 border-[#0B5ED7]' : 'hover:text-[#0B5ED7]' %> pb-1">My Courses</a>
                 <% } %>
             </div>
         </div>

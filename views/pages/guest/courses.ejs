@@ -60,14 +60,39 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                     <span class="text-sm font-bold tracking-wide">Category</span>
                 </div>
-                <div class="space-y-3">
-                    <% (allCategories || []).forEach(cat => { %>
-                        <% const isChecked = selectedCategoryId && selectedCategoryId === cat._id.toString(); %>
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" name="category" value="<%= cat._id %>" <%= isChecked ? 'checked' : '' %> class="category-filter w-4 h-4 accent-[#0B5ED7] border-gray-300 rounded focus:ring-[#0B5ED7]">
-                            <span class="ml-3 text-sm <%= isChecked ? 'font-bold text-[#0B5ED7]' : 'font-medium text-gray-700 hover:text-[#0B5ED7]' %>"><%= cat.name %></span>
-                        </label>
-                    <% }) %>
+                <div class="relative w-full" id="category-dropdown-container">
+                    <input type="hidden" name="category" id="category-input" value="<%= typeof selectedCategoryId !== 'undefined' ? selectedCategoryId : '' %>">
+                    
+                    <% 
+                      let selectedCatName = "All Categories";
+                      if (typeof selectedCategoryId !== 'undefined' && selectedCategoryId) {
+                        const foundCat = (allCategories || []).find(c => c._id.toString() === selectedCategoryId.toString());
+                        if (foundCat) selectedCatName = foundCat.name;
+                      }
+                    %>
+                    
+                    <!-- Dropdown Button -->
+                    <div class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-[#0B5ED7] transition-colors" onclick="toggleCategoryDropdown()">
+                        <span id="selected-category-text" class="text-sm font-medium text-gray-700 truncate"><%= selectedCatName %></span>
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+
+                    <!-- Dropdown Menu -->
+                    <div id="category-dropdown-menu" class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl hidden flex-col overflow-hidden">
+                        <div class="p-2 border-b border-gray-50">
+                            <input type="text" id="category-search" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0B5ED7]/20 focus:border-[#0B5ED7] transition-all" placeholder="Search category..." onkeyup="filterCategories()" onclick="event.stopPropagation()">
+                        </div>
+                        <ul class="max-h-48 overflow-y-auto py-1 custom-scrollbar" id="category-list">
+                            <li class="px-4 py-2.5 text-sm text-gray-700 hover:bg-[#0B5ED7] hover:text-white cursor-pointer transition-colors" onclick="selectCategory('', 'All Categories')">
+                                All Categories
+                            </li>
+                            <% (allCategories || []).forEach(cat => { %>
+                                <li class="category-item px-4 py-2.5 text-sm text-gray-700 hover:bg-[#0B5ED7] hover:text-white cursor-pointer transition-colors" data-name="<%= cat.name.toLowerCase() %>" onclick="selectCategory('<%= cat._id %>', '<%= cat.name %>')">
+                                    <%= cat.name %>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -301,6 +326,42 @@
 
 </section>
 </form>
+
+<script>
+    function toggleCategoryDropdown() {
+        const menu = document.getElementById('category-dropdown-menu');
+        menu.classList.toggle('hidden');
+        menu.classList.toggle('flex');
+    }
+
+    function selectCategory(id, name) {
+        document.getElementById('category-input').value = id;
+        document.getElementById('selected-category-text').innerText = name;
+        toggleCategoryDropdown();
+    }
+
+    function filterCategories() {
+        const search = document.getElementById('category-search').value.toLowerCase();
+        const items = document.querySelectorAll('.category-item');
+        items.forEach(item => {
+            if (item.getAttribute('data-name').includes(search)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const container = document.getElementById('category-dropdown-container');
+        const menu = document.getElementById('category-dropdown-menu');
+        if (container && !container.contains(event.target)) {
+            menu.classList.add('hidden');
+            menu.classList.remove('flex');
+        }
+    });
+</script>
 </main>
 
 

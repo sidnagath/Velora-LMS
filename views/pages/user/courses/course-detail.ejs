@@ -239,6 +239,9 @@
             <span><%= course.rating || '0.0' %></span>
             <span class="reviews">(<%= course.reviewsCount || 0 %> reviews)</span>
           </div>
+          <span class="text-xs font-bold text-gray-500 bg-gray-200 px-2.5 py-1 rounded-full uppercase tracking-wider" style="margin-left: 0.5rem;">
+            <%= (course.category && course.category.name) ? course.category.name : 'Unknown Category' %>
+          </span>
         </div>
 
         <h1 style="font-size:2.5rem;font-weight:900;color:#111;line-height:1.15;letter-spacing:-0.02em;margin:0 0 1rem;"><%= course.title %></h1>
@@ -378,13 +381,26 @@
       <div class="cd-sidebar-card">
 
         <!-- Video Preview -->
-        <div class="cd-video-thumb">
-          <img src="<%= course.thumbnail || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' %>" alt="Preview">
-          <div class="cd-play-btn">
-            <div class="cd-play-circle">
-              <svg width="22" height="22" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <div class="cd-video-thumb" style="cursor: <%= course.trailer ? 'auto' : 'pointer' %>;">
+          <% if (course.trailer) { %>
+            <video 
+              controls 
+              preload="metadata" 
+              poster="<%= course.thumbnail || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' %>" 
+              style="width: 100%; height: 100%; object-fit: contain; border-radius: 0.75rem; background: #000;">
+              <source src="<%= course.trailer %>" type="video/mp4">
+              <source src="<%= course.trailer %>" type="video/webm">
+              <source src="<%= course.trailer %>" type="video/ogg">
+              Your browser does not support the video tag.
+            </video>
+          <% } else { %>
+            <img src="<%= course.thumbnail || 'https://images.unsplash.com/photo-1542831371-29b0f74f9713?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' %>" alt="Preview">
+            <div class="cd-play-btn">
+              <div class="cd-play-circle">
+                <svg width="22" height="22" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </div>
             </div>
-          </div>
+          <% } %>
         </div>
 
         <!-- Sidebar Body -->
@@ -402,24 +418,32 @@
             <% } %>
           </div>
 
-          <!-- Enroll / Cart Button -->
-          <% const isInCart = cartCourseIds?.includes(course._id.toString()); %>
-          <button class="cart-btn cd-btn-enroll <%= isInCart ? 'bg-green-600 hover:bg-green-700' : '' %>" data-course-id="<%= course._id %>" style="<%= isInCart ? 'background-color: #059669;' : '' %>">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            <span class="btn-text"><%= isInCart ? 'Added to Cart' : 'Add to Cart' %></span>
-          </button>
+          <% const isEnrolled = typeof enrolledCourseIds !== 'undefined' && enrolledCourseIds?.includes(course._id.toString()) %>
 
-          <!-- Wishlist Button -->
-          <% const isWishlisted = wishlistCourseIds?.includes(course._id.toString()); %>
-          <button class="wishlist-btn cd-btn-wishlist <%= isWishlisted ? 'bg-purple-50 text-purple-700' : '' %>" data-course-id="<%= course._id %>" style="<%= isWishlisted ? 'background-color: #F5F3FF;' : '' %>">
-            <% if(isWishlisted) { %>
-              <svg width="16" height="16" fill="currentColor" stroke="none" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-              <span class="btn-text">Wishlisted</span>
-            <% } else { %>
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-              <span class="btn-text">Add to Wishlist</span>
-            <% } %>
-          </button>
+          <% if (isEnrolled) { %>
+            <a href="/my-courses" class="cd-btn-enroll" style="background-color: #059669; text-align: center; display: block; text-decoration: none;">
+              <span class="btn-text" style="color: white;">Continue Learning</span>
+            </a>
+          <% } else { %>
+            <!-- Enroll / Cart Button -->
+            <% const isInCart = cartCourseIds?.includes(course._id.toString()); %>
+            <button class="cart-btn cd-btn-enroll <%= isInCart ? 'bg-green-600 hover:bg-green-700' : '' %>" data-course-id="<%= course._id %>" style="<%= isInCart ? 'background-color: #059669;' : '' %>">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              <span class="btn-text"><%= isInCart ? 'Added to Cart' : 'Add to Cart' %></span>
+            </button>
+
+            <!-- Wishlist Button -->
+            <% const isWishlisted = wishlistCourseIds?.includes(course._id.toString()); %>
+            <button class="wishlist-btn cd-btn-wishlist <%= isWishlisted ? 'bg-purple-50 text-purple-700' : '' %>" data-course-id="<%= course._id %>" style="<%= isWishlisted ? 'background-color: #F5F3FF;' : '' %>">
+              <% if(isWishlisted) { %>
+                <svg width="16" height="16" fill="currentColor" stroke="none" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                <span class="btn-text">Wishlisted</span>
+              <% } else { %>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                <span class="btn-text">Add to Wishlist</span>
+              <% } %>
+            </button>
+          <% } %>
 
           <!-- Course Includes -->
           <div class="cd-includes-title">This course includes:</div>

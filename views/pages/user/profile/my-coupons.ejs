@@ -1,0 +1,162 @@
+<%- include('../../../partials/header') %>
+
+<main class="min-h-screen bg-gray-100 font-sans py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-8">
+    
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-64 shrink-0 space-y-6">
+      
+      <!-- Profile Card -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center flex flex-col items-center">
+        <% if(user.avatar) { %>
+          <img src="<%= user.avatar %>" alt="<%= user.name %>" class="w-20 h-20 rounded-full border-4 border-gray-50 mb-3 object-cover">
+        <% } else { %>
+          <div class="w-20 h-20 rounded-full bg-blue-100 text-blue-600 border-4 border-gray-50 mb-3 flex items-center justify-center text-2xl font-bold">
+            <%= user.name.split(" ").map(word => word[0]).join("").slice(0,2).toUpperCase() %>
+          </div>
+        <% } %>
+        <h3 class="font-extrabold text-gray-900"><%=user.name%></h3>
+      </div>
+
+      <!-- Upgrade Button -->
+      <button class="w-full bg-[#6B46C1] hover:bg-[#553C9A] text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-colors flex justify-center items-center">
+        Upgrade to Pro
+      </button>
+
+      <!-- Navigation Menu -->
+      <div class="bg-white rounded-2xl py-4 shadow-sm border border-gray-100">
+        <nav class="space-y-1 text-sm font-semibold">
+          <a href="/user-profile" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            Account Details
+          </a>
+          <a href="/user-address" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            Address
+          </a>
+          <a href="/user-orders" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+            Orders
+          </a>
+          <!-- <a href="/user-wishlist" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+            Wishlist
+          </a> -->
+          <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:text-blue-600 hover:bg-gray-50 border-l-4 border-transparent transition-colors">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+            Wallet
+          </a>
+          <a href="/user-profile/my-coupons" class="flex items-center px-6 py-3 text-blue-600 bg-blue-50/50 border-l-4 border-blue-600 transition-colors">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+            My Coupons
+          </a>
+          <div class="pt-4 mt-2 border-t border-gray-100">
+            <a href="/user-logout" class="flex items-center px-6 py-3 text-red-600 hover:bg-red-50 transition-colors">
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              Logout
+            </a>
+          </div>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 max-w-4xl">
+      
+      <!-- HEADER -->
+      <div class="mb-8">
+        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">My Coupons</h2>
+        <p class="text-gray-500 mt-2 text-sm max-w-2xl">
+          Manage your rewards and promotional codes. Your digital sanctuary for savings and exclusive access.
+        </p>
+      </div>
+
+      <!-- COUPON CARDS GRID -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <% if(coupons && coupons.length > 0) { %>
+          <% coupons.forEach(coupon => { %>
+            <div class="relative bg-white rounded-3xl p-6 shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition-shadow">
+              
+              <!-- Gradient corner -->
+              <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl <%= coupon.discountType === 'percentage' ? 'from-purple-50' : 'from-blue-50' %> to-transparent rounded-bl-[100px] pointer-events-none transition-all group-hover:scale-110"></div>
+              
+              <!-- Icon -->
+              <div class="absolute top-5 right-5 text-gray-300 group-hover:text-gray-400 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+              </div>
+
+              <!-- Badge -->
+              <div class="inline-flex items-center px-5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase mb-4 <%= coupon.discountType === 'percentage' ? 'bg-purple-100/50 text-purple-700' : 'bg-blue-50 text-blue-600' %>">
+                <%= coupon.discountType === 'percentage' ? 'PERCENTAGE' : 'FLAT DISCOUNT' %>
+              </div>
+
+              <!-- Content -->
+              <h3 class="text-2xl font-extrabold text-gray-900 tracking-tight mb-2"><%= coupon.code %></h3>
+              <p class="text-sm text-gray-600 font-medium mb-6">
+                <%= coupon.discountType === 'percentage' ? `Get ${coupon.discountValue}% off on your purchase` : `Get ₹${coupon.discountValue} off on your purchase` %>
+              </p>
+
+              <!-- Meta data -->
+              <div class="flex flex-wrap items-center gap-3 text-[11px] text-gray-500 font-medium mb-8">
+                <div class="flex items-center bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
+                  <svg class="w-3.5 h-3.5 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                  <%= coupon.minOrderValue > 0 ? `Min order ₹${coupon.minOrderValue}` : 'No min order' %>
+                </div>
+                <div class="flex items-center bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
+                  <svg class="w-3.5 h-3.5 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  Expires <%= new Date(coupon.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                </div>
+              </div>
+
+              <!-- Actions & Status -->
+              <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                <div class="flex items-center text-sm font-bold text-green-500">
+                  <span class="w-2 h-2 rounded-full bg-green-500 mr-2 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span> Active
+                </div>
+                <button class="px-6 py-2 <%= coupon.discountType === 'percentage' ? 'bg-[#6B46C1] hover:bg-[#553C9A] shadow-[#6B46C1]/20' : 'bg-[#0B5ED7] hover:bg-[#0A58CA] shadow-[#0B5ED7]/20' %> text-white text-sm font-bold rounded-full transition shadow-md">Apply</button>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+
+        <!-- Browse More Deals (Empty state placeholder) -->
+        <!-- <div class="bg-gray-50 rounded-3xl p-8 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center h-full min-h-[250px]">
+          <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Browse More Deals</h3>
+          <p class="text-sm text-gray-500 max-w-xs">Check out our latest course bundles and seasonal offers.</p>
+        </div> -->
+
+      </div>
+
+      <!-- VELORA REWARDS BANNER -->
+      <!-- <div class="bg-[#EBEBEB] rounded-3xl p-8 flex flex-col md:flex-row gap-6 mt-8 items-center border border-gray-200 shadow-sm relative overflow-hidden"> -->
+        <!-- Subtle background pattern or gradient -->
+        <!-- <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div> -->
+        
+        <!-- <div class="w-24 h-24 bg-[#111111] text-white rounded-2xl flex items-center justify-center text-[10px] font-bold tracking-widest uppercase shrink-0 shadow-lg relative z-10">
+          REWARD
+        </div> -->
+        
+        <!-- <div class="flex-1 w-full relative z-10">
+          <h3 class="text-lg font-extrabold text-gray-900 mb-2">Velora Rewards Program</h3>
+          <p class="text-sm text-gray-600 font-medium mb-5 max-w-2xl">
+            Earn points for every course you complete. Redeem points for exclusive coupons and early access to masterclasses.
+          </p>
+          <div class="w-full bg-gray-300/60 rounded-full h-2.5 mb-2">
+            <div class="bg-[#A855F7] h-2.5 rounded-full" style="width: 75%"></div>
+          </div>
+          <div class="flex justify-between text-xs font-bold text-gray-600">
+            <span>750 Points</span>
+            <span>1,000 Points (Next Reward)</span>
+          </div>
+        </div>
+      </div> -->
+
+    </div>
+  </div>
+</main>
+
+<%- include('../../../partials/footer') %>

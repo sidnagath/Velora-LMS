@@ -112,6 +112,18 @@ exports.getAdminEditCourse = async (req, res) => {
   });
 };
 
+exports.getViewCourse = async (req, res) => {
+  const result = await courseService.getCourseDetails(req.params.courseId, true);
+  if (!result.success) return res.redirect("/admin-courses");
+
+  res.render("pages/admin/courses/view-course", {
+    title: `Velora - View Course: ${result.data.course.title}`,
+    isLoggedIn: true,
+    isAdmin: true,
+    ...result.data
+  });
+};
+
 exports.postAdminEditCourse = async (req, res) => {
   const result = await courseService.updateCourse(req.params.courseId, req.body, req.files, req.fileValidationError);
 
@@ -241,3 +253,22 @@ exports.postAdminToggleCourseStatus = async (req, res) => {
   const separator = redirectUrl.includes('?') ? '&' : '?';
   res.redirect(`${redirectUrl}${separator}flashType=success&flashMsg=${encodeURIComponent(successMsg)}`);
 };
+
+
+
+
+exports.getCourses=async(req,res)=>{
+
+
+
+  const result=await courseService.getCourse(req.query);
+
+
+  if(!result.success){
+   return res.redirect("/courses");
+  }
+
+
+  return res.render("pages")
+
+}

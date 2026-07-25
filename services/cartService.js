@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const Course = require("../models/courseModel");
+const Module = require("../models/moduleModel");
 
 class CartService {
   async getCart(userId, searchQuery = "") {
@@ -21,13 +22,25 @@ class CartService {
       return { success: false, message: "User not found" };
     }
 
-    return { success: true, cart: user.cart || [] };
+    const cartItems = user.cart || [];
+    const cartWithModules = await Promise.all(cartItems.map(async (course) => {
+      const modulesCount = await Module.countDocuments({ courseId: course._id });
+      return { ...course.toObject(), modulesCount };
+    }));
+
+    return { success: true, cart: cartWithModules };
   }
 
   async toggleCart(userId, courseId) {
     const user = await User.findById(userId);
     if (!user) {
       return { success: false, message: "User not found" };
+    }
+
+    const Enrollment = require("../models/enrollmentModel");
+    const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
+    if (isEnrolled) {
+      return { success: false, message: "You are already enrolled in this course." };
     }
 
     const index = user.cart.findIndex(id => id.toString() === courseId.toString());
@@ -65,6 +78,12 @@ class CartService {
     const user = await User.findById(userId);
     if (!user) {
       return { success: false, message: "User not found" };
+    }
+
+    const Enrollment = require("../models/enrollmentModel");
+    const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
+    if (isEnrolled) {
+      return { success: false, message: "You are already enrolled in this course." };
     }
 
     // Remove from cart

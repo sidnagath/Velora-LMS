@@ -7,6 +7,7 @@ const courseController = require('../controllers/admin/courseController');
 const moduleController = require('../controllers/admin/moduleController');
 const lessonController = require('../controllers/admin/lessonController');
 const resourceController = require('../controllers/admin/resourceController');
+const couponController = require("../controllers/admin/couponController");
 const authController = require('../controllers/admin/authController');
 const { isAdmin } = require('../middleware/adminMiddleware');
 const {noCache} = require('../middleware/noCache');
@@ -54,6 +55,9 @@ router.post("/admin-courses/create",upload.fields([{ name: "thumbnail" },{ name:
 router.get("/admin-courses/:courseId/edit",noCache,isAdmin,courseController.getAdminEditCourse);
 router.post("/admin-courses/:courseId/edit",upload.fields([{ name: "thumbnail" },{ name: "trailer" }]),noCache,isAdmin,courseController.postAdminEditCourse);
 
+// View Course
+router.get("/admin-courses/:courseId/view",noCache,isAdmin,courseController.getViewCourse);
+
 // Delete Course
 router.post("/admin-courses/:courseId/delete",noCache,isAdmin,courseController.postAdminDeleteCourse);
 
@@ -83,16 +87,30 @@ router.post('/admin-courses/:courseId/resources/upload-file', upload.single("res
 router.post('/admin-courses/:courseId/resources/delete-file', noCache, isAdmin, resourceController.postAdminCourseResourcesDeleteFile);
 router.post('/admin-courses/:courseId/resources/add-link', noCache, isAdmin, resourceController.postAdminCourseResourcesAddLink);
 router.post('/admin-courses/:courseId/resources/delete-link', noCache, isAdmin, resourceController.postAdminCourseResourcesDeleteLink);
-// router.post('/admin-courses/:courseId/resources/bulk-save', upload.array("resourceFiles", 10), noCache, isAdmin, adminController.postAdminCourseResourcesBulkSave);
-// router.post('/admin-courses/:courseId/resources/edit-file', noCache, isAdmin, adminController.postAdminCourseResourcesEditFile);
-// router.post('/admin-courses/:courseId/resources/edit-link', noCache, isAdmin, adminController.postAdminCourseResourcesEditLink);
+
 
 // Publish Course
 router.get('/admin-courses/:courseId/publish', noCache, isAdmin, courseController.getAdminCoursePublish);
 router.post('/admin-courses/:courseId/publish', noCache, isAdmin, courseController.postAdminCoursePublish);
 router.post('/admin-courses/:courseId/toggle-status', noCache, isAdmin, courseController.postAdminToggleCourseStatus);
 
+
+// Orders
+const orderController = require("../controllers/admin/orderController");
+router.get("/admin-orders", noCache, isAdmin, orderController.getAdminOrders);
+router.get("/admin-orders/:id", noCache, isAdmin, orderController.getAdminOrderDetails);
+
+//Coupons
+router.get("/admin-coupons", noCache, isAdmin, couponController.getAdminCoupons);
+router.get("/admin-coupons/create", noCache, isAdmin, couponController.getAdminCreateCoupon);
+router.post("/admin-coupons/create", noCache, isAdmin, couponController.postAdminCreateCoupon);
+router.get("/admin-coupons/:couponId/edit", noCache, isAdmin, couponController.getAdminEditCoupon);
+router.post("/admin-coupons/:couponId/edit", noCache, isAdmin, couponController.postAdminEditCoupon);
+router.post("/admin-delete-coupon/:couponId", noCache, isAdmin, couponController.postAdminDeleteCoupon);
+
 // Logout
 router.get("/admin-logout",noCache,authController.getAdminLogout);
 
 module.exports=router;
+
+

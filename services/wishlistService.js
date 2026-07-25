@@ -30,6 +30,12 @@ class WishlistService {
       return { success: false, message: "User not found" };
     }
 
+    const Enrollment = require("../models/enrollmentModel");
+    const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
+    if (isEnrolled) {
+      return { success: false, message: "You are already enrolled in this course." };
+    }
+
     const index = user.wishlist.findIndex(id => id.toString() === courseId.toString());
     let isAdded = false;
     let message = "";
@@ -55,6 +61,12 @@ class WishlistService {
 
     if(!user){
       return {success:false, message:"User not found"}
+    }
+
+    const Enrollment = require("../models/enrollmentModel");
+    const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
+    if (isEnrolled) {
+      return { success: false, message: "You are already enrolled in this course." };
     }
 
     //Remove from Wishlist

@@ -24,10 +24,11 @@
     "jsdom": "^29.1.1",
     "mongoose": "^9.6.1",
     "multer": "^2.1.1",
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^9.0.3",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "postcss": "^8.5.12",
+    "razorpay": "^2.9.8",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.2.4"
   },
