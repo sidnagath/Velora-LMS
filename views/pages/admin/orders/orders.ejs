@@ -63,9 +63,16 @@
             </div>
         </div>
 
-        <!-- Table Container -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-            <!-- Table Controls -->
+        <!-- Tabs Container -->
+        <div class="flex space-x-4 mb-6">
+            <button id="tab-orders" onclick="switchTab('orders')" class="px-6 py-3 rounded-xl font-bold text-sm bg-blue-600 text-white shadow-sm transition-all border border-blue-600">All Orders</button>
+            <button id="tab-refunds" onclick="switchTab('refunds')" class="px-6 py-3 rounded-xl font-bold text-sm bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 transition-all shadow-sm">Refund Requests</button>
+        </div>
+
+        <div id="allOrdersView">
+          <!-- Table Container -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+              <!-- Table Controls -->
             <div class="p-6 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
                 <div class="flex items-center space-x-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button class="px-4 py-2 rounded-lg bg-white shadow-sm text-sm font-bold text-blue-600">This Week</button>
@@ -75,11 +82,24 @@
                 
                 <div class="flex items-center space-x-3">
                     <div class="relative">
-                        <select class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2.5 pl-4 pr-10 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="all">All Statuses</option>
-                            <option value="completed">Success</option>
-                            <option value="pending">Pending</option>
-                            <option value="failed">Failed</option>
+                        <select id="sortFilter" onchange="applyFilters()" class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2.5 pl-4 pr-10 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="newest" <%= sortBy === 'newest' ? 'selected' : '' %>>Newest First</option>
+                            <option value="oldest" <%= sortBy === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                            <option value="amount_desc" <%= sortBy === 'amount_desc' ? 'selected' : '' %>>Amount (High to Low)</option>
+                            <option value="amount_asc" <%= sortBy === 'amount_asc' ? 'selected' : '' %>>Amount (Low to High)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                            <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <select id="statusFilter" onchange="applyFilters()" class="appearance-none bg-gray-50 border border-gray-200 text-gray-700 py-2.5 pl-4 pr-10 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All Statuses</option>
+                            <option value="paid" <%= statusFilter === 'paid' ? 'selected' : '' %>>Paid</option>
+                            <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>Pending</option>
+                            <option value="failed" <%= statusFilter === 'failed' ? 'selected' : '' %>>Failed</option>
+                            <option value="cancelled" <%= statusFilter === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
                             <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
@@ -91,6 +111,19 @@
                     </button>
                 </div>
             </div>
+
+            <script>
+                function applyFilters() {
+                    const status = document.getElementById('statusFilter').value;
+                    const sort = document.getElementById('sortFilter').value;
+                    const search = '<%= typeof search !== "undefined" ? search : "" %>';
+                    let url = '/admin-orders?page=1';
+                    if (status && status !== 'all') url += '&status=' + status;
+                    if (sort && sort !== 'newest') url += '&sortBy=' + sort;
+                    if (search) url += '&search=' + encodeURIComponent(search);
+                    window.location.href = url;
+                }
+            </script>
 
             <!-- Table -->
             <div class="overflow-x-auto">
@@ -157,6 +190,11 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
                                                 Cancelled
                                             </span>
+                                        <% } else if (order.paymentStatus === 'refunded') { %>
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-blue-100 text-blue-700 items-center gap-1.5 border border-blue-200">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                Refunded
+                                            </span>
                                         <% } else { %>
                                             <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-50 text-red-600 items-center gap-1.5 border border-red-100">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
@@ -191,6 +229,7 @@
                     const qs = new URLSearchParams();
                     if (search) qs.set('search', search);
                     if (statusFilter && statusFilter !== 'all') qs.set('status', statusFilter);
+                    if (typeof sortBy !== 'undefined' && sortBy !== 'newest') qs.set('sortBy', sortBy);
                     qs.set('page', p);
                     return '/admin-orders?' + qs.toString();
                   }; %>
@@ -225,6 +264,149 @@
                 </div>
             </div>
         </div>
+        </div>
+
+        <!-- Refund Requests View -->
+        <div id="refundsView" class="hidden">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+            <!-- Table Controls for Refunds -->
+            <div class="p-6 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+                <h3 class="text-lg font-bold text-gray-900">Pending Refund Requests</h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50">
+                            <th class="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100">Order ID</th>
+                            <th class="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100">Customer Name</th>
+                            <th class="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100">Request Date</th>
+                            <th class="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100">Reason</th>
+                            <th class="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        <% const pendingRefunds = orders ? orders.filter(o => o.refundStatus === 'pending') : []; %>
+                        <% if (pendingRefunds.length > 0) { %>
+                            <% pendingRefunds.forEach(order => { %>
+                                <tr class="hover:bg-gray-50/50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-bold text-[#0B5ED7]">
+                                            <%= order.orderId || '#VL-' + (order.razorpayOrderId ? order.razorpayOrderId.substring(10,14).toUpperCase() : order._id.toString().substring(20,24).toUpperCase()) %>
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-bold text-gray-900 text-sm"><%= order.userId ? order.userId.name : 'Unknown User' %></div>
+                                        <div class="text-xs text-gray-500 font-medium"><%= order.userId ? order.userId.email : '' %></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        <%= order.refundRequestedAt ? new Date(order.refundRequestedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A' %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-normal text-sm text-gray-700 italic max-w-xs">
+                                        <%= order.refundReason || 'No reason provided.' %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right space-x-2">
+                                        <button onclick="approveRefund('<%= order._id %>')" class="text-green-600 hover:text-green-800 font-bold border border-green-200 bg-green-50 px-3 py-1.5 rounded-lg transition-colors">Approve</button>
+                                        <button onclick="rejectRefund('<%= order._id %>')" class="text-red-600 hover:text-red-800 font-bold border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Reject</button>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-500 font-medium">
+                                    No pending refund requests found on this page.
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+
+
+        <script>
+            function switchTab(tab) {
+                const btnOrders = document.getElementById('tab-orders');
+                const btnRefunds = document.getElementById('tab-refunds');
+                const viewOrders = document.getElementById('allOrdersView');
+                const viewRefunds = document.getElementById('refundsView');
+                
+                if(tab === 'orders') {
+                    btnOrders.className = 'px-6 py-3 rounded-xl font-bold text-sm bg-blue-600 text-white shadow-sm transition-all border border-blue-600';
+                    btnRefunds.className = 'px-6 py-3 rounded-xl font-bold text-sm bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 transition-all shadow-sm';
+                    viewOrders.classList.remove('hidden');
+                    viewRefunds.classList.add('hidden');
+                } else {
+                    btnRefunds.className = 'px-6 py-3 rounded-xl font-bold text-sm bg-blue-600 text-white shadow-sm transition-all border border-blue-600';
+                    btnOrders.className = 'px-6 py-3 rounded-xl font-bold text-sm bg-white text-gray-600 hover:text-blue-600 hover:bg-blue-50 border border-gray-200 transition-all shadow-sm';
+                    viewRefunds.classList.remove('hidden');
+                    viewOrders.classList.add('hidden');
+                }
+            }
+
+
+            function approveRefund(orderId) {
+                if (typeof window.openConfirmModal === 'function') {
+                    window.openConfirmModal({
+                        title: 'Approve Refund',
+                        message: 'Are you sure you want to approve this refund? The amount will be credited to the user\'s wallet.',
+                        confirmText: 'Approve',
+                        confirmColor: 'blue',
+                        onConfirm: async () => {
+                            try {
+                                const response = await fetch(`/admin-orders/${orderId}/refund/approve`, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    }
+                                });
+                                const data = await response.json();
+                                if (data.success) {
+                                    window.location.reload();
+                                } else {
+                                    alert(data.message || "Failed to approve refund");
+                                }
+                            } catch (error) {
+                                console.error("Error approving refund:", error);
+                                alert("Something went wrong.");
+                            }
+                        }
+                    });
+                }
+            }
+
+            function rejectRefund(orderId) {
+                if (typeof window.openConfirmModal === 'function') {
+                    window.openConfirmModal({
+                        title: 'Reject Refund',
+                        message: 'Are you sure you want to reject this refund request?',
+                        confirmText: 'Reject',
+                        confirmColor: 'red',
+                        onConfirm: async () => {
+                            try {
+                                const response = await fetch(`/admin-orders/${orderId}/refund/reject`, {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    }
+                                });
+                                const data = await response.json();
+                                if (data.success) {
+                                    window.location.reload();
+                                } else {
+                                    alert(data.message || "Failed to reject refund");
+                                }
+                            } catch (error) {
+                                console.error("Error rejecting refund:", error);
+                                alert("Something went wrong.");
+                            }
+                        }
+                    });
+                }
+            }
+        </script>
+        <%- include('../../../partials/confirm-modal') %>
 
         <!-- Bottom Widgets -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">

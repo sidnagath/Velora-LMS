@@ -1,49 +1,22 @@
-const Order = require('../../models/orderModel');
-const User = require('../../models/userModel');
-const Course = require('../../models/courseModel');
+const orderService = require('../../services/orderService');
 
 exports.getAdminOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 5;
-    const skip = (page - 1) * limit;
+    const queryObj = {
+      page: req.query.page,
+      status: req.query.status,
+      search: req.query.search,
+      sortBy: req.query.sortBy
+    };
 
-    const query = {};
-    if (req.query.status && req.query.status !== 'all') {
-      query.paymentStatus = req.query.status;
+    const result = await orderService.getAdminOrdersData(queryObj);
+
+    if (!result.success) {
+      req.flash('error', result.message || 'Failed to load orders.');
+      return res.redirect('/admin-dashboard');
     }
 
-    if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
-      const users = await User.find({ name: searchRegex }).select('_id').lean();
-      const userIds = users.map(u => u._id);
-      
-      query.$or = [
-        { orderId: searchRegex },
-        { userId: { $in: userIds } }
-      ];
-    }
-
-    const totalOrders = await Order.countDocuments(query);
-    const totalPages = Math.ceil(totalOrders / limit);
-
-    const orders = await Order.find(query)
-      .populate('userId', 'name avatar email')
-      .populate('courses', 'title')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    // Calculate Stats
-    const allOrders = await Order.find({ paymentStatus: 'paid' }).lean();
-    const totalRevenue = allOrders.reduce((sum, order) => sum + order.finalAmount, 0);
-    
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyOrdersCount = allOrders.filter(order => order.createdAt >= startOfMonth).length;
-    
-    const avgOrderValue = allOrders.length > 0 ? (totalRevenue / allOrders.length) : 0;
+    const { orders, currentPage, totalPages, totalOrders, stats } = result.data;
 
     res.render('pages/admin/orders/orders', {
       title: 'Velora Admin - Orders',
@@ -51,16 +24,13 @@ exports.getAdminOrders = async (req, res) => {
       activePage: 'orders',
       isAdmin: true,
       orders,
-      currentPage: page,
+      currentPage,
       totalPages,
       totalOrders,
-      stats: {
-        totalRevenue: totalRevenue.toFixed(2),
-        monthlyOrders: monthlyOrdersCount,
-        avgOrderValue: avgOrderValue.toFixed(2)
-      },
+      stats,
       search: req.query.search || '',
-      statusFilter: req.query.status || 'all'
+      statusFilter: req.query.status || 'all',
+      sortBy: req.query.sortBy || 'newest'
     });
   } catch (error) {
     console.error('Error fetching admin orders:', error);
@@ -71,14 +41,10 @@ exports.getAdminOrders = async (req, res) => {
 
 exports.getAdminOrderDetails = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id)
-      .populate('userId', 'name avatar email phone')
-      .populate('courses', 'title thumbnail basePrice discountPrice level')
-      .populate('couponId', 'code discountType discountValue')
-      .lean();
+    const result = await orderService.getOrderById(req.params.id);
 
-    if (!order) {
-      req.flash('error', 'Order not found.');
+    if (!result.success) {
+      req.flash('error', result.message || 'Order not found.');
       return res.redirect('/admin-orders');
     }
 
@@ -87,7 +53,7 @@ exports.getAdminOrderDetails = async (req, res) => {
       path: '/admin-orders',
       activePage: 'orders',
       isAdmin: true,
-      order
+      order: result.data
     });
   } catch (error) {
     console.error('Error fetching order details:', error);
@@ -95,3 +61,59 @@ exports.getAdminOrderDetails = async (req, res) => {
     res.redirect('/admin-orders');
   }
 };
+
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const orderId = req.params.id;
+    
+    const result = await orderService.updateOrderStatus(orderId, status);
+    
+    if (!result.success) {
+      return res.status(400).json({ success: false, message: result.message });
+    }
+    
+    return res.json({ success: true, message: result.message });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return res.status(500).json({ success: false, message: 'Server error updating status' });
+  }
+};
+
+
+exports.approveRefund= async (req,res)=>{
+try{
+
+  const orderId=req.params.id;
+  const result= await orderService.approveRefund(orderId);
+
+  if(!result.success){
+    return res.status(400).json({ success: false, message: result.message });
+  }
+
+  return res.json({ success: true, message: result.message });
+
+}catch(error){
+ console.error('Error updating refund status:', error);
+ return res.status(500).json({ success: false, message: 'Server error updating refund status' });
+}
+}
+
+exports.rejectRefund= async (req,res)=>{
+try{
+
+  const orderId=req.params.id;
+  const result= await orderService.rejectRefund(orderId);
+
+  if(!result.success){
+    return res.status(400).json({ success: false, message: result.message });
+  }
+
+  return res.json({ success: true, message: result.message });
+
+}catch(error){
+ console.error('Error updating refund status:', error);
+ return res.status(500).json({ success: false, message: 'Server error updating refund status' });
+}
+
+}

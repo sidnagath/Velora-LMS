@@ -49,7 +49,12 @@ const couponSchema = new mongoose.Schema(
       default: "active"
     },
 
-    usageCount: {
+    usageLimit:{
+      type:Number,
+      required:true,
+      default:100
+    },
+    usageCount:{
       type: Number,
       default: 0
     }

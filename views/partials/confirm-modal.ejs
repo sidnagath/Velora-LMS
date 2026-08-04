@@ -77,7 +77,7 @@
       _pendingCb   = null;
     };
 
-    document.getElementById('confirmModalOkBtn').addEventListener('click', function () {
+    document.getElementById('confirmModalOkBtn').onclick = function () {
       if (_pendingForm) {
         // Remove the onsubmit guard so it submits cleanly
         _pendingForm.onsubmit = null;
@@ -86,7 +86,7 @@
         _pendingCb();
       }
       closeConfirmModal();
-    });
+    };
 
     // Close on Escape
     document.addEventListener('keydown', function (e) {

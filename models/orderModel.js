@@ -68,9 +68,27 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed", "cancelled"],
+      enum: ["pending", "paid", "failed", "cancelled", "refunded"],
       default: "pending"
     },
+    refundStatus:{
+      type: String,
+      enum: ["pending","approved","rejected"],
+      default: null
+    },
+    refundReason:{
+      type: String,
+      default: null
+    },
+    refundRequestedAt:{
+    type: Date,
+    default: null
+    },
+    refundProcessedAt:{
+    type: Date,
+    default: null
+    },
+
     failureReason: {
       type: String,
       default: null

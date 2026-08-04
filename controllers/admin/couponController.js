@@ -119,6 +119,7 @@ exports.postAdminEditCoupon = async (req, res) => {
           minOrderValue: req.body.minOrderValue || "",
           maxDiscount: req.body.maxDiscountAmount || "",
           expiryDate: req.body.expiryDate || "",
+          usageLimit:req.body.usageLimit || "",
           status: req.body.status || "active",
           description: req.body.code || "this promotional code"
         }

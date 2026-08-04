@@ -99,6 +99,9 @@ router.post('/admin-courses/:courseId/toggle-status', noCache, isAdmin, courseCo
 const orderController = require("../controllers/admin/orderController");
 router.get("/admin-orders", noCache, isAdmin, orderController.getAdminOrders);
 router.get("/admin-orders/:id", noCache, isAdmin, orderController.getAdminOrderDetails);
+router.put("/admin-orders/:id/status", noCache, isAdmin, orderController.updateOrderStatus);
+router.post("/admin-orders/:id/refund/approve", noCache, isAdmin, orderController.approveRefund);
+router.post("/admin-orders/:id/refund/reject", noCache, isAdmin, orderController.rejectRefund);
 
 //Coupons
 router.get("/admin-coupons", noCache, isAdmin, couponController.getAdminCoupons);

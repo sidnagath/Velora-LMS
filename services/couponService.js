@@ -91,7 +91,8 @@ class CouponService{
       const now = new Date();
       const coupons = await Coupon.find({
         status: "active",
-        expiryDate: { $gt: now }
+        expiryDate: { $gt: now },
+        $expr: { $lt: ["$usageCount", "$usageLimit"] }
       }).sort({ createdAt: -1 }).lean();
 
       return { success: true, coupons };
@@ -115,6 +116,7 @@ class CouponService{
         discountValue,
         minOrderValue,
         maxDiscountAmount,
+        usageLimit,
         expiryDate,
         status,
       } = body;
@@ -127,6 +129,7 @@ class CouponService{
       discountValue = Number(discountValue);
       minOrderValue = Number(minOrderValue) || 0;
       maxDiscountAmount = Number(maxDiscountAmount) || 0;
+      let rawUsageLimit = body.usageLimit;
       status = status?.trim() || "active";
 
       const formData = {
@@ -135,6 +138,7 @@ class CouponService{
         discountValue,
         minOrderValue,
         maxDiscountAmount,
+        usageLimit: rawUsageLimit,
         expiryDate,
         status,
       };
@@ -163,8 +167,12 @@ class CouponService{
         errors.discountValue = "Discount value must be greater than 0";
       }
 
-      if (discountType === "percentage" && discountValue > 100) {
-        errors.discountValue = "Percentage discount cannot exceed 100%";
+      if (discountType === "percentage" && discountValue >= 100) {
+        errors.discountValue = "Percentage discount must be less than 100%";
+      }
+
+      if (discountType === "flat" && minOrderValue > 0 && discountValue >= minOrderValue) {
+        errors.discountValue = "Flat discount must be less than the minimum order value";
       }
 
       if (isNaN(minOrderValue) || minOrderValue <= 0) {
@@ -192,6 +200,21 @@ class CouponService{
         errors.status = "Invalid status";
       }
 
+      if (!rawUsageLimit || rawUsageLimit.toString().trim() === "") {
+        errors.usageLimit = "Usage Limit is required";
+      } else {
+        const num = Number(rawUsageLimit);
+        if (isNaN(num) || num <= 0) {
+          errors.usageLimit = "Usage Limit must be greater than 0";
+        } else if (num > 100) {
+          errors.usageLimit = "Usage Limit cannot exceed more than 100";
+        } else if (!Number.isInteger(num)) {
+          errors.usageLimit = "Usage Limit must be a whole number";
+        } else {
+          usageLimit = num;
+        }
+      }
+     
       if (Object.keys(errors).length > 0) {
         return { success: false, errors, formData };
       }
@@ -202,6 +225,7 @@ class CouponService{
         discountValue, 
         minOrderValue,
         maxDiscount: maxDiscountAmount,
+        usageLimit,
         expiryDate,
         status
       });
@@ -239,7 +263,8 @@ class CouponService{
         minOrderValue,
         maxDiscountAmount,
         expiryDate,
-        status,
+        usageLimit,
+        status
       } = body;
 
       // ===========================
@@ -250,6 +275,7 @@ class CouponService{
       discountValue = Number(discountValue);
       minOrderValue = Number(minOrderValue) || 0;
       maxDiscountAmount = Number(maxDiscountAmount) || 0;
+      let rawUsageLimit = body.usageLimit;
       status = status?.trim() || "active";
 
       const formData = {
@@ -259,6 +285,7 @@ class CouponService{
         minOrderValue,
         maxDiscountAmount,
         expiryDate,
+        usageLimit: rawUsageLimit,
         status,
       };
 
@@ -295,8 +322,12 @@ class CouponService{
         errors.discountValue = "Discount value must be greater than 0";
       }
 
-      if (discountType === "percentage" && discountValue > 100) {
-        errors.discountValue = "Percentage discount cannot exceed 100%";
+      if (discountType === "percentage" && discountValue >= 100) {
+        errors.discountValue = "Percentage discount must be less than 100%";
+      }
+
+      if (discountType === "flat" && minOrderValue > 0 && discountValue >= minOrderValue) {
+        errors.discountValue = "Flat discount must be less than the minimum order value";
       }
 
       if (isNaN(minOrderValue) || minOrderValue <= 0) {
@@ -329,6 +360,21 @@ class CouponService{
         errors.status = "Invalid status";
       }
 
+      if (!rawUsageLimit || rawUsageLimit.toString().trim() === "") {
+        errors.usageLimit = "Usage Limit is required";
+      } else {
+        const num = Number(rawUsageLimit);
+        if (isNaN(num) || num <= 0) {
+          errors.usageLimit = "Usage Limit must be greater than 0";
+        } else if (num > 100) {
+          errors.usageLimit = "Usage Limit cannot exceed more than 100";
+        } else if (!Number.isInteger(num)) {
+          errors.usageLimit = "Usage Limit must be a whole number";
+        } else {
+          usageLimit = num;
+        }
+      }
+
       if (Object.keys(errors).length > 0) {
         return { success: false, errors, formData };
       }
@@ -339,7 +385,14 @@ class CouponService{
        coupon.minOrderValue = minOrderValue;
        coupon.maxDiscount = maxDiscountAmount;
        coupon.expiryDate = expiryDate;
-       coupon.status = status;
+       coupon.usageLimit=usageLimit;
+       
+       // Ensure status goes inactive if limit is reduced below current usage
+       if (status === "active" && coupon.usageCount >= usageLimit) {
+         coupon.status = "inactive";
+       } else {
+         coupon.status = status;
+       }
 
       await coupon.save();
 

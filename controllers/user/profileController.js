@@ -1,6 +1,9 @@
 const cartService = require('../../services/cartService');
 const profileService = require('../../services/profileService');
 const courseService = require('../../services/courseService');
+const couponService = require('../../services/couponService');
+const walletService=require('../../services/walletService');
+
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -123,7 +126,6 @@ exports.getMyCoupons = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
     const cartCount = await cartService.getCartCount(req.session.user?.id);
-    const couponService = require('../../services/couponService');
     const result = await couponService.getActiveCoupons();
 
     if (!user) {
@@ -144,6 +146,44 @@ exports.getMyCoupons = async (req, res) => {
     return res.status(500).send(err.stack || err.toString());
   }
 };
+
+
+exports.getWallet= async(req,res)=>{
+  try{
+  
+    const user=await profileService.getUserById(req.session.user?.id);
+    const cartCount = await cartService.getCartCount(req.session.user?.id);
+    const result= await walletService.getWallet(req.session.user?.id);
+
+
+      if (!user) {
+      return res.render("pages/user/profile/wallet", {
+        title: "Velora - Wallet",
+        isLoggedIn: true,
+        user: null,
+        errors: { general: "User not found" },
+        formData: {},
+      });
+    }
+
+    if(!result.success){
+     return res.redirect("user-profile");
+    }
+
+    return res.render("pages/user/profile/wallet",{
+      title:"Velora - Wallet",
+      isLoggedIn:true,
+      user,
+      errors:{},
+      formData:{},
+      cartCount: cartCount.success ? cartCount.count : 0,
+      wallet:result.wallet
+    });
+  }catch(err){
+   console.error(err);
+   return res.status(500).send(err.stack || err.toString());
+  }
+}
 
 exports.postUpdateAvatar = async (req, res) => {
   try {

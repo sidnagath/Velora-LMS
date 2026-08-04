@@ -68,13 +68,20 @@ router.post("/api/verify-payment", isUser, ensureActiveUser, checkoutController.
 router.get("/payment-success/:orderId", noCache, isUser, ensureActiveUser, checkoutController.getPaymentSuccess);
 
 router.get("/user-orders", noCache, isUser, ensureActiveUser, userOrderController.getUserOrders);
+router.get("/user-orders/:id/invoice", noCache, isUser, ensureActiveUser, userOrderController.downloadInvoice);
+router.post("/user-orders/:id/refund", noCache, isUser, ensureActiveUser, userOrderController.refund)
+
 router.post("/payment/cancel", isUser, ensureActiveUser, userOrderController.cancelPayment);
 router.post("/payment/failed", isUser, ensureActiveUser, userOrderController.failPayment);
 router.post("/api/retry-payment", isUser, ensureActiveUser, userOrderController.retryPayment);
 
-router.get("/user-profile/my-coupons", noCache, isUser, ensureActiveUser, profileController.getMyCoupons);
+router.get("/user-coupons", noCache, isUser, ensureActiveUser, profileController.getMyCoupons);
 router.get("/my-courses", noCache, isUser, ensureActiveUser, courseController.getMyCourses);
 router.get("/user-courses", noCache, isUser, ensureActiveUser, courseController.getCourses);
+
+
+router.get("/user-wallet",noCache, isUser, ensureActiveUser, profileController.getWallet);
+
 
 module.exports=router;
 

@@ -210,7 +210,7 @@
           <span>-₹<%= calcCourseDiscount.toFixed(2) %></span>
         </div>
 
-        <div id="couponDiscountRow" style="display: <%= calcCouponDiscount > 0 ? 'flex' : 'none' %>; justify-content: space-between; margin-bottom: 1.5rem; color: #0B5ED7; font-size: 0.95rem; font-weight: 600;">
+        <div id="couponDiscountRow" style="display: <%= calcCouponDiscount > 0 ? 'flex' : 'none' %>; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; color: #0B5ED7; font-size: 0.95rem; font-weight: 600;">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             Coupon Discount <span id="appliedCouponCode" style="background-color: #e8f0fe; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;"></span>
           </div>
@@ -221,7 +221,7 @@
         <div style="margin-bottom: 2rem;">
           <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Select a Coupon</label>
           <div style="display: flex; background-color: #f3f4f6; border-radius: 1.5rem; padding: 0.25rem;">
-            <select id="couponSelect" style="background: transparent; border: none; outline: none; padding: 0.75rem 1rem; flex-grow: 1; font-weight: 600; font-size: 0.95rem; color: #111827; cursor: pointer; appearance: none;">
+            <select id="couponSelect" <%= calcCouponDiscount > 0 ? 'disabled' : '' %> style="background: transparent; border: none; outline: none; padding: 0.75rem 1rem; flex-grow: 1; font-weight: 600; font-size: 0.95rem; color: #111827; cursor: pointer; appearance: none;">
               <option value="">-- Choose a Coupon --</option>
               <% if (typeof coupons !== 'undefined' && coupons.length > 0) { %>
                 <% coupons.forEach(c => { %>
@@ -231,10 +231,14 @@
                 <% }) %>
               <% } %>
             </select>
-            <button type="button" id="applyCouponBtn" style="background-color: #e5e7eb; color: #111827; font-weight: 700; border: none; border-radius: 1.25rem; padding: 0 1.5rem; cursor: pointer; transition: background-color 0.2s;">Apply</button>
+            <button type="button" id="applyCouponBtn" style="background-color: <%= calcCouponDiscount > 0 ? '#fee2e2' : '#e5e7eb' %>; color: <%= calcCouponDiscount > 0 ? '#dc2626' : '#111827' %>; font-weight: 700; border: none; border-radius: 1.25rem; padding: 0 1.5rem; cursor: pointer; transition: background-color 0.2s;">
+              <%= calcCouponDiscount > 0 ? 'Remove Coupon' : 'Apply' %>
+            </button>
           </div>
           <div id="couponMessage" style="margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600; text-align: center; display: none;"></div>
         </div>
+
+
 
         <div style="border-top: 2px dashed #f3f4f6; margin-bottom: 1.5rem;"></div>
 
@@ -276,8 +280,33 @@
       
       // Keep track of the final total in JS to avoid parsing DOM strings
       let currentTotal = amountBeforeCoupon;
+
       
       applyBtn.addEventListener("click", async () => {
+        if (applyBtn.textContent.trim() === "Remove Coupon") {
+          discountRow.style.display = "none";
+          
+          // Recalculate total
+          currentTotal = amountBeforeCoupon;
+          finalTotalAmount.textContent = "₹" + currentTotal.toFixed(2);
+          
+          couponSelect.value = "";
+          couponSelect.disabled = false;
+          
+          const hiddenInput = document.getElementById("hiddenAppliedCoupon");
+          if (hiddenInput) hiddenInput.value = "";
+          
+          applyBtn.textContent = "Apply";
+          applyBtn.style.backgroundColor = "#e5e7eb";
+          applyBtn.style.color = "#111827";
+          
+          msgDiv.style.display = "block";
+          msgDiv.style.color = "#6b7280";
+          msgDiv.textContent = "Coupon removed.";
+          setTimeout(() => { msgDiv.style.display = "none"; }, 3000);
+          return;
+        }
+
         const couponId = couponSelect.value;
         if (!couponId) {
           msgDiv.style.display = "block";
@@ -324,6 +353,12 @@
             }
             hiddenInput.value = data.couponId;
             
+            // Transform Apply button into Remove Coupon button
+            applyBtn.textContent = "Remove Coupon";
+            applyBtn.style.backgroundColor = "#fee2e2";
+            applyBtn.style.color = "#dc2626";
+            couponSelect.disabled = true;
+            
           } else {
             msgDiv.style.color = "#dc2626";
             msgDiv.textContent = data.message;
@@ -341,7 +376,9 @@
           msgDiv.style.color = "#dc2626";
           msgDiv.textContent = "An error occurred. Please try again.";
         } finally {
-          applyBtn.textContent = "Apply";
+          if (applyBtn.textContent.trim() !== "Remove Coupon") {
+            applyBtn.textContent = "Apply";
+          }
           applyBtn.disabled = false;
         }
       });
@@ -373,6 +410,11 @@
             alert(orderData.message || "Failed to create order");
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            return;
+          }
+
+          if (orderData.data && orderData.data.bypassRazorpay) {
+            window.location.href = "/payment-success/" + orderData.data.dbOrderId;
             return;
           }
 
