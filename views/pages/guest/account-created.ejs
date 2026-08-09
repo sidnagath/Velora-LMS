@@ -20,7 +20,7 @@
                 Your account has been created successfully.<br>You can now log in with your credentials.
             </p>
 
-            <a href="/login" class="btn-primary w-full text-center block mb-6">Go to Login</a>
+            <a href="/auth/login" class="btn-primary w-full text-center block mb-6">Go to Login</a>
             
             <!-- Redirect Text -->
             <div class="flex items-center justify-center gap-2 text-xs text-gray-400 font-medium tracking-wide">
@@ -34,7 +34,7 @@
 <script>
     // Redirect to login after 3 seconds
     setTimeout(function() {
-        window.location.href = '/login';
+        window.location.href = '/auth/login';
     }, 3000);
 </script>
 

@@ -48,7 +48,7 @@
       <!-- FLASH BANNER -->
       <%- include('../../../partials/admin-banner') %>
 
-      <form action="/admin-courses/<%= course._id %>/publish" method="POST" class="space-y-8">
+      <form id="publishForm" data-course-id="<%= course._id %>" class="space-y-8">
         
         <!-- COURSE PREVIEW CARD -->
         <div class="relative rounded-3xl overflow-hidden bg-blue-900 min-h-[16rem] flex flex-col md:flex-row md:items-center p-8 md:p-12 shadow-2xl">
@@ -219,12 +219,12 @@
 
         <!-- ACTIONS -->
         <div class="flex items-center justify-between pt-6 border-t border-gray-100">
-          <a href="/admin-courses/<%= course._id %>/modules" class="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
+          <a href="/admin/courses/<%= course._id %>/modules" class="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Back to Curriculum
           </a>
           <div class="flex items-center space-x-4">
-            <a href="/admin-courses" class="px-8 py-3.5 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">Save Draft</a>
+            <a href="/admin/courses" class="px-8 py-3.5 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">Save Draft</a>
             <button type="submit" class="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center shadow-lg shadow-blue-200">
               Publish Course
               <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -286,6 +286,31 @@
     
     // Trigger currency select initial symbol
     currencySelect.dispatchEvent(new Event('change'));
+  });
+
+  document.getElementById('publishForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const courseId = this.dataset.courseId;
+    const formData = new FormData(this);
+    // FormData will collect all inputs
+    try {
+      const response = await fetch(`/api/v1/admin/courses/${courseId}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData.entries()))
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        Swal.fire('Success', data.message, 'success').then(() => {
+          window.location.href = '/admin/courses';
+        });
+      } else {
+        Swal.fire('Error', data.message || 'Action failed', 'error');
+      }
+    } catch (error) {
+      Swal.fire('Error', 'An unexpected error occurred.', 'error');
+    }
   });
 </script>
 

@@ -96,7 +96,7 @@
 
       <h3 style="font-size: 1.125rem; font-weight: 700; color: #111827; margin-bottom: 1.5rem;">Select Payment Method</h3>
 
-      <form id="checkout-form" action="/user-checkout/process" method="POST">
+      <form id="checkout-form" action="/api/v1/user/order" method="POST">
         
         <!-- RAZORPAY -->
         <label class="payment-card <%= typeof selectedPaymentMethod !== 'undefined' && selectedPaymentMethod === 'razorpay' ? 'active' : 'active' %>">
@@ -170,8 +170,12 @@
             });
           }
           
-          let calcTotal = calcSubtotal - calcCourseDiscount - calcCouponDiscount;
-          if (calcTotal < 0) calcTotal = 0;
+          let calcCartSubtotal = calcSubtotal - calcCourseDiscount;
+          if (calcCouponDiscount > calcCartSubtotal) calcCouponDiscount = calcCartSubtotal;
+          let calcTaxable = calcCartSubtotal - calcCouponDiscount;
+          if (calcTaxable < 0) calcTaxable = 0;
+          let calcGst = calcTaxable * 0.18;
+          let calcTotal = calcTaxable + calcGst;
         %>
 
         <!-- Cart Items Loop -->
@@ -242,6 +246,18 @@
 
         <div style="border-top: 2px dashed #f3f4f6; margin-bottom: 1.5rem;"></div>
 
+        <!-- GST Breakdown (NEW) -->
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #4b5563; font-size: 0.95rem;">
+          <span>Taxable Amount</span>
+          <span id="taxableAmount" style="font-weight: 600;">₹<%= calcTaxable.toFixed(2) %></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: #4b5563; font-size: 0.95rem;">
+          <span>GST (18%)</span>
+          <span id="gstAmount" style="font-weight: 600;">₹<%= calcGst.toFixed(2) %></span>
+        </div>
+        
+        <div style="border-top: 2px dashed #f3f4f6; margin-bottom: 1.5rem;"></div>
+
         <!-- Total -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
           <span style="font-size: 1.125rem; font-weight: 800; color: #111827;">Total Amount</span>
@@ -287,8 +303,13 @@
           discountRow.style.display = "none";
           
           // Recalculate total
-          currentTotal = amountBeforeCoupon;
+          const newTaxable = amountBeforeCoupon;
+          const newGst = newTaxable * 0.18;
+          currentTotal = newTaxable + newGst;
+          
           finalTotalAmount.textContent = "₹" + currentTotal.toFixed(2);
+          document.getElementById("taxableAmount").textContent = "₹" + newTaxable.toFixed(2);
+          document.getElementById("gstAmount").textContent = "₹" + newGst.toFixed(2);
           
           couponSelect.value = "";
           couponSelect.disabled = false;
@@ -319,7 +340,7 @@
         applyBtn.disabled = true;
         
         try {
-          const res = await fetch("/api/user-checkout/apply-coupon", {
+          const res = await fetch("/api/v1/user/checkout/coupon", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             // Pass the amount after course discounts to the backend for coupon validation
@@ -338,6 +359,8 @@
             codeSpan.textContent = data.couponCode;
             discountAmountSpan.textContent = "-₹" + data.discountAmount.toFixed(2);
             finalTotalAmount.textContent = "₹" + data.finalTotal.toFixed(2);
+            document.getElementById("taxableAmount").textContent = "₹" + data.taxableAmount.toFixed(2);
+            document.getElementById("gstAmount").textContent = "₹" + data.gstAmount.toFixed(2);
             
             // Update JS variable
             currentTotal = data.finalTotal;
@@ -399,7 +422,7 @@
           const hiddenInput = document.getElementById("hiddenAppliedCoupon");
           const appliedCouponId = hiddenInput ? hiddenInput.value : null;
 
-          const orderRes = await fetch("/api/create-order", {
+          const orderRes = await fetch("/api/v1/user/order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ appliedCouponId })
@@ -407,14 +430,14 @@
           
           const orderData = await orderRes.json();
           if (!orderData.success) {
-            alert(orderData.message || "Failed to create order");
+            Swal.fire({ text: orderData.message || "Failed to create order", icon: "error" });
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
             return;
           }
 
-          if (orderData.data && orderData.data.bypassRazorpay) {
-            window.location.href = "/payment-success/" + orderData.data.dbOrderId;
+          if (orderData.bypassRazorpay) {
+            window.location.href = "/user/payment-success/" + orderData.dbOrderIds[0];
             return;
           }
 
@@ -428,23 +451,23 @@
             order_id: orderData.order.id,
             handler: async function (response) {
               // 4. Verify Payment on Backend
-              const verifyRes = await fetch("/api/verify-payment", {
+              const verifyRes = await fetch("/api/v1/user/order/verify", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_signature: response.razorpay_signature,
-                  dbOrderId: orderData.dbOrderId
+                  dbOrderIds: orderData.dbOrderIds
                 })
               });
               
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
                 // Redirect to success page
-                window.location.href = "/payment-success/" + verifyData.orderId;
+                window.location.href = "/user/payment-success/" + verifyData.orderId;
               } else {
-                alert("Payment verification failed. Please contact support.");
+                Swal.fire({ text: "Payment verification failed. Please contact support.", icon: "error" });
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
               }
@@ -452,12 +475,12 @@
             modal: {
               ondismiss: async function() {
                 // Handle dismiss
-                await fetch("/payment/cancel", {
+                await fetch("/api/v1/user/payment/cancel", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ dbOrderId: orderData.dbOrderId })
                 });
-                alert("Payment cancelled.");
+                Swal.fire({ text: "Payment cancelled.", icon: "warning" });
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
               }
@@ -473,9 +496,9 @@
           };
 
           const rzp = new Razorpay(options);
-          rzp.on('payment.failed', async function (response){
+           rzp.on('payment.failed', async function (response){
              // Handle payment failure
-             await fetch("/payment/failed", {
+             await fetch("/api/v1/user/payment/failed", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -483,7 +506,7 @@
                   reason: response.error.description 
                 })
              });
-             alert("Payment Failed: " + response.error.description);
+             Swal.fire({ text: "Payment Failed: " + response.error.description, icon: "error" });
              submitBtn.innerHTML = originalText;
              submitBtn.disabled = false;
           });
@@ -491,7 +514,7 @@
           
         } catch (error) {
           console.error(error);
-          alert("An error occurred during checkout.");
+          Swal.fire({ text: "An error occurred during checkout.", icon: "error" });
           submitBtn.innerHTML = originalText;
           submitBtn.disabled = false;
         }

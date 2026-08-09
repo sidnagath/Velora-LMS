@@ -37,10 +37,10 @@
         <p class="text-xs text-gray-400 mb-8 font-medium">Start exploring and add courses to your cart</p>
         
         <div class="flex flex-col sm:flex-row gap-4 mb-16">
-          <a href="/user-courses" class="bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors text-sm text-center">
+          <a href="/user/courses" class="bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors text-sm text-center">
             Browse Courses
           </a>
-          <a href="/user-wishlist" class="bg-transparent hover:bg-gray-100 text-[#0B5ED7] font-bold py-3.5 px-8 rounded-full transition-colors text-sm text-center">
+          <a href="/user/wishlist" class="bg-transparent hover:bg-gray-100 text-[#0B5ED7] font-bold py-3.5 px-8 rounded-full transition-colors text-sm text-center">
             View Wishlist
           </a>
         </div>
@@ -170,7 +170,7 @@
       </style>
 
       <!-- Search Bar -->
-      <form action="/user-cart" method="GET" class="w-full mb-8 flex gap-3" style="position: relative;">
+      <form action="/user/cart" method="GET" class="w-full mb-8 flex gap-3" style="position: relative;">
           <div class="flex-grow" style="position: relative;">
               <svg
                 class="text-gray-400"
@@ -214,14 +214,14 @@
                 <div class="cart-card-fixed">
                   
                   <!-- Delete Icon -->
-                  <form action="/user-cart/remove/<%= course._id %>" method="POST" class="cart-card-trash">
+                  <form action="/api/v1/user/cart/<%= course._id %>" onsubmit="handleCartAction(event, 'DELETE')" class="cart-card-trash">
                     <button type="submit" class="text-gray-400 hover:text-red-500 transition-colors border-0 bg-transparent flex items-center justify-center cursor-pointer p-0">
                       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 20px; height: 20px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                   </form>
 
                   <!-- Move to Wishlist Button (Desktop & Mobile) -->
-                  <form action="/user-cart/move-to-wishlist/<%= course._id %>" method="POST" class="cart-card-wishlist">
+                  <form action="/api/v1/user/cart/<%= course._id %>/wishlist" onsubmit="handleCartAction(event, 'POST')" class="cart-card-wishlist">
                     <button type="submit" class="w-full sm:w-auto bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-semibold py-2 px-5 rounded-lg text-[13px] transition-colors shadow-sm whitespace-nowrap border-0 cursor-pointer" style="display: block; width: 100%;">
                       Move back to Wishlist
                     </button>
@@ -229,7 +229,7 @@
 
                   <!-- 1. Thumbnail -->
                   <div class="cart-card-thumb">
-                    <a href="/user-courses/<%= course._id %>">
+                    <a href="/user/courses/<%= course._id %>">
                       <img src="<%= course.thumbnail ? course.thumbnail : '/images/placeholder.jpg' %>" alt="<%= course.title %>" class="w-full h-full object-cover">
                     </a>
                   </div>
@@ -237,7 +237,7 @@
                   <!-- 2. Course Details -->
                   <div class="cart-card-details">
                       <h3 class="font-bold text-gray-900 mb-0.5 leading-snug truncate" style="font-size: 18px;">
-                        <a href="/user-courses/<%= course._id %>" class="hover:text-blue-600 transition-colors"><%= course.title %></a>
+                        <a href="/user/courses/<%= course._id %>" class="hover:text-blue-600 transition-colors"><%= course.title %></a>
                       </h3>
                       <p class="text-gray-500 mb-1.5 truncate" style="font-size: 14px;">by <%= course.instructor || 'Unknown Instructor' %></p>
                       
@@ -291,7 +291,7 @@
               <span class="text-[28px] font-extrabold text-[#0B5ED7]">₹<%= total.toFixed(2) %></span>
             </div>
             
-            <a href="/user-checkout" class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-4 rounded-xl text-base flex items-center justify-center transition-colors mb-4">
+            <a href="/user/checkout" class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-4 rounded-xl text-base flex items-center justify-center transition-colors mb-4">
               Checkout
               <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </a>
@@ -308,7 +308,7 @@
             </div>
             <div>
               <h4 class="font-bold text-[#6B46C1] text-sm mb-1">Course Guarantee</h4>
-              <p class="text-gray-600 text-xs leading-relaxed">30-day money-back guarantee on all professional courses.</p>
+              <p class="text-gray-600 text-xs leading-relaxed">5-day money-back guarantee on all professional courses.</p>
             </div>
           </div>
         </div>
@@ -318,5 +318,25 @@
 
   </div>
 </main>
+
+<script>
+async function handleCartAction(e, method) {
+  e.preventDefault();
+  const form = e.target;
+  try {
+    const res = await fetch(form.action, { method });
+    const data = await res.json();
+    if(data.success) {
+      Swal.fire({ icon: 'success', title: 'Success', text: data.message }).then(() => {
+        window.location.reload();
+      });
+    } else {
+      Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+    }
+  } catch(err) {
+    Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });
+  }
+}
+</script>
 
 <%- include('../../../partials/footer') %>

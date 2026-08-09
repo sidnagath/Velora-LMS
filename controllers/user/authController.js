@@ -4,7 +4,7 @@ exports.getUserLogout = (req, res) => {
   req.session.save((err) => {
     if (err) {
       console.log(err);
-      return res.redirect("/login");
+      return res.redirect("/auth/login");
     }
 
     res.setHeader(
@@ -12,6 +12,6 @@ exports.getUserLogout = (req, res) => {
       "no-store, no-cache, must-revalidate, private"
     );
     req.flash("success", "Logged out successfully.");
-    res.redirect("/login");
+    res.redirect("/auth/login");
   });
 };

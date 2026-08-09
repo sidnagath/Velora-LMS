@@ -6,6 +6,8 @@ const Lesson = require('../models/lessonModel');
 const Resource = require('../models/resourceModel');
 const User = require('../models/userModel');
 const cloudinaryUtil = require('../config/cloudinary');
+const Enrollment=require('../models/enrollmentModel');
+
 
 const calculateTotalDuration = (lessons) => {
   let totalMinutes = 0;
@@ -26,13 +28,46 @@ const calculateTotalDuration = (lessons) => {
 };
 
 const formatDuration = (totalMinutes) => {
-  if (!totalMinutes || totalMinutes <= 0) return '0 min';
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  // Handle decimal minutes like 32.5 gracefully
-  if (hours === 0) return `${minutes} min`;
-  if (minutes === 0) return `${hours}h`;
-  return `${hours}h ${minutes}m`;
+  if (!totalMinutes || totalMinutes <= 0) return '00:00';
+  let h = Math.floor(totalMinutes / 60);
+  let m = Math.floor(totalMinutes % 60);
+  let s = Math.round((totalMinutes - Math.floor(totalMinutes)) * 60);
+  
+  if (s === 60) {
+    s = 0;
+    m += 1;
+  }
+  if (m >= 60) {
+    m -= 60;
+    h += 1;
+  }
+  
+  if (h > 0) {
+    return `${h}h ${m}m ${s}s`;
+  }
+  return `${m}m ${s}s`;
+};
+
+const formatLessonDurationAsMMSS = (durationRaw) => {
+  if (!durationRaw) return '00:00';
+  const raw = String(durationRaw).trim();
+  if (raw.includes(':')) {
+    const parts = raw.split(':');
+    if (parts.length === 3) return raw;
+    if (parts.length === 2) return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+    return raw;
+  }
+  const n = parseFloat(raw);
+  if (isNaN(n) || n < 0) return '00:00';
+  let minutes = Math.floor(n);
+  let seconds = Math.round((n - minutes) * 60);
+  
+  if (seconds === 60) {
+    seconds = 0;
+    minutes += 1;
+  }
+  
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 exports.getAdminCoursesList = async (query) => {
   try {
@@ -352,15 +387,20 @@ exports.getAdminCoursePublishData = async (courseId) => {
       return { success: false, errors: { general: "Course not found" } };
     }
 
-    const modules = await Module.find({ courseId });
-    const lessons = await Lesson.find({ moduleId: { $in: modules.map(m => m._id) } });
+    const modules = await Module.find({ courseId }).lean();
+    const lessons = await Lesson.find({ moduleId: { $in: modules.map(m => m._id) } }).lean();
+
+    const formattedLessons = lessons.map(lesson => ({
+      ...lesson,
+      durationFormatted: formatLessonDurationAsMMSS(lesson.duration)
+    }));
 
     const totalMinutes = calculateTotalDuration(lessons);
     const totalDurationFormatted = formatDuration(totalMinutes);
 
     const canPublish = modules.length > 0 && lessons.length > 0 && course.title && course.description && course.thumbnail && course.trailer;
 
-    return { success: true, data: { course, modules, lessons, canPublish, totalDurationFormatted } };
+    return { success: true, data: { course, modules, lessons: formattedLessons, canPublish, totalDurationFormatted } };
   } catch (err) {
     console.log(err);
     return { success: false, errors: { general: "Failed to load course publish data" } };
@@ -556,12 +596,18 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
     const modulesWithLessons = await Promise.all(
       modules.map(async (mod) => {
         const lessons = await Lesson.find({ moduleId: mod._id }).sort({ order: 1 }).lean();
-        allLessons = allLessons.concat(lessons);
         
-        const moduleMinutes = calculateTotalDuration(lessons);
+        const formattedLessons = lessons.map(lesson => ({
+          ...lesson,
+          durationFormatted: formatLessonDurationAsMMSS(lesson.duration)
+        }));
+
+        allLessons = allLessons.concat(formattedLessons);
+        
+        const moduleMinutes = calculateTotalDuration(formattedLessons);
         const moduleDurationFormatted = formatDuration(moduleMinutes);
         
-        return { ...mod, lessons, moduleDurationFormatted };
+        return { ...mod, lessons: formattedLessons, moduleDurationFormatted };
       })
     );
 
@@ -602,12 +648,174 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
 exports.getMyCoursesData = async (userId) => {
   try {
     const Enrollment = require('../models/enrollmentModel');
-    const enrollments = await Enrollment.find({ userId })
+    const enrollments = await Enrollment.find({ 
+      userId,
+      status: { $in: ['active', 'completed'] }
+    })
       .populate('courseId')
       .sort({ createdAt: -1 });
     return { success: true, enrollments };
   } catch (err) {
     console.error(err);
     return { success: false, message: "Error fetching user courses" };
+  }
+};
+
+
+exports.myCourseDetails = async (courseId, userId, lessonId) => {
+    try {
+const enrollment= await Enrollment.findOne({userId,courseId,status: { $in: ["active", "completed"] }}).lean();
+
+if(!enrollment){
+  return {success:false,
+    errors:{ general:"Course not found" }
+  }
+}
+    const course = await Course.findOne({   
+    _id: courseId,
+    isDeleted: false,
+    status: "published"}).populate("category").lean();
+
+
+    if (!course) {
+      return { success: false, errors: { general: "Course not found" } };
+    }
+
+    const modules = await Module.find({ courseId }).sort({ order: 1 }).lean();
+
+    if (modules.length === 0) {
+      return { success: false, errors: { general: "Modules not found" } };
+    }
+
+    const modulesWithLessons = await Promise.all(
+      modules.map(async (module) => {
+        let lessons = await Lesson.find({
+            moduleId: module._id
+        }).sort({ order: 1 }).lean();
+
+        lessons = lessons.map(lesson => ({
+          ...lesson,
+          durationFormatted: formatLessonDurationAsMMSS(lesson.duration)
+        }));
+
+        return {
+            ...module,
+            lessons
+        };
+      })
+    );
+
+    // Flatten in correct sequence after Promise.all resolves
+    const allLessons = modulesWithLessons.reduce((acc, module) => acc.concat(module.lessons), []);
+
+
+let activeLesson = null;
+let previousLesson = null;
+let nextLesson = null;
+let resources = [];
+
+if (allLessons.length > 0) {
+  if(lessonId){
+    activeLesson = allLessons.find(lesson => lesson._id.toString() === lessonId);
+  }
+  if(!activeLesson){
+    activeLesson = allLessons[0];
+  }
+
+  if (activeLesson) {
+    let activeIndex = allLessons.findIndex(lesson => lesson._id.toString() === activeLesson._id.toString());
+    previousLesson = activeIndex > 0 ? allLessons[activeIndex - 1] : null;
+    nextLesson = activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
+
+    resources = await Resource.find({ lessonId: activeLesson._id }).lean();
+  }
+}
+
+const totalLessons = allLessons.length;
+
+ return {
+            success: true,
+            data: {
+              course,
+              modules: modulesWithLessons,
+              enrollment,
+              completedLessons: (enrollment.completedLessons || []).map(id => id.toString()),
+              ...(activeLesson && { activeLesson }),
+              ...(previousLesson && { previousLesson }),
+              ...(nextLesson && { nextLesson }),
+              resources,
+              totalLessons
+            }
+          };
+
+       
+
+
+}catch (error) {
+        console.log(error);
+        return {
+            success: false,
+            errors: {
+                general: "Failed to load course"
+            }
+        };
+    }
+};
+
+exports.markLessonComplete = async (userId, courseId, lessonId) => {
+  try {
+
+    const enrollment = await Enrollment.findOne({ userId, courseId });
+    if (!enrollment) return { success: false, message: "Enrollment not found" };
+
+    // $addToSet to add the lessonId to completedLessons without duplicates
+    await Enrollment.updateOne(
+      { _id: enrollment._id },
+      { $addToSet: { completedLessons: lessonId } }
+    );
+
+    // Calculate progress
+    const modules = await Module.find({ courseId }).lean();
+    const moduleIds = modules.map(m => m._id);
+    const totalLessons = await Lesson.countDocuments({ moduleId: { $in: moduleIds } });
+
+    // Fetch updated enrollment to get accurate completed count
+    const updatedEnrollment = await Enrollment.findById(enrollment._id);
+    const completedCount = updatedEnrollment.completedLessons.length;
+    
+    let progress = 0;
+    if (totalLessons > 0) {
+      progress = Math.round((completedCount / totalLessons) * 100);
+    }
+    
+    updatedEnrollment.progress = progress;
+    if (progress === 100) {
+       updatedEnrollment.status = "completed";
+    }
+    await updatedEnrollment.save();
+
+    return { success: true, progress, completedCount, totalLessons };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Failed to mark lesson complete" };
+  }
+};
+
+exports.validateCertificateAccess = async (userId, courseId) => {
+  try {
+    const enrollment = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } }).populate('courseId', 'title category').lean();
+    
+    if (!enrollment) {
+      return { success: false, message: "Enrollment not found." };
+    }
+    
+    if (enrollment.progress !== 100) {
+      return { success: false, message: "Course must be 100% complete to get a certificate." };
+    }
+    
+    return { success: true, data: { enrollment, course: enrollment.courseId } };
+  } catch (error) {
+    console.error('Error validating certificate access:', error);
+    return { success: false, message: "Failed to validate certificate." };
   }
 };

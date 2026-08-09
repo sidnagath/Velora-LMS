@@ -67,15 +67,9 @@ exports.postAdminAddCategory = async (req, res) => {
   const result = await categoryService.createCategory(req.body, req.file, req.fileValidationError);
 
   if (result.success) {
-    res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + result.name + "' created successfully."));
+    return res.status(201).json({ success: true, message: `Category '${result.name}' created successfully.` });
   } else {
-    res.render("pages/admin/categories/add-category", {
-      title: "Velora - Add Category",
-      isLoggedIn: true,
-      isAdmin: true,
-      errors: result.errors,
-      formData: result.formData || req.body
-    });
+    return res.status(400).json({ success: false, message: 'Failed to create category', errors: result.errors, formData: result.formData || req.body });
   }
 };
 
@@ -92,7 +86,7 @@ exports.getAdminEditCategory = async (req, res) => {
       formData: {}
     });
   } else {
-    res.redirect("/admin-categories");
+    res.redirect("/admin/categories");
   }
 };
 
@@ -100,20 +94,13 @@ exports.postAdminEditCategory = async (req, res) => {
   const result = await categoryService.updateCategory(req.params.categoryId, req.body, req.file, req.fileValidationError);
 
   if (result.success) {
-    res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + result.name + "' updated successfully."));
+    return res.status(200).json({ success: true, message: `Category '${result.name}' updated successfully.` });
   } else if (result.notFound) {
-    res.redirect("/admin-categories");
+    return res.status(404).json({ success: false, message: 'Category not found' });
   } else if (result.generalError) {
-    res.redirect("/admin-categories");
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   } else {
-    res.render("pages/admin/categories/edit-category", {
-      title: "Velora - Edit Category",
-      isLoggedIn: true,
-      isAdmin: true,
-      category: result.category,
-      errors: result.errors,
-      formData: result.formData
-    });
+    return res.status(400).json({ success: false, message: 'Failed to update category', errors: result.errors, formData: result.formData });
   }
 };
 
@@ -121,10 +108,10 @@ exports.postAdminDeleteCategory = async (req, res) => {
   const result = await categoryService.deleteCategory(req.params.categoryId);
 
   if (result.success) {
-    res.redirect("/admin-categories?flashType=success&flashMsg=" + encodeURIComponent("Category '" + result.categoryName + "' deleted successfully."));
+    return res.status(200).json({ success: true, message: `Category '${result.categoryName}' deleted successfully.` });
   } else if (result.hasCourses) {
-    res.redirect("/admin-categories?flashType=error&flashMsg=" + encodeURIComponent("Cannot delete '" + result.categoryName + "' — it is assigned to " + result.courseCount + " course(s)."));
+    return res.status(400).json({ success: false, message: `Cannot delete '${result.categoryName}' — it is assigned to ${result.courseCount} course(s).` });
   } else {
-    res.redirect("/admin-categories");
+    return res.status(500).json({ success: false, message: 'Failed to delete category.' });
   }
 };

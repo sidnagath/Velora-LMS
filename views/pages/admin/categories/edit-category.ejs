@@ -13,7 +13,7 @@
       <!-- HEADER -->
       <div class="mb-8">
         <div class="flex items-center gap-2 text-sm text-gray-400 mb-3">
-          <a href="/admin-categories" class="hover:text-blue-600 transition-colors">Category Management</a>
+          <a href="/admin/categories" class="hover:text-blue-600 transition-colors">Category Management</a>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           <span class="text-gray-600 font-medium">Edit Category</span>
         </div>
@@ -27,7 +27,7 @@
       </div>
       <% } %>
 
-      <form action="/admin-categories/<%= category._id %>/edit" method="POST" enctype="multipart/form-data">
+      <form id="editCategoryForm" data-id="<%= category._id %>" enctype="multipart/form-data">
 
         <!-- CATEGORY DETAILS CARD -->
         <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm mb-6">
@@ -148,7 +148,7 @@
 
         <!-- FOOTER ACTIONS -->
         <div class="flex items-center justify-between pt-2">
-          <a href="/admin-categories"
+          <a href="/admin/categories"
             class="flex items-center text-gray-500 font-bold hover:text-gray-800 transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
@@ -179,6 +179,37 @@
   }
 </style>
 
+<script>
+  document.getElementById('editCategoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = this.dataset.id;
+    const formData = new FormData(this);
+    
+    // Add cropped image if available
+    const cropper = window.croppers && window.croppers['thumbnailPreview'];
+    if (cropper) {
+      const blob = await new Promise(resolve => cropper.getCroppedCanvas().toBlob(resolve, 'image/jpeg'));
+      if (blob) formData.set('thumbnail', blob, 'thumbnail.jpg');
+    }
+
+    try {
+      const response = await fetch(`/api/v1/admin/categories/${id}`, {
+        method: 'PATCH',
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        Swal.fire({ title: 'Success', text: data.message, icon: 'success' }).then(() => {
+          window.location.href = '/admin/categories';
+        });
+      } else {
+        Swal.fire('Error', data.message || 'Validation failed', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'An unexpected error occurred', 'error');
+    }
+  });
 </script>
 <%- include('../../../partials/cropper-modal') %>
 <%- include('../../../partials/footer') %>

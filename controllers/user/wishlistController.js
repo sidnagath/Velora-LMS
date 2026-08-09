@@ -14,7 +14,7 @@ exports.getWishlistPage = async (req, res) => {
 
     if (!wishlistResult.success) {
       req.flash("error", "Failed to load wishlist.");
-      return res.redirect("/user-profile");
+      return res.redirect("/user/profile");
     }
 
     res.render("pages/user/wishlist/wishlist", {
@@ -28,7 +28,7 @@ exports.getWishlistPage = async (req, res) => {
   } catch (err) {
     console.error(err);
     req.flash("error", "An error occurred.");
-    return res.redirect("/user-profile");
+    return res.redirect("/user/profile");
   }
 };
 
@@ -39,39 +39,30 @@ exports.removeCourse = async (req, res) => {
 
     const result = await wishlistService.removeFromWishlist(userId, courseId);
     if (result.success) {
-      req.flash("success", "Course removed from wishlist.");
+      return res.status(200).json({ success: true, message: "Course removed from wishlist." });
     } else {
-      req.flash("error", "Failed to remove course.");
+      return res.status(400).json({ success: false, message: "Failed to remove course." });
     }
-
-    res.redirect("/user-wishlist");
   } catch (err) {
     console.error(err);
-    req.flash("error", "An error occurred.");
-    res.redirect("/user-wishlist");
+    return res.status(500).json({ success: false, message: "An error occurred." });
   }
 };
 
 exports.moveToCart= async (req,res)=>{
   try{
-   
     const courseId=req.params.courseId;
     const userId=req.session.user?.id;
 
     const result=await wishlistService.moveToCart(userId,courseId);
     if(result.success){
-      req.flash("success", result.message);
+      return res.status(200).json({ success: true, message: result.message });
+    } else {
+      return res.status(400).json({ success: false, message: result.message || "Failed to move course to cart" });
     }
-    else{
-      req.flash("error", result.message || "Failed to move course to cart");
-    }
-
-    res.redirect("/user-wishlist");
-    
   }catch(err){
     console.error(err);
-    req.flash("error","An error occured");
-    res.redirect("/user-wishlist")
+    return res.status(500).json({ success: false, message: "An error occurred." });
   }
 }
 

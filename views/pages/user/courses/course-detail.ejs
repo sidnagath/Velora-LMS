@@ -330,7 +330,7 @@
                               <% } %>
                             </div>
                           </div>
-                          <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.duration ? lesson.duration + ' min' : '10:00' %></span>
+                          <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.durationFormatted || '00:00' %></span>
                         </div>
                       </div>
                     <% }); %>
@@ -355,7 +355,7 @@
         <div class="cd-related-grid">
           <% if (relatedCourses && relatedCourses.length > 0) { %>
             <% relatedCourses.forEach(function(rc) { %>
-              <div class="cd-rc-card" onclick="window.location.href='/user-courses/<%= rc._id %>'">
+              <div class="cd-rc-card" onclick="window.location.href='/user/courses/<%= rc._id %>'">
                 <div class="cd-rc-thumb">
                   <img src="<%= rc.thumbnail || '/placeholder.png' %>" alt="<%= rc.title %>">
                 </div>
@@ -421,7 +421,7 @@
           <% const isEnrolled = typeof enrolledCourseIds !== 'undefined' && enrolledCourseIds?.includes(course._id.toString()) %>
 
           <% if (isEnrolled) { %>
-            <a href="/my-courses" class="cd-btn-enroll" style="background-color: #059669; text-align: center; display: block; text-decoration: none;">
+            <a href="/user/my-courses" class="cd-btn-enroll" style="background-color: #059669; text-align: center; display: block; text-decoration: none;">
               <span class="btn-text" style="color: white;">Continue Learning</span>
             </a>
           <% } else { %>
@@ -507,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
       const courseId = btn.getAttribute("data-course-id");
       try {
-        const response = await fetch("/api/user-wishlist/toggle", {
+        const response = await fetch("/api/v1/user/wishlist/toggle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ courseId })
@@ -525,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg><span class="btn-text">Add to Wishlist</span>`;
           }
         } else {
-          if(data.message === "Please log in first") window.location.href = "/login";
+          if(data.message === "Please log in first") window.location.href = "/auth/login";
         }
       } catch (err) {
         console.error(err);
@@ -539,7 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation();
       const courseId = btn.getAttribute("data-course-id");
       try {
-        const response = await fetch("/api/user-cart/toggle", {
+        const response = await fetch("/api/v1/user/cart/toggle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ courseId })
@@ -555,7 +555,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (textSpan) textSpan.textContent = 'Add to Cart';
           }
         } else {
-          if(data.message === "Please log in first") window.location.href = "/login";
+          if(data.message === "Please log in first") window.location.href = "/auth/login";
         }
       } catch (err) {
         console.error(err);

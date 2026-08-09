@@ -148,7 +148,7 @@
         </div>
         <p class="text-gray-500 mt-2 text-sm max-w-2xl">Read-only view of course details and curriculum.</p>
       </div>
-      <a href="/admin-courses" class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-colors">
+      <a href="/admin/courses" class="inline-flex items-center px-4 py-2 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-colors">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         Back to Courses
       </a>
@@ -252,7 +252,7 @@
                                 <% } %>
                               </div>
                             </div>
-                            <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.duration ? lesson.duration + ' min' : '10:00' %></span>
+                            <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.durationFormatted || '00:00' %></span>
                           </div>
                         </div>
                       <% }); %>

@@ -200,13 +200,13 @@
 
       <!-- FOOTER ACTIONS -->
       <div class="flex items-center justify-between pt-6 border-t border-gray-200 mt-auto">
-        <a href="/admin-courses/<%= course._id %>/edit" class="flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
+        <a href="/admin/courses/<%= course._id %>/edit" class="flex items-center text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
           Back to Basic Info
         </a>
         <div class="flex items-center space-x-4">
-          <a href="/admin-courses" class="px-8 py-3.5 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">Save Draft</a>
-          <a href="/admin-courses/<%= course._id %>/publish" class="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center shadow-lg shadow-blue-200">
+          <a href="/admin/courses" class="px-8 py-3.5 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">Save Draft</a>
+          <a href="/admin/courses/<%= course._id %>/publish" class="px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition flex items-center shadow-lg shadow-blue-200">
             Continue to Publish
             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </a>
@@ -459,7 +459,7 @@
       const panel = document.getElementById(panelId);
       
       if (!backdrop || !panel) {
-        alert("Could not find panel elements in DOM!");
+        Swal.fire({ text: "Could not find panel elements in DOM!", icon: "error" });
         return;
       }
       
@@ -474,7 +474,7 @@
       // Safety scroll to top
       window.scrollTo(0, 0);
     } catch (err) {
-      alert("Error opening panel: " + err.message);
+      Swal.fire({ text: "Error opening panel: " + err.message, icon: "error" });
     }
   }
 
@@ -566,12 +566,14 @@
     }
 
     const id = document.getElementById('moduleIdInput').value;
-    const url = id 
-      ? `/admin-courses/${courseId}/modules/${id}/edit`
-      : `/admin-courses/${courseId}/modules/create`;
+    const isEdit = !!id;
+    const url = isEdit
+      ? `/api/v1/admin/courses/${courseId}/modules/${id}`
+      : `/api/v1/admin/courses/${courseId}/modules`;
+    const method = isEdit ? "PATCH" : "POST";
 
     fetch(url, {
-      method: 'POST',
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -615,8 +617,8 @@
   }
 
   function _doDeleteModule(moduleId, moduleTitle) {
-    fetch(`/admin-courses/${courseId}/modules/${moduleId}/delete`, {
-      method: 'POST',
+    fetch(`/api/v1/admin/courses/${courseId}/modules/${moduleId}`, {
+      method: 'DELETE',
       headers: { 'Accept': 'application/json' }
     })
     .then(res => res.json())
@@ -704,6 +706,7 @@
     clearAllErrors('lessonTitleError', 'lessonDescError', 'lessonDurationError', 'lessonVideoError');
 
     const lessonId = document.getElementById('lessonIdInput').value;
+    const isEdit = !!lessonId;
     const title = document.getElementById('lessonTitleInput').value.trim();
     const description = document.getElementById('lessonDescInput').value.trim();
     const duration = document.getElementById('lessonDurationInput').value.trim();
@@ -755,12 +758,13 @@
     const form = document.getElementById('lessonForm');
     const formData = new FormData(form);
 
-    const url = lessonId 
-      ? `/admin-courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/edit`
-      : `/admin-courses/${courseId}/modules/${moduleId}/lessons/create`;
+    const url = isEdit
+      ? `/api/v1/admin/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`
+      : `/api/v1/admin/courses/${courseId}/modules/${moduleId}/lessons`;
+    const method = isEdit ? "PATCH" : "POST";
 
     fetch(url, {
-      method: 'POST',
+      method: method,
       headers: { 'Accept': 'application/json' },
       body: formData
     })
@@ -810,8 +814,8 @@
   }
 
   function _doDeleteLesson(moduleId, lessonId, lessonTitle) {
-    fetch(`/admin-courses/${courseId}/modules/${moduleId}/lessons/${lessonId}/delete`, {
-      method: 'POST',
+    fetch(`/api/v1/admin/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, {
+      method: 'DELETE',
       headers: { 'Accept': 'application/json' }
     })
     .then(res => res.json())
@@ -970,7 +974,7 @@
     btn.disabled = true;
     btn.classList.add('opacity-50', 'cursor-not-allowed');
 
-    fetch(`/admin-courses/${courseId}/resources/upload-file`, {
+    fetch(`/api/v1/admin/courses/${courseId}/resources/file`, {
       method: 'POST',
       body: formData
     })
@@ -1009,8 +1013,8 @@
   }
 
   function _doDeleteResourceFile(moduleId, lessonId, fileId, fileName) {
-    fetch(`/admin-courses/${courseId}/resources/delete-file`, {
-      method: 'POST',
+    fetch(`/api/v1/admin/courses/${courseId}/resources/file`, {
+      method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ moduleId, lessonId, fileId })
     })
@@ -1049,7 +1053,7 @@
       btn.classList.add('opacity-50', 'cursor-not-allowed');
     }
 
-    fetch(`/admin-courses/${courseId}/resources/add-link`, {
+    fetch(`/api/v1/admin/courses/${courseId}/resources/link`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ moduleId, lessonId, title, url, description })
@@ -1090,8 +1094,8 @@
   }
 
   function _doDeleteResourceLink(moduleId, lessonId, linkId, linkTitle) {
-    fetch(`/admin-courses/${courseId}/resources/delete-link`, {
-      method: 'POST',
+    fetch(`/api/v1/admin/courses/${courseId}/resources/link`, {
+      method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ moduleId, lessonId, linkId })
     })

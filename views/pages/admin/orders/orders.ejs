@@ -117,7 +117,7 @@
                     const status = document.getElementById('statusFilter').value;
                     const sort = document.getElementById('sortFilter').value;
                     const search = '<%= typeof search !== "undefined" ? search : "" %>';
-                    let url = '/admin-orders?page=1';
+                    let url = '/admin/orders?page=1';
                     if (status && status !== 'all') url += '&status=' + status;
                     if (sort && sort !== 'newest') url += '&sortBy=' + sort;
                     if (search) url += '&search=' + encodeURIComponent(search);
@@ -203,7 +203,7 @@
                                         <% } %>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <a href="/admin-orders/<%= order._id %>" class="text-blue-600 hover:text-blue-900 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors inline-block">
+                                        <a href="/admin/orders/<%= order._id %>" class="text-blue-600 hover:text-blue-900 font-bold text-sm bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors inline-block">
                                             View
                                         </a>
                                     </td>
@@ -231,7 +231,7 @@
                     if (statusFilter && statusFilter !== 'all') qs.set('status', statusFilter);
                     if (typeof sortBy !== 'undefined' && sortBy !== 'newest') qs.set('sortBy', sortBy);
                     qs.set('page', p);
-                    return '/admin-orders?' + qs.toString();
+                    return '/admin/orders?' + qs.toString();
                   }; %>
                   
                   <% if(currentPage > 1){ %>
@@ -355,7 +355,7 @@
                         confirmColor: 'blue',
                         onConfirm: async () => {
                             try {
-                                const response = await fetch(`/admin-orders/${orderId}/refund/approve`, {
+                                const response = await fetch(`/api/v1/admin/orders/${orderId}/refund/approve`, {
                                     method: "POST",
                                     headers: {
                                         "Content-Type": "application/json"
@@ -365,11 +365,11 @@
                                 if (data.success) {
                                     window.location.reload();
                                 } else {
-                                    alert(data.message || "Failed to approve refund");
+                                    Swal.fire({ text: data.message || "Failed to approve refund", icon: "error" });
                                 }
                             } catch (error) {
                                 console.error("Error approving refund:", error);
-                                alert("Something went wrong.");
+                                Swal.fire({ text: "Something went wrong.", icon: "error" });
                             }
                         }
                     });
@@ -385,7 +385,7 @@
                         confirmColor: 'red',
                         onConfirm: async () => {
                             try {
-                                const response = await fetch(`/admin-orders/${orderId}/refund/reject`, {
+                                const response = await fetch(`/api/v1/admin/orders/${orderId}/refund/reject`, {
                                     method: "POST",
                                     headers: {
                                         "Content-Type": "application/json"
@@ -395,11 +395,11 @@
                                 if (data.success) {
                                     window.location.reload();
                                 } else {
-                                    alert(data.message || "Failed to reject refund");
+                                    Swal.fire({ text: data.message || "Failed to reject refund", icon: "error" });
                                 }
                             } catch (error) {
                                 console.error("Error rejecting refund:", error);
-                                alert("Something went wrong.");
+                                Swal.fire({ text: "Something went wrong.", icon: "error" });
                             }
                         }
                     });

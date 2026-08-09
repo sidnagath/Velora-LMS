@@ -59,7 +59,7 @@
 </p>
 
 <% } %>
-            <form action="<%= isEdit ? `/admin-courses/${course._id}/edit` : `/admin-courses/create` %>" method="POST" enctype="multipart/form-data">
+            <form id="basicInfoForm" data-is-edit="<%= isEdit %>" data-course-id="<%= isEdit ? course._id : '' %>">
               <!-- COURSE DETAILS CARD -->
               <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm mb-8">
                 <div class="flex items-center space-x-3 mb-8">
@@ -365,7 +365,7 @@
 
               <!-- FOOTER ACTIONS -->
               <div class="flex items-center justify-between pt-8 border-t border-gray-100">
-                <a href="/admin-courses"
+                <a href="/admin/courses"
                   class="flex items-center text-gray-500 font-bold hover:text-gray-800 transition-colors">
                   <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -374,7 +374,7 @@
                   Back to Courses
                 </a>
                 <div class="flex items-center space-x-4">
-                  <a href="/admin-courses" type="button"
+                  <a href="/admin/courses" type="button"
                     class="px-8 py-3.5 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-all">Save
                     Draft</a>
                   <button type="submit"
@@ -494,6 +494,39 @@ trailerInput.addEventListener(
 
 );
 
+
+
+  document.getElementById('basicInfoForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const isEdit = this.dataset.isEdit === 'true';
+    const courseId = this.dataset.courseId;
+    const url = isEdit ? `/api/v1/admin/courses/${courseId}` : `/api/v1/admin/courses`;
+    const method = isEdit ? 'PATCH' : 'POST';
+    
+    const formData = new FormData(this);
+    if (window.croppedBlob) {
+      formData.set('thumbnail', window.croppedBlob, 'thumbnail.jpg');
+    }
+
+    try {
+      const response = await fetch(url, {
+        method,
+        body: formData
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        Swal.fire('Success', data.message, 'success').then(() => {
+          // Go to modules page
+          window.location.href = `/admin/courses/${data.courseId || courseId}/modules`;
+        });
+      } else {
+        Swal.fire('Error', data.message || 'Validation failed', 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'An unexpected error occurred', 'error');
+    }
+  });
 
 </script>
 <%- include('../../../partials/cropper-modal') %>

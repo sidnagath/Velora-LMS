@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const file = fileInput.files[0];
     if (!file.type.startsWith("image/")) {
-      alert("Please select a valid image file.");
+      Swal.fire({ text: "Please select a valid image file.", icon: "error" });
       fileInput.value = "";
       return;
     }
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (!canvas) {
-      alert("Failed to crop image.");
+      Swal.fire({ text: "Failed to crop image.", icon: "error" });
       return;
     }
 
@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     canvas.toBlob((blob) => {
       if (!blob) {
-        alert("Failed to process cropped image.");
+        Swal.fire({ text: "Failed to process cropped image.", icon: "error" });
         return;
       }
 

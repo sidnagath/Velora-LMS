@@ -14,39 +14,39 @@ router.get("/home", noCache, isUserGuest, guestCourseController.getHome);
 router.get("/courses",noCache,guestCourseController.getCourses);
 router.get("/courses/:courseId",noCache,guestCourseController.getCourseDetails);
 
-router.get("/admin-login", noCache,isAdminGuest,guestAuthController.getAdminLogin);
-router.post("/admin-login", guestAuthController.postAdminLogin);
+router.get("/auth/admin-login", noCache,isAdminGuest,guestAuthController.getAdminLogin);
+router.post("/api/v1/auth/admin-login", guestAuthController.postAdminLogin);
 
 
-router.get("/login",noCache,isUserGuest,guestAuthController.getLogin);
-router.post("/login", guestAuthController.postLogin);
+router.get("/auth/login",noCache,isUserGuest,guestAuthController.getLogin);
+router.post("/api/v1/auth/login", guestAuthController.postLogin);
 
 router.get("/auth/google",noCache,passport.authenticate("google",{scope: ["profile", "email"], prompt: "select_account"}));
 router.get("/auth/google/callback",noCache,guestAuthController.googleAuthCallback);
 
 
-router.get("/signup", noCache,isUserGuest,guestAuthController.getSignup);
-router.post("/signup", guestAuthController.postSignup);
+router.get("/auth/signup", noCache,isUserGuest,guestAuthController.getSignup);
+router.post("/api/v1/auth/signup", guestAuthController.postSignup);
 
-router.get("/verify-signupotp",noCache,guestAuthController.getVerifySignupOtp);
-router.post("/verify-signupotp",guestAuthController.postVerifySignupOtp);
+router.get("/auth/verify-signupotp",noCache,guestAuthController.getVerifySignupOtp);
+router.post("/api/v1/auth/verify-signupotp",guestAuthController.postVerifySignupOtp);
 
 
-router.post("/resend-signupotp", guestAuthController.resendSignupOtp);
+router.post("/api/v1/auth/resend-signupotp", guestAuthController.resendSignupOtp);
 
-router.get("/account-created",noCache,guestAuthController.getAccountCreated);
+router.get("/auth/account-created",noCache,guestAuthController.getAccountCreated);
 
-router.get("/forgot-password",noCache,isUserGuest,guestAuthController.getForgotPassword);
-router.post("/forgot-password", guestAuthController.postForgotPassword);
+router.get("/auth/forgot-password",noCache,isUserGuest,guestAuthController.getForgotPassword);
+router.post("/api/v1/auth/forgot-password", guestAuthController.postForgotPassword);
 
-router.get("/verify-otp",noCache,isUserGuest,guestAuthController.getVerifyOtp);
-router.post("/verify-otp", guestAuthController.postVerifyOtp);
+router.get("/auth/verify-otp",noCache,isUserGuest,guestAuthController.getVerifyOtp);
+router.post("/api/v1/auth/verify-otp", guestAuthController.postVerifyOtp);
 
-router.get("/reset-password",noCache,isUserGuest,guestAuthController.getResetPassword);
-router.post("/reset-password", guestAuthController.postResetPassword);
+router.get("/auth/reset-password",noCache,isUserGuest,guestAuthController.getResetPassword);
+router.post("/api/v1/auth/reset-password", guestAuthController.postResetPassword);
 
-router.post("/resend-otp", guestAuthController.resendOtp);
+router.post("/api/v1/auth/resend-otp", guestAuthController.resendOtp);
 
-router.get("/password-updated",noCache,isUserGuest,guestAuthController.getPasswordUpdated);
+router.get("/auth/password-updated",noCache,isUserGuest,guestAuthController.getPasswordUpdated);
 
 module.exports=router;

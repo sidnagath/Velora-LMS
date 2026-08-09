@@ -8,7 +8,7 @@ exports.isAdmin =
   }
 
   return res.redirect(
-    "/admin-login"
+    "/auth/admin-login"
   );
 
 };

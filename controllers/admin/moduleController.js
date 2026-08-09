@@ -5,7 +5,7 @@ exports.getAdminCourseModules = async (req, res) => {
     const result = await moduleService.getCourseModules(req.params.courseId);
     if (!result.success) {
       req.flash("error", result.error || "Course not found");
-      return res.redirect("/admin-courses");
+      return res.redirect("/admin/courses");
     }
 
     res.render("pages/admin/courses/modules", {
@@ -23,7 +23,7 @@ exports.getAdminCourseModules = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.redirect("/admin-courses");
+    res.redirect("/admin/courses");
   }
 };
 
@@ -33,38 +33,13 @@ exports.postAdminAddModule = async (req, res) => {
     const result = await moduleService.addModule(req.params.courseId, title, description);
 
     if (!result.success) {
-      if (result.status === 404) return res.redirect("/admin-courses");
-
-      if (req.xhr || req.headers.accept.includes('json')) {
-        return res.status(400).json({ success: false, errors: result.errors });
-      }
-      return res.render("pages/admin/courses/add-module", {
-        title: "Velora - Add Module",
-        activePage: "courses",
-        isLoggedIn: true,
-        isAdmin: true,
-        isEdit: false,
-        course: { _id: req.params.courseId },
-        module: {}, 
-        errors: result.errors,
-        formData: { title: title?.trim(), description: description?.trim() }
-      });
+      return res.status(400).json({ success: false, message: 'Failed to add module', errors: result.errors });
     }
 
-    if (req.xhr || req.headers.accept.includes('json')) {
-      return res.json({ success: true, module: result.module });
-    }
-
-    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+    return res.status(201).json({ success: true, message: 'Module added successfully', module: result.module });
   } catch (err) {
     console.log(err);
-    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
-      return res.status(500).json({ success: false, error: "Something went wrong" });
-    }
-    return res.render("pages/admin/courses/add-module", {
-      title: "Velora - Add Module", activePage: "courses", isLoggedIn: true, isAdmin: true, isEdit: false,
-      course: {}, module: {}, errors: { general: "Something went wrong" }, formData: { title: req.body.title, description: req.body.description }
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -74,38 +49,13 @@ exports.postAdminEditModule = async (req, res) => {
     const result = await moduleService.editModule(req.params.courseId, req.params.moduleId, title, description);
 
     if (!result.success) {
-      if (result.status === 404) return res.redirect("/admin-courses");
-
-      if (req.xhr || req.headers.accept.includes('json')) {
-        return res.status(400).json({ success: false, errors: result.errors });
-      }
-      return res.render("pages/admin/courses/add-module", {
-        title: "Velora - Edit Module",
-        activePage: "courses",
-        isLoggedIn: true,
-        isAdmin: true,
-        isEdit: true,
-        course: { _id: req.params.courseId },
-        module: { _id: req.params.moduleId },
-        errors: result.errors,
-        formData: { title: title?.trim(), description: description?.trim() }
-      });
+      return res.status(400).json({ success: false, message: 'Failed to edit module', errors: result.errors });
     }
 
-    if (req.xhr || req.headers.accept.includes('json')) {
-      return res.json({ success: true, module: result.module });
-    }
-
-    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+    return res.status(200).json({ success: true, message: 'Module updated successfully', module: result.module });
   } catch (err) {
     console.log(err);
-    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
-      return res.status(500).json({ success: false, error: "Something went wrong" });
-    }
-    return res.render("pages/admin/courses/add-module", {
-      title: "Velora - Edit Module", activePage: "courses", isLoggedIn: true, isAdmin: true, isEdit: true,
-      course: {}, module: {}, errors: { general: "Something went wrong" }, formData: { title: req.body.title, description: req.body.description }
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -113,22 +63,12 @@ exports.postAdminDeleteModule = async (req, res) => {
   try {
     const result = await moduleService.deleteModule(req.params.courseId, req.params.moduleId);
     if (!result.success) {
-      if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
-        return res.status(404).json({ success: false, error: result.error });
-      }
-      req.flash("error", result.error);
-      return res.redirect("/admin-courses");
+      return res.status(400).json({ success: false, message: result.error });
     }
 
-    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
-      return res.json({ success: true });
-    }
-    res.redirect(`/admin-courses/${req.params.courseId}/modules`);
+    return res.status(200).json({ success: true, message: 'Module deleted successfully' });
   } catch(err) {
     console.log(err);
-    if (req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
-      return res.status(500).json({ success: false, error: "Something went wrong" });
-    }
-    res.redirect("/admin-courses");
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };

@@ -25,7 +25,7 @@
         <h2 class="text-[34px] font-extrabold text-gray-900 mb-3 tracking-tight">No items in your wishlist</h2>
         <p class="text-gray-600 mb-10 max-w-sm mx-auto text-[15px] leading-relaxed">Save courses you like and come back to them anytime.</p>
         
-        <a href="/user-courses" class="bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors flex items-center justify-center w-max mx-auto mb-6">
+        <a href="/user/courses" class="bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors flex items-center justify-center w-max mx-auto mb-6">
           Explore Courses
           <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
         </a>
@@ -47,7 +47,7 @@
       </div>
 
       <!-- Search Bar -->
-      <form action="/user-wishlist" method="GET" class="w-full mb-10 flex gap-3" style="position: relative;">
+      <form action="/user/wishlist" method="GET" class="w-full mb-10 flex gap-3" style="position: relative;">
           <div class="flex-grow" style="position: relative;">
               <svg
                 class="text-gray-400"
@@ -152,7 +152,7 @@
             <div style="background-color: #ffffff; border-radius: 20px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border: 1px solid #f3f4f6; overflow: hidden; display: flex; flex-direction: column; height: 100%; transition: box-shadow 0.3s ease;">
               
               <div style="position: relative; height: 11rem; width: 100%; background-color: #e5e7eb; overflow: hidden;">
-                <a href="/user-courses/<%= course._id %>">
+                <a href="/user/courses/<%= course._id %>">
                   <img src="<%= course.thumbnail ? course.thumbnail : '/images/placeholder.jpg' %>" alt="<%= course.title %>" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
                 </a>
                 
@@ -166,7 +166,7 @@
                   <%= course.category ? course.category.name : 'Uncategorized' %>
                 </div>
                 <h3 style="font-size: 17px; font-weight: 800; color: #111827; line-height: 1.3; margin-bottom: 0.375rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                  <a href="/user-courses/<%= course._id %>" style="color: inherit; text-decoration: none;"><%= course.title %></a>
+                  <a href="/user/courses/<%= course._id %>" style="color: inherit; text-decoration: none;"><%= course.title %></a>
                 </h3>
                 <p style="font-size: 13px; color: #6b7280; margin-bottom: 1.25rem;">By <%= course.instructor || 'Unknown Instructor' %></p>
                 
@@ -181,14 +181,14 @@
                   <% } %>
                 </div>
                 
-                <form action="/user-wishlist/move-to-cart/<%= course._id %>" method="POST" style="margin-bottom: 0.75rem; width: 100%;">
+                <form action="/api/v1/user/wishlist/<%= course._id %>/cart" onsubmit="handleWishlistAction(event, 'POST')" style="margin-bottom: 0.75rem; width: 100%;">
                   <button type="submit" style="width: 100%; background-color: #0B5ED7; color: white; padding: 0.75rem 0; border-radius: 0.75rem; font-weight: 700; font-size: 14px; display: flex; items-center; justify-content: center; cursor: pointer; border: none; align-items: center;">
                     <svg style="width: 16px; height: 16px; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     Move to Cart
                   </button>
                 </form>
                 
-                <form action="/user-wishlist/remove/<%= course._id %>" method="POST" style="width: 100%;">
+                <form action="/api/v1/user/wishlist/<%= course._id %>" onsubmit="handleWishlistAction(event, 'DELETE')" style="width: 100%;">
                   <button type="submit" style="width: 100%; color: #6b7280; padding: 0.375rem 0; border-radius: 0.5rem; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent;">
                     <svg style="width: 14px; height: 14px; margin-right: 0.375rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     Remove
@@ -212,7 +212,7 @@
           <p style="color: #4b5563; margin-bottom: 2rem; line-height: 1.625; font-size: 15px;">Bundle your wishlist items today and get an extra 15% off your entire order. Your sanctuary of knowledge is waiting.</p>
           <div style="display: flex; flex-direction: column; gap: 1rem; align-items: center; justify-content: center;">
             <button style="background-color: #6B46C1; color: white; font-weight: 700; padding: 0.875rem 2rem; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border: none; cursor: pointer; width: 100%; max-width: 200px;">Move All to Cart</button>
-            <a href="/user-courses" style="color: #0B5ED7; font-weight: 700; padding: 0.875rem 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; text-decoration: none;">Continue Browsing</a>
+            <a href="/user/courses" style="color: #0B5ED7; font-weight: 700; padding: 0.875rem 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.75rem; text-decoration: none;">Continue Browsing</a>
           </div>
         </div>
         
@@ -234,5 +234,25 @@
 
   </div>
 </main>
+
+<script>
+async function handleWishlistAction(e, method) {
+  e.preventDefault();
+  const form = e.target;
+  try {
+    const res = await fetch(form.action, { method });
+    const data = await res.json();
+    if(data.success) {
+      Swal.fire({ icon: 'success', title: 'Success', text: data.message }).then(() => {
+        window.location.reload();
+      });
+    } else {
+      Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+    }
+  } catch(err) {
+    Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });
+  }
+}
+</script>
 
 <%- include('../../../partials/footer') %>

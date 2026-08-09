@@ -19,7 +19,7 @@
             </div>
             <% } %>
 
-            <form id="signupForm" action="/signup" method="POST" class="space-y-5">
+            <form id="ajaxForm" data-action="/api/v1/auth/signup" class="space-y-5">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Full Name</label>
                     <div class="relative">
@@ -140,7 +140,7 @@
 
 </a>
  <div class="mt-8 text-center text-sm">
-                <p class="text-gray-600">Already have an account? <a href="/login" class="text-purple-600 hover:text-purple-800 font-medium">Log in</a></p>
+                <p class="text-gray-600">Already have an account? <a href="/auth/login" class="text-purple-600 hover:text-purple-800 font-medium">Log in</a></p>
             </div>
     </div>
 
@@ -151,7 +151,48 @@
     </div>
 </main>
 
-
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.getElementById('ajaxForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const url = form.getAttribute('data-action');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: result.message,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = result.data.redirectUrl || '/';
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Something went wrong'
+            });
+        }
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Network error. Please try again.'
+        });
+    }
+});
+</script>
 
   <%- include('../../partials/footer') %>

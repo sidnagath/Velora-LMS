@@ -38,16 +38,13 @@ exports.removeCourse = async (req, res) => {
 
     const result = await cartService.removeFromCart(userId, courseId);
     if (result.success) {
-      req.flash("success", "Course removed from cart.");
+      return res.status(200).json({ success: true, message: "Course removed from cart." });
     } else {
-      req.flash("error", "Failed to remove course.");
+      return res.status(400).json({ success: false, message: "Failed to remove course." });
     }
-
-    res.redirect("/user-cart");
   } catch (err) {
     console.error(err);
-    req.flash("error", "An error occurred.");
-    res.redirect("/user-cart");
+    return res.status(500).json({ success: false, message: "An error occurred." });
   }
 };
 
@@ -58,16 +55,13 @@ exports.moveToWishlist = async (req, res) => {
 
     const result = await cartService.moveToWishlist(userId, courseId);
     if (result.success) {
-      req.flash("success", result.message);
+      return res.status(200).json({ success: true, message: result.message });
     } else {
-      req.flash("error", result.message || "Failed to move course to wishlist.");
+      return res.status(400).json({ success: false, message: result.message || "Failed to move course to wishlist." });
     }
-
-    res.redirect("/user-cart");
   } catch (err) {
     console.error(err);
-    req.flash("error", "An error occurred.");
-    res.redirect("/user-cart");
+    return res.status(500).json({ success: false, message: "An error occurred." });
   }
 };
 

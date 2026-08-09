@@ -5,7 +5,7 @@ exports.ensureActiveUser = async (req, res, next) => {
   try {
 
     if (!req.session.user) {
-      return res.redirect("/login");
+      return res.redirect("/auth/login");
     }
 
     const user = await User.findById(
@@ -29,7 +29,7 @@ exports.ensureActiveUser = async (req, res, next) => {
 
     console.log(err);
 
-    return res.redirect("/login");
+    return res.redirect("/auth/login");
 
   }
 

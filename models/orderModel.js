@@ -21,13 +21,11 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
-    courses: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Course",
-        required: true
-      }
-    ],
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true
+    },
     subtotal: {
       type: Number,
       required: true,

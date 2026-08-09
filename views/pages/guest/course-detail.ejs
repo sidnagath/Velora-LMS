@@ -330,7 +330,7 @@
                               <% } %>
                             </div>
                           </div>
-                          <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.duration ? lesson.duration + ' min' : '10:00' %></span>
+                          <span style="font-size:0.75rem;color:#9CA3AF;font-weight:500; white-space: nowrap; margin-left: 1rem;"><%= lesson.durationFormatted || '00:00' %></span>
                         </div>
                       </div>
                     <% }); %>
@@ -420,7 +420,7 @@
 
           <!-- Enroll / Cart Button -->
   
-            <a href="/login" class="cd-btn-enroll">
+            <a href="/auth/login" class="cd-btn-enroll">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
               Login to Enroll
             </a>

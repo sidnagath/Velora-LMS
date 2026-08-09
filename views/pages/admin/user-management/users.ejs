@@ -89,7 +89,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
               <!-- Search Form -->
-              <form id="userFilterForm" action="/admin-users" method="GET" class="flex flex-wrap items-center gap-3 w-full">
+              <form id="userFilterForm" action="/admin/users" method="GET" class="flex flex-wrap items-center gap-3 w-full">
 
                 <!-- Hidden filter fields (populated by JS from the panel) -->
                 <input type="hidden" name="status"       id="hiddenStatus"   value="<%= filterStatus %>">
@@ -225,7 +225,7 @@
                   </div>
                 </div>
 
-                <a href="/admin-create-user"
+                <a href="/admin/users/create"
                   class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                   <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -316,7 +316,7 @@
                       </td>
                       <td class="px-6 py-4">
                         <div class="flex items-center gap-2">
-                          <a href="/admin-edit-user/<%= user._id %>"
+                          <a href="/admin/users/<%= user._id %>/edit"
                             class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                             <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -325,18 +325,16 @@
                             </svg>
                             Edit
                           </a>
-                          <form id="delUserForm-<%= user._id %>" action="/admin-delete-user/<%= user._id %>" method="POST">
-                            <button type="button"
-                              onclick="openConfirmModal({title:'Delete User?',message:'This will permanently delete \&quot;<%= user.name %>\&quot;. This action cannot be undone.',form:document.getElementById('delUserForm-<%= user._id %>')})"
-                              class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
-                              <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                </path>
-                              </svg>
-                              Delete
-                            </button>
-                          </form>
+                          <button type="button"
+                            onclick="deleteUser('<%= user._id %>', '<%= user.name %>')"
+                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
+                            <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                              </path>
+                            </svg>
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -370,7 +368,7 @@
                 if (filterProvider) qs.set('authProvider', filterProvider);
                 if (sortBy)         qs.set('sortBy', sortBy);
                 qs.set('page', p);
-                return '/admin-users?' + qs.toString();
+                return '/admin/users?' + qs.toString();
               }; %>
 
               <% if(currentPage > 1){ %>
@@ -409,6 +407,35 @@
   </main>
 
   <script>
+    // ─── Delete ────────────────────────────────────────────────────────────────
+    async function deleteUser(id, name) {
+      const result = await Swal.fire({
+        title: 'Delete User?',
+        text: `This will permanently delete "${name}". This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete!'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/api/v1/admin/users/${id}`, { method: 'DELETE' });
+          const data = await res.json();
+          if (data.success) {
+            Swal.fire('Deleted!', data.message, 'success').then(() => {
+              window.location.reload();
+            });
+          } else {
+            Swal.fire('Error', data.message || 'Failed to delete user.', 'error');
+          }
+        } catch (err) {
+          Swal.fire('Error', 'An unexpected error occurred.', 'error');
+        }
+      }
+    }
+
     // ─── State (seeded from server) ────────────────────────────────────────────
     const _uf = {
       status:   '<%= filterStatus %>',

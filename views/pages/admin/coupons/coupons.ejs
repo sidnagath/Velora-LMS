@@ -78,7 +78,7 @@
               <input type="text" placeholder="Search by code..." class="pl-4 pr-10 py-2.5 bg-gray-100 border-transparent rounded-full text-sm focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all w-64">
               <svg class="w-4 h-4 text-gray-500 absolute right-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
-            <a href="/admin-coupons/create" class="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-[#0B5ED7] hover:bg-[#0A58CA] transition-colors">
+            <a href="/admin/coupons/create" class="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-[#0B5ED7] hover:bg-[#0A58CA] transition-colors">
               <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
               Create Coupon
             </a>
@@ -136,18 +136,16 @@
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
-                        <a href="/admin-coupons/<%= coupon._id %>/edit" class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
+                        <a href="/admin/coupons/<%= coupon._id %>/edit" class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                           Edit
                         </a>
-                        <form id="delCouponForm-<%= coupon._id %>" action="/admin-delete-coupon/<%= coupon._id %>" method="POST">
-                          <button type="button"
-                            onclick="openConfirmModal({title:'Delete Coupon?',message:'This will permanently delete coupon \&quot;<%= coupon.code %>\&quot;.',form:document.getElementById('delCouponForm-<%= coupon._id %>')})"
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
-                            <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            Delete
-                          </button>
-                        </form>
+                        <button type="button"
+                          onclick="deleteCoupon('<%= coupon._id %>', '<%= coupon.code %>')"
+                          class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
+                          <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -180,7 +178,7 @@
               if (filterStatus) qs.set('status', filterStatus);
               if (sortBy && sortBy !== 'newest') qs.set('sortBy', sortBy);
               qs.set('page', p);
-              return '/admin-coupons?' + qs.toString();
+              return '/admin/coupons?' + qs.toString();
             }; %>
 
             <% if(currentPage > 1){ %>
@@ -223,6 +221,38 @@
     </div>
   </div>
 </main>
+
+<script>
+  async function deleteCoupon(id, code) {
+    const result = await Swal.fire({
+      title: 'Delete Coupon?',
+      text: `This will permanently delete coupon "${code}".`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/api/v1/admin/coupons/${id}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Deleted!', data.message, 'success').then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire('Error', data.message || 'Failed to delete coupon.', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'An unexpected error occurred.', 'error');
+      }
+    }
+  }
+</script>
 
 <%- include('../../../partials/confirm-modal') %>
 

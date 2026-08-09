@@ -16,18 +16,18 @@
         <svg class="text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); width: 1.25rem; height: 1.25rem; pointer-events: none; z-index: 10;">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
         </svg>
-        <input type="text" class="w-full h-16 rounded-2xl bg-gray-100 border border-transparent focus:border-[#0B5ED7] focus:ring-2 focus:ring-[#0B5ED7]/20 outline-none text-gray-900 placeholder-gray-400" style="padding-left: 3.5rem; padding-right: 1rem; width: 100%; height: 4rem;" placeholder="Search courses...">
+        <input type="text" id="course-search-input" class="w-full h-16 rounded-2xl bg-gray-100 border border-transparent focus:border-[#0B5ED7] focus:ring-2 focus:ring-[#0B5ED7]/20 outline-none text-gray-900 placeholder-gray-400" style="padding-left: 3.5rem; padding-right: 1rem; width: 100%; height: 4rem;" placeholder="Search courses...">
       </div>
-      <button type="submit" class="h-16 px-8 rounded-2xl bg-[#0B5ED7] hover:bg-blue-700 text-white font-bold transition flex-shrink-0" style="height: 4rem;">
+      <button type="button" id="course-search-btn" class="h-16 px-8 rounded-2xl bg-[#0B5ED7] hover:bg-blue-700 text-white font-bold transition flex-shrink-0" style="height: 4rem;">
         Search
       </button>
     </div>
 
     <!-- Filter Tabs -->
-    <div class="flex border-b border-gray-200 mb-10">
-      <button class="px-2 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 mr-8">All Courses</button>
-      <button class="px-2 py-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors mr-8">In Progress</button>
-      <button class="px-2 py-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">Completed</button>
+    <div class="flex border-b border-gray-200 mb-10" id="course-filter-tabs">
+      <button data-filter="all" class="filter-btn px-2 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 mr-8">All Courses</button>
+      <button data-filter="in-progress" class="filter-btn px-2 py-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors mr-8">In Progress</button>
+      <button data-filter="completed" class="filter-btn px-2 py-4 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">Completed</button>
     </div>
 
     <!-- Course Grid -->
@@ -47,7 +47,7 @@
              const completedLessons = Math.round((enrollment.progress / 100) * totalLessons);
           %>
           
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+          <div class="course-card bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full" data-progress="<%= enrollment.progress %>">
             
             <!-- Thumbnail & Category Badge -->
             <div class="relative w-full h-52 bg-gray-100 overflow-hidden">
@@ -85,11 +85,21 @@
 
                 <!-- Action Button -->
                 <% if (enrollment.progress === 100) { %>
-                  <a href="/course/<%= course._id %>" class="block w-full py-3 px-4 bg-[#F2F3F5] hover:bg-gray-200 text-[#4a4a4a] font-bold text-sm text-center rounded-lg transition-colors">
-                    Review Course
+                  <div class="flex gap-2 mt-6">
+                    <a href="/user/my-courses/<%= course._id %>" class="flex-1 py-3 px-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs text-center rounded-lg transition-colors whitespace-nowrap">
+                      View Course
+                    </a>
+                    <a href="/user/my-courses/<%= course._id %>/certificate" class="flex-1 py-3 px-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs text-center rounded-lg shadow-sm transition-all flex items-center justify-center gap-1 whitespace-nowrap">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      Get Certificate
+                    </a>
+                  </div>
+                <% } else if (enrollment.progress == 0) { %>
+                  <a href="/user/my-courses/<%= course._id %>" class="block w-full py-3 px-4 bg-blue-600 text-white font-bold text-sm text-center rounded-lg mt-6">
+                    Start Learning
                   </a>
                 <% } else { %>
-                  <a href="/course/<%= course._id %>" class="block w-full py-3 px-4 bg-[#0a58ca] hover:bg-blue-700 text-white font-bold text-sm text-center rounded-lg transition-colors">
+                  <a href="/user/my-courses/<%= course._id %>" class="block w-full py-3 px-4 bg-blue-600 text-white font-bold text-sm text-center rounded-lg mt-6">
                     Continue Learning
                   </a>
                 <% } %>
@@ -112,7 +122,7 @@
       <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center max-w-2xl mx-auto mt-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-3">No Courses Yet</h2>
         <p class="text-gray-500 mb-8 max-w-md mx-auto">You haven't enrolled in any courses yet. Browse our catalog to find the perfect course to start your learning journey.</p>
-        <a href="/" class="inline-flex items-center justify-center bg-[#0a58ca] hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+        <a href="/user/courses" class="inline-flex items-center justify-center bg-[#0a58ca] hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">
           Browse Courses
         </a>
       </div>
@@ -120,5 +130,61 @@
 
   </div>
 </main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const courseCards = document.querySelectorAll('.course-card');
+    const searchInput = document.getElementById('course-search-input');
+    const searchBtn = document.getElementById('course-search-btn');
+
+    function filterCourses() {
+      const activeBtn = document.querySelector('.filter-btn.text-blue-600');
+      const filter = activeBtn ? activeBtn.dataset.filter : 'all';
+      const searchTerm = searchInput.value.toLowerCase().trim();
+
+      courseCards.forEach(card => {
+        const progress = parseFloat(card.dataset.progress) || 0;
+        const titleElement = card.querySelector('h3');
+        const title = titleElement ? titleElement.textContent.toLowerCase() : '';
+        
+        let matchesFilter = false;
+        if (filter === 'all') {
+          matchesFilter = true;
+        } else if (filter === 'in-progress') {
+          matchesFilter = progress > 0 && progress < 100;
+        } else if (filter === 'completed') {
+          matchesFilter = progress === 100;
+        }
+
+        const matchesSearch = title.includes(searchTerm);
+
+        if (matchesFilter && matchesSearch) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active tab styling
+        filterBtns.forEach(b => {
+          b.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+          b.classList.add('text-gray-500', 'hover:text-gray-700');
+        });
+        btn.classList.remove('text-gray-500', 'hover:text-gray-700');
+        btn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+
+        filterCourses();
+      });
+    });
+
+    // Handle search input events
+    searchInput.addEventListener('keyup', filterCourses);
+    searchBtn.addEventListener('click', filterCourses);
+  });
+</script>
 
 <%- include('../../../partials/footer') %>

@@ -28,7 +28,7 @@
                </p>
                <% } %>
 
-            <form action="/verify-signupotp" method="POST" class="w-full text-left space-y-6">
+            <form id="ajaxForm" data-action="/api/v1/auth/verify-signupotp" class="w-full text-left space-y-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
@@ -58,10 +58,7 @@
 
   <!-- RESEND FORM -->
 
-  <form
-    action="/resend-signupotp"
-    method="POST"
-  >
+  <form id="ajaxResendForm" data-action="/api/v1/auth/resend-signupotp">
 
     <button
       id="resendBtn"
@@ -160,6 +157,55 @@ setInterval(
   1000
 );
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+async function handleAjaxSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const url = form.getAttribute('data-action');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: result.message,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                if (result.data?.redirectUrl) {
+                    window.location.href = result.data.redirectUrl;
+                } else {
+                    window.location.reload();
+                }
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Something went wrong'
+            });
+        }
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Network error. Please try again.'
+        });
+    }
+}
+
+document.getElementById('ajaxForm')?.addEventListener('submit', handleAjaxSubmit);
+document.getElementById('ajaxResendForm')?.addEventListener('submit', handleAjaxSubmit);
 </script>
 
   <%- include('../../partials/footer') %>

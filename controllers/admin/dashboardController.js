@@ -113,8 +113,11 @@ exports.getAdminUsers = async (req, res) => {
 
   } catch (err) {
     console.log(err);
-    res.redirect("/admin-dashboard");
+    res.redirect("/admin/dashboard");
   }
 
 };
 
+exports.getAnalytics = (req, res) => {
+  res.render("pages/admin/reports/analytics", { title: "Analytics & Reports - Velora", user: req.user, isAdmin: true });
+};

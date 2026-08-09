@@ -27,7 +27,11 @@ const enrollmentSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "completed", "cancelled"],
       default: "active"
-    }
+    },
+    completedLessons: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Lesson"
+}]
   },
   {
     timestamps: true

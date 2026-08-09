@@ -4,7 +4,7 @@ exports.isAdminGuest =
   if (req.session.admin) {
 
     return res.redirect(
-      "/admin-dashboard"
+      "/admin/dashboard"
     );
 
   }

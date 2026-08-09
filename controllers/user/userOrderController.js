@@ -94,7 +94,7 @@ exports.downloadInvoice = async (req, res) => {
       
     if (!result.success) {
       req.flash('error', result.message || 'Invoice not found or order not paid.');
-      return res.redirect('/user-orders');
+      return res.redirect('/user/orders');
     }
     
     const order = result.data;
@@ -175,12 +175,29 @@ exports.downloadInvoice = async (req, res) => {
       yPos += 15;
     }
     
+    // GST Breakdown
+    const subtotalAmt = order.subtotal || subtotal;
+    const courseDisc = order.courseDiscount || 0;
+    const couponDisc = order.couponDiscount || 0;
+    const taxableAmt = subtotalAmt - courseDisc - couponDisc;
+    const gstAmt = taxableAmt * 0.18;
+    const finalAmt = order.finalAmount || 0;
+    
+    doc.font('Helvetica');
+    doc.text('Taxable Amount:', rightColX, yPos);
+    doc.text(`Rs. ${taxableAmt.toFixed(2)}`, valueColX, yPos, { width: 100, align: 'right' });
+    yPos += 15;
+    
+    doc.text('GST (18%):', rightColX, yPos);
+    doc.text(`Rs. ${gstAmt.toFixed(2)}`, valueColX, yPos, { width: 100, align: 'right' });
+    yPos += 15;
+    
     doc.moveTo(rightColX, yPos).lineTo(550, yPos).stroke();
     yPos += 10;
-    
+
     doc.font('Helvetica-Bold');
     doc.text('Total:', rightColX, yPos);
-    doc.text(`Rs. ${order.finalAmount.toFixed(2)}`, valueColX, yPos, { width: 100, align: 'right' });
+    doc.text(`Rs. ${finalAmt.toFixed(2)}`, valueColX, yPos, { width: 100, align: 'right' });
     
     doc.moveDown(4);
     doc.font('Helvetica-Oblique').fillColor('#888888').text('Thank you for choosing Velora LMS!', 50, doc.y, { align: 'center' });
@@ -189,7 +206,7 @@ exports.downloadInvoice = async (req, res) => {
   } catch (error) {
     console.error('Error generating invoice:', error);
     req.flash('error', 'Failed to generate invoice.');
-    return res.redirect('/user-orders');
+    return res.redirect('/user/orders');
   }
 };
 

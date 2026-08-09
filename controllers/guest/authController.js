@@ -2,7 +2,7 @@ const passport = require('passport');
 const authService = require('../../services/authService');
 
 exports.getLogin = (req, res) => {
-  if (req.session.user) return res.redirect("/user-dashboard");
+  if (req.session.user) return res.redirect("/user/dashboard");
   let errors = {};
   if (req.query.error === "inactive") errors.general = "Account is inactive";
   res.render("pages/guest/login", { title: "Velora - Login", isLoggedIn: false, errors, formData: {} });
@@ -14,23 +14,22 @@ exports.postLogin = async (req, res) => {
     const result = await authService.login(email, password);
 
     if (!result.success) {
-      return res.render("pages/guest/login", {
-        title: "Velora - Login", isLoggedIn: false,
-        errors: result.errors, formData: { email: email?.trim() }
-      });
+      req.flash("error", result.errors?.general || 'Login failed');
+      return res.redirect("/auth/login");
     }
 
     req.session.user = { id: result.user._id, name: result.user.name, email: result.user.email };
     req.flash("success", "Logged in successfully.");
-    res.redirect("/user-dashboard");
+    return res.redirect("/user/dashboard");
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/login", { title: "Velora - Login", isLoggedIn: false, errors: { general: "Something went wrong" }, formData: { email: req.body.email } });
+    req.flash("error", "Something went wrong");
+    return res.redirect("/auth/login");
   }
 };
 
 exports.getSignup = (req, res) => {
-  if (req.session.user) return res.redirect("/user-dashboard");
+  if (req.session.user) return res.redirect("/user/dashboard");
   res.render("pages/guest/signup", { title: "Velora - Sign Up", isLoggedIn: false, errors: {}, formData: {} });
 };
 
@@ -43,19 +42,16 @@ exports.postSignup = async (req, res) => {
     const result = await authService.signup(name, email, password, confirmPassword);
 
     if (!result.success) {
-      return res.render("pages/guest/signup", {
-        title: "Velora - Sign Up", isLoggedIn: false,
-        errors: result.errors, formData: { name: trimmedName, email: trimmedEmail }
-      });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'Signup failed', data: { errors: result.errors } });
     }
 
     req.session.signupData = { name: trimmedName, email: trimmedEmail, password: trimmedPassword };
     req.session.signupOTP = result.otp;
     req.session.signupOTPExpires = result.otpExpires;
-    res.redirect("/verify-signupotp");
+    return res.status(200).json({ success: true, message: 'OTP sent successfully.', data: { redirectUrl: '/auth/verify-signupotp' } });
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/signup", { title: "Velora - Sign Up", isLoggedIn: false, errors: { general: "Something went wrong" }, formData: { name: req.body.name, email: req.body.email } });
+    return res.status(500).json({ success: false, message: 'Something went wrong', data: {} });
   }
 };
 
@@ -70,7 +66,7 @@ exports.googleAuthCallback = (req, res, next) => {
     }
     req.session.user = { id: user._id, name: user.name, email: user.email };
     req.flash("success", "Logged in successfully.");
-    res.redirect("/user-dashboard");
+    res.redirect("/user/dashboard");
   })(req, res, next);
 };
 
@@ -82,33 +78,33 @@ exports.postVerifySignupOtp = async (req, res) => {
   try {
     const result = await authService.verifySignupOtp(req.body.otp, req.session.signupOTP, req.session.signupOTPExpires, req.session.signupData);
     if (!result.success) {
-      return res.render("pages/guest/verify-signupotp", { title: "Velora - Verify Signup OTP", isLoggedIn: false, errors: result.errors, otpExpires: req.session.signupOTPExpires || 0 });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'OTP verification failed', data: { errors: result.errors } });
     }
     delete req.session.signupData;
     delete req.session.signupOTP;
     delete req.session.signupOTPExpires;
-    res.redirect("/login");
+    return res.status(200).json({ success: true, message: 'Account created successfully.', data: { redirectUrl: '/auth/login' } });
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/verify-signupotp", { title: "Velora - Verify Signup OTP", isLoggedIn: false, errors: { general: "Something went wrong" }, otpExpires: req.session.signupOTPExpires || 0 });
+    return res.status(500).json({ success: false, message: 'Something went wrong', data: {} });
   }
 };
 
 exports.resendSignupOtp = async (req, res) => {
   try {
     if (!req.session.signupData) {
-      return res.render("pages/guest/verify-signupotp", { title: "Velora - Verify Signup OTP", isLoggedIn: false, errors: { general: "Session expired. Please signup again." } });
+      return res.status(400).json({ success: false, message: 'Session expired. Please signup again.', data: {} });
     }
     const result = await authService.resendSignupOtp(req.session.signupData.email);
     if (!result.success) {
-      return res.render("pages/guest/verify-signupotp", { title: "Velora - Verify Signup OTP", isLoggedIn: false, errors: result.errors });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'Failed to resend OTP', data: { errors: result.errors } });
     }
     req.session.signupOTP = result.otp;
     req.session.signupOTPExpires = result.otpExpires;
-    res.redirect("/verify-signupotp");
+    return res.status(200).json({ success: true, message: 'OTP resent successfully.', data: {} });
   } catch (err) {
     console.log(err);
-    return res.render("pages/guest/verify-signupotp", { title: "Velora - Verify Signup OTP", isLoggedIn: false, errors: { general: "Failed to resend OTP" } });
+    return res.status(500).json({ success: false, message: 'Failed to resend OTP', data: {} });
   }
 };
 
@@ -124,20 +120,20 @@ exports.postForgotPassword = async (req, res) => {
   try {
     const result = await authService.forgotPassword(req.body.email);
     if (!result.success) {
-      return res.render("pages/guest/forgot-password", { title: "Velora - Forgot Password", isLoggedIn: false, errors: result.errors, formData: { email: req.body.email?.trim() } });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'Forgot password failed', data: { errors: result.errors } });
     }
     req.session.forgotOTP = result.otp;
     req.session.forgotOTPExpires = result.otpExpires;
     req.session.forgotEmail = result.email;
-    res.redirect("/verify-otp");
+    return res.status(200).json({ success: true, message: 'OTP sent to email.', data: { redirectUrl: '/auth/verify-otp' } });
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/forgot-password", { title: "Velora - Forgot Password", isLoggedIn: false, errors: { general: "Something went wrong" }, formData: { email: req.body.email } });
+    return res.status(500).json({ success: false, message: 'Something went wrong', data: {} });
   }
 };
 
 exports.getVerifyOtp = (req, res) => {
-  if (!req.session.forgotEmail) return res.redirect("/forgot-password");
+  if (!req.session.forgotEmail) return res.redirect("/auth/forgot-password");
   res.render("pages/guest/verify-otp", { title: "Velora - Verify OTP", isLoggedIn: false, errors: {}, otpExpires: req.session.forgotOTPExpires || 0 });
 };
 
@@ -145,55 +141,56 @@ exports.postVerifyOtp = async (req, res) => {
   try {
     const result = await authService.verifyForgotOtp(req.body.otp, req.session.forgotOTP, req.session.forgotOTPExpires);
     if (!result.success) {
-      return res.render("pages/guest/verify-otp", { title: "Velora - Verify OTP", isLoggedIn: false, errors: result.errors, otpExpires: req.session.forgotOTPExpires || 0 });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'OTP verification failed', data: { errors: result.errors } });
     }
     req.session.isOtpVerified = true;
-    res.redirect("/reset-password");
+    return res.status(200).json({ success: true, message: 'OTP verified successfully.', data: { redirectUrl: '/auth/reset-password' } });
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/verify-otp", { title: "Velora - Verify OTP", isLoggedIn: false, errors: { general: "Something went wrong" }, otpExpires: req.session.forgotOTPExpires || 0 });
+    return res.status(500).json({ success: false, message: 'Something went wrong', data: {} });
   }
 };
 
 exports.resendOtp = async (req, res) => {
   try {
     if (!req.session.forgotEmail) {
-      return res.render("pages/guest/verify-otp", { title: "Velora - Verify OTP", isLoggedIn: false, errors: { general: "Session expired. Please request again." } });
+      return res.status(400).json({ success: false, message: 'Session expired. Please request again.', data: {} });
     }
     const result = await authService.resendSignupOtp(req.session.forgotEmail);
     if (!result.success) {
-      return res.render("pages/guest/verify-otp", { title: "Velora - Verify OTP", isLoggedIn: false, errors: result.errors });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'Failed to resend OTP', data: { errors: result.errors } });
     }
     req.session.forgotOTP = result.otp;
     req.session.forgotOTPExpires = result.otpExpires;
-    res.redirect("/verify-otp");
+    return res.status(200).json({ success: true, message: 'OTP resent successfully.', data: {} });
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/verify-otp", { title: "Velora - Verify OTP", isLoggedIn: false, errors: { general: "Failed to resend OTP" } });
+    return res.status(500).json({ success: false, message: 'Failed to resend OTP', data: {} });
   }
 };
 
 exports.getResetPassword = (req, res) => {
-  if (!req.session.isOtpVerified) return res.redirect("/forgot-password");
+  if (!req.session.isOtpVerified) return res.redirect("/auth/forgot-password");
   res.render("pages/guest/reset-password", { title: "Velora - Reset Password", isLoggedIn: false, errors: {}, formData: {} });
 };
 
 exports.postResetPassword = async (req, res) => {
   try {
-    if (!req.session.isOtpVerified || !req.session.forgotEmail) return res.redirect("/forgot-password");
+    if (!req.session.isOtpVerified || !req.session.forgotEmail) {
+      return res.status(401).json({ success: false, message: 'Unauthorized', data: { redirectUrl: '/auth/forgot-password' } });
+    }
     const result = await authService.resetPassword(req.body.password, req.body.confirmPassword, req.session.forgotEmail);
     if (!result.success) {
-      return res.render("pages/guest/reset-password", { title: "Velora - Reset Password", isLoggedIn: false, errors: result.errors, formData: {} });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'Password reset failed', data: { errors: result.errors } });
     }
     delete req.session.forgotEmail;
     delete req.session.forgotOTP;
     delete req.session.forgotOTPExpires;
     delete req.session.isOtpVerified;
-    req.flash("success", "Password reset successfully.");
-    res.redirect("/login");
+    return res.status(200).json({ success: true, message: 'Password reset successfully.', data: { redirectUrl: '/auth/login' } });
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/reset-password", { title: "Velora - Reset Password", isLoggedIn: false, errors: { general: "Something went wrong" }, formData: {} });
+    return res.status(500).json({ success: false, message: 'Something went wrong', data: {} });
   }
 };
 
@@ -202,7 +199,7 @@ exports.getPasswordUpdated = (req, res) => {
 };
 
 exports.getAdminLogin = (req, res) => {
-  if (req.session.admin) return res.redirect("/admin-dashboard");
+  if (req.session.admin) return res.redirect("/admin/dashboard");
   res.render("pages/guest/admin-login", { title: "Velora - Admin Login", isLoggedIn: false, errors: {}, formData: {} });
 };
 
@@ -211,17 +208,20 @@ exports.postAdminLogin = async (req, res) => {
     const { email, password } = req.body;
     const result = await authService.adminLogin(email, password);
     if (!result.success) {
-      return res.render("pages/guest/admin-login", { title: "Velora - Admin Login", isLoggedIn: false, errors: result.errors, formData: { email: email?.trim() } });
+      req.flash("error", result.errors?.general || 'Login failed');
+      return res.redirect("/auth/admin-login");
     }
     req.session.admin = result.admin;
-    res.redirect("/admin-dashboard");
+    req.flash("success", "Admin logged in successfully.");
+    return res.redirect("/admin/dashboard");
   } catch (err) {
     console.log(err);
-    res.render("pages/guest/admin-login", { title: "Velora - Admin Login", isLoggedIn: false, errors: { general: "Something went wrong" }, formData: { email: req.body.email } });
+    req.flash("error", "Something went wrong");
+    return res.redirect("/auth/admin-login");
   }
 };
 
 exports.getAdminLogout = (req, res) => {
   req.session.destroy();
-  res.redirect("/admin-login");
+  res.redirect("/auth/admin-login");
 };

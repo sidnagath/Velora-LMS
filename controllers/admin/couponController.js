@@ -1,8 +1,7 @@
 const couponService = require('../../services/couponService');
 
 exports.getAdminCoupons = async (req, res) => {
-
-  const result=await couponService.getCoupons(req.query);
+  const result = await couponService.getCoupons(req.query);
 
   if(!result.success){
     return res.render("pages/admin/coupons/coupons",{
@@ -32,16 +31,14 @@ exports.getAdminCoupons = async (req, res) => {
     flashType: req.query.flashType || "success",
     errors: {}
   });
-  
 };
 
 
 exports.getAdminCreateCoupon = async (req, res) => {
-
   const result = await couponService.getCreateCouponData();
 
   if (!result.success) {
-    return res.redirect("/admin-coupons?flashType=error&flashMsg=Could%20not%20load%20form");
+    return res.redirect("/admin/coupons?flashType=error&flashMsg=Could%20not%20load%20form");
   }
   
   res.render("pages/admin/coupons/create-coupon", {
@@ -58,33 +55,22 @@ exports.getAdminCreateCoupon = async (req, res) => {
 
 
 exports.postAdminCreateCoupon = async (req, res) => {
-
   const result = await couponService.postCreateCouponData(req.body);
 
   if (!result.success) {
-    return res.render("pages/admin/coupons/create-coupon", {
-      title: "Velora Admin - Create Coupon",
-      isLoggedIn: true,
-      activePage: "coupons",
-      admin: req.session.admin || { email: 'admin@velora.com' },
-      isAdmin: true,
-      flashMessages: { success: null, error: result.errors.general || "Please fix the errors below." },
-      formData: result.formData || req.body,
-      errors: result.errors
-    });
+    return res.status(400).json({ success: false, message: result.errors.general || 'Failed to create coupon', errors: result.errors, formData: result.formData || req.body });
   }
 
-  return res.redirect("/admin-coupons?success=true&flashMsg=" + encodeURIComponent(result.message || "Coupon created successfully"));
+  return res.status(201).json({ success: true, message: result.message || "Coupon created successfully" });
 };
 
 
 
 exports.getAdminEditCoupon = async (req, res) => {
-
   const result = await couponService.getEditCouponData(req.params.couponId);
 
     if (!result.success) {
-    return res.redirect("/admin-coupons?flashType=error&flashMsg=Could%20not%20load%20form");
+    return res.redirect("/admin/coupons?flashType=error&flashMsg=Could%20not%20load%20form");
   }
 
   res.render("pages/admin/coupons/edit-coupon", {
@@ -100,39 +86,19 @@ exports.getAdminEditCoupon = async (req, res) => {
 
 
 exports.postAdminEditCoupon = async (req, res) => {
-
   const result = await couponService.postEditCouponData(req.params.couponId,req.body);
 
     if (!result.success) {
-      return res.render("pages/admin/coupons/edit-coupon", {
-        title: "Velora Admin - Edit Coupon",
-        activePage: "coupons",
-        admin: req.session.admin || { email: 'admin@velora.com' },
-        isAdmin: true,
-        flashMessages:{ success: null, error: result.errors?.general || "Please fix the errors below." },
-        errors: result.errors || {},
-        coupon: {
-          _id: req.params.couponId,
-          code: req.body.code || "",
-          discountType: req.body.discountType || "percentage",
-          discountValue: req.body.discountValue || "",
-          minOrderValue: req.body.minOrderValue || "",
-          maxDiscount: req.body.maxDiscountAmount || "",
-          expiryDate: req.body.expiryDate || "",
-          usageLimit:req.body.usageLimit || "",
-          status: req.body.status || "active",
-          description: req.body.code || "this promotional code"
-        }
-      });
+      return res.status(400).json({ success: false, message: result.errors?.general || 'Failed to update coupon', errors: result.errors });
   }
   
-  return res.redirect("/admin-coupons?success=true&flashMsg=" + encodeURIComponent(result.message || "Coupon edited successfully"));
+  return res.status(200).json({ success: true, message: result.message || "Coupon edited successfully" });
 };
 
 exports.postAdminDeleteCoupon = async (req, res) => {
   const result = await couponService.deleteCouponData(req.params.couponId);
   if (!result.success) {
-    return res.redirect("/admin-coupons?flashType=error&flashMsg=" + encodeURIComponent(result.message || "Failed to delete coupon"));
+    return res.status(400).json({ success: false, message: result.message || "Failed to delete coupon" });
   }
-  return res.redirect("/admin-coupons?success=true&flashMsg=" + encodeURIComponent(result.message || "Coupon deleted successfully"));
+  return res.status(200).json({ success: true, message: result.message || "Coupon deleted successfully" });
 };

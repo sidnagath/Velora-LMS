@@ -21,8 +21,9 @@
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
 
       <form
-        method="POST"
-        action="/user-profile/edit"
+        id="editProfileForm"
+        method="PUT"
+        action="/api/v1/user/profile"
         class="space-y-8"
       >
 <% if(errors?.general){ %>
@@ -115,7 +116,7 @@
       
 
           <a
-            href="/user-profile/edit"
+            href="/user/profile"
             class="bg-gray-100 text-gray-700 font-bold py-3.5 px-8 rounded-xl hover:bg-gray-200 transition-colors"
           >
             Cancel
@@ -131,9 +132,48 @@
 
 </main>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('editProfileForm');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const res = await fetch(form.action, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          if (result.redirectUrl) {
+            Swal.fire({
+              icon: 'info',
+              title: 'Email Change Verification',
+              text: result.message
+            }).then(() => {
+              window.location.href = result.redirectUrl;
+            });
+          } else {
+            Swal.fire({ icon: 'success', title: 'Success', text: result.message }).then(() => {
+              window.location.href = '/user/profile';
+            });
+          }
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+        }
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });
+      }
+    });
+  }
+});
+</script>
+
 <%- include('../../../partials/footer') %>
-
-
-
-
-

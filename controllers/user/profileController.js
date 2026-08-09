@@ -9,9 +9,13 @@ exports.getDashboard = async (req, res) => {
   try {
     const user = await profileService.getUserById(req.session.user?.id);
 
-    const cartCount= await cartService.getCartCount(req.session.user.id);
-    const result = await courseService.getPublishedCourses({ limit: 3 });
+    const cartCount = await cartService.getCartCount(req.session.user.id);
+    const result = await courseService.getPublishedCourses({ limit: 4 });
     const featuredCourses = result.success ? result.data.courses : [];
+    
+    // Fetch categories for "Explore Categories" section
+    const Category = require('../../models/categoryModel');
+    const exploreCategories = await Category.find({ status: 'active' }).limit(5).lean();
 
     if (!user) {
       return res.render("pages/guest/login", {
@@ -22,12 +26,44 @@ exports.getDashboard = async (req, res) => {
       });
     }
 
-    let enrolledCourseIds = [];
+    let enrolledCount = 0;
+    let completedCount = 0;
+    let overallProgress = 0;
+
+    let continueLearningCourses = [];
+
     if (user) {
       const Enrollment = require('../../models/enrollmentModel');
-      const enrollments = await Enrollment.find({ userId: req.session.user.id, status: { $ne: 'cancelled' } }).lean();
-      enrolledCourseIds = enrollments.map(e => e.courseId.toString());
+      // Fetch enrollments, populated, sorted by most recently interacted
+      const enrollments = await Enrollment.find({ 
+        userId: req.session.user.id, 
+        status: { $in: ['active', 'completed'] } 
+      }).populate('courseId').sort({ updatedAt: -1 }).lean();
+      
+      enrolledCourseIds = enrollments.map(e => e.courseId._id.toString());
+      
+      enrolledCount = enrollments.length;
+      completedCount = enrollments.filter(e => e.status === 'completed' || e.progress === 100).length;
+      
+      // Better overall progress: only average courses that have been started (progress > 0), 
+      // or if all are 0, then 0. 
+      // Another way: simple average of all enrolled. Let's stick to simple average of all enrolled courses.
+      if (enrolledCount > 0) {
+        const totalProgress = enrollments.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+        overallProgress = Math.round(totalProgress / enrolledCount);
+      }
+      
+      // Top 3 for "Continue Learning" section
+      continueLearningCourses = enrollments.slice(0, 3);
     }
+
+    // Get Wallet Balance
+    const walletRes = await walletService.getWallet(req.session.user.id);
+    const walletBalance = walletRes.success ? walletRes.wallet.balance : 0;
+
+    // Get an Active Coupon (for display)
+    const couponsRes = await couponService.getCoupons({ status: "Active" });
+    const availableCoupon = (couponsRes.success && couponsRes.data.coupons.length > 0) ? couponsRes.data.coupons[0] : null;
 
     res.render("pages/user/home/dashboard", {
       title: "Velora - Dashboard",
@@ -37,7 +73,14 @@ exports.getDashboard = async (req, res) => {
       formData: {},
       featuredCourses,
       enrolledCourseIds,
-      cartCount:cartCount.success?cartCount.count:0
+      cartCount: cartCount.success ? cartCount.count : 0,
+      enrolledCount,
+      completedCount,
+      overallProgress,
+      walletBalance,
+      availableCoupon,
+      continueLearningCourses,
+      exploreCategories
     });
   } catch (err) {
     console.log(err);
@@ -129,7 +172,7 @@ exports.getMyCoupons = async (req, res) => {
     const result = await couponService.getActiveCoupons();
 
     if (!user) {
-      return res.redirect("/login");
+      return res.redirect("/auth/login");
     }
 
     res.render("pages/user/profile/my-coupons", {
@@ -167,7 +210,7 @@ exports.getWallet= async(req,res)=>{
     }
 
     if(!result.success){
-     return res.redirect("user-profile");
+     return res.redirect("/user/profile");
     }
 
     return res.render("pages/user/profile/wallet",{
@@ -191,28 +234,15 @@ exports.postUpdateAvatar = async (req, res) => {
 
     if (!result.success) {
       if (result.errors.general === "User not found") {
-        return res.redirect("/login");
+        return res.status(401).json({ success: false, message: "User not found" });
       }
-      return res.render("pages/user/profile/account-details", {
-        title: "Velora - Profile",
-        isLoggedIn: true,
-        user: result.user || null,
-        errors: result.errors,
-        formData: {}
-      });
+      return res.status(400).json({ success: false, message: "Validation error", errors: result.errors });
     }
 
-    req.flash("success", "Profile picture updated successfully.");
-    return res.redirect("/user-profile");
+    return res.status(200).json({ success: true, message: "Profile picture updated successfully." });
   } catch (err) {
     console.log(err);
-    return res.render("pages/user/profile/account-details", {
-      title: "Velora - Profile",
-      isLoggedIn: true,
-      user: null,
-      errors: { general: "Something went wrong" },
-      formData: {}
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -256,13 +286,7 @@ exports.postProfileDetails = async (req, res) => {
     const result = await profileService.updateProfileDetails(req.session.user?.id, req.body);
     
     if (!result.success) {
-      return res.render("pages/user/profile/edit-profile", {
-        title: "Edit Profile",
-        isLoggedIn: true,
-        user: result.user || null,
-        errors: result.errors,
-        formData: result.formData || req.body
-      });
+      return res.status(400).json({ success: false, message: "Validation error", errors: result.errors });
     }
 
     if (result.emailChanged) {
@@ -270,26 +294,17 @@ exports.postProfileDetails = async (req, res) => {
       req.session.emailChangeOTP = result.otp;
       req.session.emailChangeOTPExpires = result.otpExpires;
       
-      req.flash("success", "Verification code sent to your new email address.");
-      return res.redirect("/verify-email-change-otp");
+      return res.status(200).json({ success: true, message: "Verification code sent to your new email address.", data: { redirect: "/user/verify-email-change-otp" } });
     }
 
     // UPDATE SESSION
     req.session.user.name = result.user.name;
     req.session.user.email = result.user.email;
 
-    req.flash("success", "Profile updated successfully.");
-    return res.redirect("/user-profile");
+    return res.status(200).json({ success: true, message: "Profile updated successfully.", data: { redirect: "/user/profile" } });
   } catch (err) {
     console.log(err);
-    const user = await profileService.getUserById(req.session.user?.id);
-    return res.render("pages/user/profile/edit-profile", {
-      title: "Edit Profile",
-      isLoggedIn: true,
-      user,
-      errors: { general: "Something went wrong" },
-      formData: req.body
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -316,14 +331,7 @@ exports.postVerifyEmailChangeOtp = async (req, res) => {
     );
 
     if (!result.success) {
-      return res.render("pages/user/profile/verify-email-change-otp", {
-        title: "Verify Email Change",
-        isLoggedIn: true,
-        errors: result.errors,
-        success: {},
-        formData: { otp },
-        otpExpires: req.session.emailChangeOTPExpires || 0
-      });
+      return res.status(400).json({ success: false, message: "Invalid OTP", errors: result.errors });
     }
 
     // UPDATE SESSION
@@ -335,32 +343,17 @@ exports.postVerifyEmailChangeOtp = async (req, res) => {
     delete req.session.emailChangeOTP;
     delete req.session.emailChangeOTPExpires;
 
-    req.flash("success", "Email address updated successfully.");
-    return res.redirect("/user-profile");
+    return res.status(200).json({ success: true, message: "Email address updated successfully.", data: { redirect: "/user/profile" } });
   } catch (err) {
     console.log(err);
-    return res.render("pages/user/profile/verify-email-change-otp", {
-      title: "Verify Email Change",
-      isLoggedIn: true,
-      errors: { general: "Something went wrong" },
-      success: {},
-      formData: {},
-      otpExpires: req.session.emailChangeOTPExpires || 0
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
 exports.resendProfileOtp = async (req, res) => {
   try {
     if (!req.session.pendingProfileUpdate || !req.session.pendingProfileUpdate.email) {
-      return res.render("pages/user/profile/verify-email-change-otp", {
-        title: "Verify Email Change",
-        isLoggedIn: true,
-        errors: { general: "Session expired. Please try again." },
-        success: {},
-        formData: {},
-        otpExpires: req.session.emailChangeOTPExpires || 0
-      });
+      return res.status(400).json({ success: false, message: "Session expired. Please try again." });
     }
 
     const result = await profileService.resendProfileOtp(req.session.pendingProfileUpdate.email);
@@ -368,17 +361,10 @@ exports.resendProfileOtp = async (req, res) => {
     req.session.emailChangeOTP = result.otp;
     req.session.emailChangeOTPExpires = result.otpExpires;
 
-    res.redirect("/verify-email-change-otp");
+    return res.status(200).json({ success: true, message: "OTP resent successfully." });
   } catch (err) {
     console.log(err);
-    return res.render("pages/user/profile/verify-email-change-otp", {
-      title: "Verify Email Change",
-      isLoggedIn: true,
-      errors: { general: "Failed to resend OTP" },
-      success: {},
-      formData: {},
-      otpExpires: req.session.emailChangeOTPExpires || 0
-    });
+    return res.status(500).json({ success: false, message: "Failed to resend OTP" });
   }
 };
 
@@ -420,31 +406,17 @@ exports.postUpdatePassword = async (req, res) => {
     const result = await profileService.updatePassword(req.session.user?.id, req.body);
     
     if (!result.success) {
-      return res.render("pages/user/profile/change-password", {
-        title: "Change Password",
-        isLoggedIn: true,
-        user: result.user || null,
-        errors: result.errors,
-        formData: {}
-      });
+      return res.status(400).json({ success: false, message: "Validation error", errors: result.errors });
     }
 
     delete req.session.user;
     req.session.save((err) => {
       if (err) console.log(err);
-      req.flash("success", "Password changed successfully. Please log in again.");
-      return res.redirect("/login");
+      return res.status(200).json({ success: true, message: "Password changed successfully. Please log in again.", data: { redirect: "/auth/login" } });
     });
   } catch (err) {
     console.log(err);
-    const user = await profileService.getUserById(req.session.user?.id);
-    return res.render("pages/user/profile/change-password", {
-      title: "Change Password",
-      isLoggedIn: true,
-      user,
-      errors: { general: "Something went wrong" },
-      formData: {}
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -486,27 +458,13 @@ exports.postUpdateAddress = async (req, res) => {
     const result = await profileService.updateAddress(req.session.user?.id, req.body);
     
     if (!result.success) {
-      return res.render("pages/user/profile/edit-address", {
-        title: "Edit Address",
-        isLoggedIn: true,
-        user: result.user || null,
-        errors: result.errors,
-        formData: result.formData || req.body
-      });
+      return res.status(400).json({ success: false, message: "Validation error", errors: result.errors });
     }
 
     const isNew = !result.user.address || !result.user.address.addressLine1;
-    req.flash("success", isNew ? "Address updated successfully." : "Address updated successfully.");
-    return res.redirect("/user-address");
+    return res.status(200).json({ success: true, message: isNew ? "Address updated successfully." : "Address updated successfully.", data: { redirect: "/user/address" } });
   } catch (err) {
     console.log(err);
-    const user = await profileService.getUserById(req.session.user?.id);
-    return res.render("pages/user/profile/edit-address", {
-      title: "Edit Address",
-      isLoggedIn: true,
-      user,
-      errors: { general: "Something went wrong" },
-      formData: req.body
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };

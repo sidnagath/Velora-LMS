@@ -76,7 +76,7 @@
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
             <!-- Search + hidden filter fields -->
-            <form id="courseFilterForm" action="/admin-courses" method="GET" class="flex flex-wrap items-center gap-3 w-full">
+            <form id="courseFilterForm" action="/admin/courses" method="GET" class="flex flex-wrap items-center gap-3 w-full">
               <input type="hidden" name="status"   id="cfHiddenStatus"   value="<%= filterStatus %>">
               <input type="hidden" name="level"    id="cfHiddenLevel"    value="<%= filterLevel %>">
               <input type="hidden" name="category" id="cfHiddenCategory" value="<%= filterCategory %>">
@@ -179,7 +179,7 @@
                 </div>
               </div>
 
-              <a href="/admin-courses/create"
+              <a href="/admin/courses/create"
                 class="inline-flex items-center px-4 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                 <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Create Course
@@ -253,9 +253,8 @@
                         const modalTitle = course.status === 'published' ? 'Move to Draft?' : 'Publish Course?';
                         const modalMsg = course.status === 'published' ? 'Are you sure you want to unpublish this course? It will no longer be visible to students.' : 'Are you sure you want to publish this course? It will immediately become live for students.';
                       %>
-                      <form id="statusCourseForm-<%= course._id %>" action="/admin-courses/<%= course._id %>/toggle-status" method="POST" class="inline-flex items-center">
-                        <input type="hidden" name="redirectUrl" value="">
-                        <button type="button" onclick="const f = document.getElementById('statusCourseForm-<%= course._id %>'); f.querySelector('input[name=\'redirectUrl\']').value = window.location.pathname + window.location.search; openConfirmModal({ title: '<%= modalTitle %>', message: '<%= modalMsg %>', confirmText: 'Update', confirmColor: 'blue', form: f });" class="group flex items-center gap-2 focus:outline-none hover:opacity-80 transition-opacity" title="Toggle Status">
+                      <div class="inline-flex items-center">
+                        <button type="button" onclick="openConfirmModal({ title: '<%= modalTitle %>', message: '<%= modalMsg %>', confirmText: 'Update', confirmColor: 'blue', onConfirm: () => toggleCourseStatus('<%= course._id %>') });" class="group flex items-center gap-2 focus:outline-none hover:opacity-80 transition-opacity" title="Toggle Status">
                           <div class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 <%= course.status === 'published' ? 'bg-green-500' : 'bg-red-600' %>">
                             <span class="inline-block h-3.5 w-3.5 rounded-full shadow transition-transform duration-200 bg-white" style="<%= course.status === 'published' ? 'transform: translateX(18px);' : 'transform: translateX(3px);' %>"></span>
                           </div>
@@ -263,28 +262,28 @@
                             <%= course.status === 'published' ? 'Published' : 'Draft' %>
                           </span>
                         </button>
-                      </form>
+                      </div>
                     </td>
                     <td class="px-6 py-4">
                       <div class="flex items-center gap-2">
-                        <a href="/admin-courses/<%= course._id %>/view"
+                        <a href="/admin/courses/<%= course._id %>"
                           class="inline-flex items-center px-3 py-1.5 border border-gray-200 text-xs font-semibold rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                           View
                         </a>
-                        <a href="/admin-courses/<%= course._id %>/edit"
+                        <a href="/admin/courses/<%= course._id %>/edit"
                           class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-semibold rounded-md text-blue-600 bg-white hover:bg-blue-50 transition-colors">
                           <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                           Edit
                         </a>
-                        <form id="delCourseForm-<%= course._id %>" action="/admin-courses/<%= course._id %>/delete" method="POST">
+                        <div class="inline-flex items-center">
                           <button type="button"
-                            onclick="openConfirmModal({title:'Delete Course?',message:'This will permanently delete \&quot;<%= course.title %>\&quot; and all its content. This action cannot be undone.',form:document.getElementById('delCourseForm-<%= course._id %>')})"
+                            onclick="openConfirmModal({title:'Delete Course?',message:'This will permanently delete \&quot;<%= course.title %>\&quot; and all its content. This action cannot be undone.', onConfirm: () => deleteCourse('<%= course._id %>')})"
                             class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
                             <svg class="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             Delete
                           </button>
-                        </form>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -319,7 +318,7 @@
               if (filterCategory) qs.set('category', filterCategory);
               if (sortBy)         qs.set('sortBy', sortBy);
               qs.set('page', p);
-              return '/admin-courses?' + qs.toString();
+              return '/admin/courses?' + qs.toString();
             }; %>
 
             <% if(currentPage > 1){ %>
@@ -451,6 +450,38 @@
 
   // Init on load
   syncCourseFilterUI();
+
+  async function toggleCourseStatus(courseId) {
+    try {
+      const response = await fetch(`/api/v1/admin/courses/${courseId}/toggle-status`, {
+        method: 'PATCH'
+      });
+      const data = await response.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        Swal.fire('Error', data.message || 'Action failed', 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'An unexpected error occurred', 'error');
+    }
+  }
+
+  async function deleteCourse(courseId) {
+    try {
+      const response = await fetch(`/api/v1/admin/courses/${courseId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        window.location.reload();
+      } else {
+        Swal.fire('Error', data.message || 'Action failed', 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'An unexpected error occurred', 'error');
+    }
+  }
 </script>
 
 <%- include('../../../partials/footer') %>

@@ -28,7 +28,7 @@
                </p>
                <% } %>
 
-            <form action="/verify-email-change-otp" method="POST" class="w-full text-left space-y-6">
+            <form id="verifyOtpForm" action="/api/v1/user/profile/verify-email" method="POST" class="w-full text-left space-y-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
@@ -59,7 +59,8 @@
   <!-- RESEND FORM -->
 
   <form
-    action="/resend-profile-otp"
+    id="resendOtpForm"
+    action="/api/v1/user/profile/resend-otp"
     method="POST"
   >
 
@@ -159,6 +160,59 @@ setInterval(
   updateTimer,
   1000
 );
+
+document.addEventListener('DOMContentLoaded', () => {
+  const verifyForm = document.getElementById('verifyOtpForm');
+  const resendForm = document.getElementById('resendOtpForm');
+
+  if (verifyForm) {
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(verifyForm);
+      const data = Object.fromEntries(formData.entries());
+      
+      try {
+        const res = await fetch(verifyForm.action, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          Swal.fire({ icon: 'success', title: 'Success', text: result.message }).then(() => {
+            window.location.href = '/user/profile';
+          });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+        }
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });
+      }
+    });
+  }
+
+  if (resendForm) {
+    resendForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch(resendForm.action, { method: 'POST' });
+        const result = await res.json();
+        
+        if (result.success) {
+          Swal.fire({ icon: 'success', title: 'Success', text: result.message }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+        }
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });
+      }
+    });
+  }
+});
 
 </script>
 

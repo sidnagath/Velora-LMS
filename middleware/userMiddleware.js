@@ -9,7 +9,7 @@ exports.isUser =
   }
 
   return res.redirect(
-    "/login"
+    "/auth/login"
   );
 
 };

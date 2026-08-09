@@ -5,7 +5,7 @@ exports.getAdminUsers = async (req, res) => {
 
   if (!result.success) {
     console.log(result.error);
-    return res.redirect("/admin-dashboard");
+    return res.redirect("/admin/dashboard");
   }
 
   const data = result.data;
@@ -46,22 +46,17 @@ exports.postAdminCreateUser = async (req, res) => {
   const result = await userService.createUser(req.body, req.file, req.fileValidationError);
 
   if (!result.success) {
-    return res.render("pages/admin/user-management/create-user", {
-      title: "Velora - Create User",
-      admin: req.session.admin,
-      errors: result.errors || {},
-      formData: result.formData || {}
-    });
+    return res.status(400).json({ success: false, message: 'Failed to create user', errors: result.errors || {}, formData: result.formData || {} });
   }
 
-  res.redirect("/admin-users?flashType=success&flashMsg=" + encodeURIComponent("User '" + result.trimmedName + "' created successfully."));
+  return res.status(201).json({ success: true, message: `User '${result.trimmedName}' created successfully.` });
 };
 
 exports.getAdminEditUser = async (req, res) => {
   const result = await userService.getUserById(req.params.id);
 
   if (!result.success) {
-    return res.redirect("/admin-users");
+    return res.redirect("/admin/users");
   }
 
   res.render("pages/admin/user-management/edit-user", {
@@ -79,20 +74,13 @@ exports.postAdminEditUser = async (req, res) => {
 
   if (!result.success) {
     if (result.error === "User not found") {
-      return res.redirect("/admin-users");
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
     
-    return res.render("pages/admin/user-management/edit-user", {
-      title: "Velora - Admin Edit User",
-      isLoggedIn: true,
-      isAdmin: true,
-      user: result.user || {},
-      errors: result.errors || {},
-      formData: result.formData || {}
-    });
+    return res.status(400).json({ success: false, message: 'Failed to update user', errors: result.errors || {}, formData: result.formData || {} });
   }
 
-  res.redirect("/admin-users?flashType=success&flashMsg=" + encodeURIComponent("User '" + result.trimmedName + "' updated successfully."));
+  return res.status(200).json({ success: true, message: `User '${result.trimmedName}' updated successfully.` });
 };
 
 exports.deleteUser = async (req, res) => {
@@ -100,8 +88,8 @@ exports.deleteUser = async (req, res) => {
 
   if (!result.success) {
     console.log(result.error);
-    return res.redirect("/admin-users");
+    return res.status(500).json({ success: false, message: 'Failed to delete user' });
   }
 
-  res.redirect("/admin-users?flashType=success&flashMsg=" + encodeURIComponent("User '" + result.userName + "' deleted successfully."));
+  return res.status(200).json({ success: true, message: `User '${result.userName}' deleted successfully.` });
 };

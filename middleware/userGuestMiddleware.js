@@ -4,7 +4,7 @@ exports.isUserGuest =
   if (req.session.user) {
 
     return res.redirect(
-      "/user-dashboard"
+      "/user/dashboard"
     );
 
   }

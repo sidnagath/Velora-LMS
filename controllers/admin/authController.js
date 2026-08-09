@@ -4,7 +4,7 @@ exports.getAdminLogout = (req, res) => {
   req.session.save((err) => {
     if (err) {
       console.log(err);
-      return res.redirect("/admin-login");
+      return res.redirect("/auth/admin-login");
     }
 
     res.setHeader(
@@ -12,6 +12,6 @@ exports.getAdminLogout = (req, res) => {
       "no-store, no-cache, must-revalidate, private"
     );
 
-    res.redirect("/admin-login");
+    res.redirect("/auth/admin-login");
   });
 };
