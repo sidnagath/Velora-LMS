@@ -13,15 +13,17 @@ cloudinary.config({
  * @param {string} folder - The destination folder in Cloudinary.
  * @param {string} resourceType - 'image', 'video', or 'auto'.
  * @param {boolean} deleteLocal - Whether to delete the local file after upload. Defaults to true.
+ * @param {string} deliveryType - 'upload' (public) or 'authenticated' (private). Defaults to 'upload'.
  * @returns {Promise<Object>} - The complete Cloudinary upload response object.
  */
-exports.uploadToCloudinary = async (filePath, folder = 'velora', resourceType = 'auto', deleteLocal = true) => {
+exports.uploadToCloudinary = async (filePath, folder = 'velora', resourceType = 'auto', deleteLocal = true, deliveryType = 'upload') => {
   if (!filePath) return null;
 
   try {
     const result = await cloudinary.uploader.upload(filePath, {
       folder,
-      resource_type: resourceType
+      resource_type: resourceType,
+      type: deliveryType
     });
     
     // Delete local temp file asynchronously if requested
@@ -60,8 +62,22 @@ exports.deleteFromCloudinary = async (publicId, resourceType = 'image') => {
 
 
 
-
-
-
-
-
+/**
+ * Generates a signed, time-limited URL for an authenticated Cloudinary video.
+ * @param {string} publicId - The public ID of the Cloudinary asset.
+ * @param {number} expiryMinutes - How many minutes the URL should be valid for (default 15).
+ * @returns {string} - The signed secure URL.
+ */
+exports.generateSignedVideoUrl = (publicId, expiryMinutes = 15) => {
+  if (!publicId) return "";
+  
+  const expiresAt = Math.floor(Date.now() / 1000) + (expiryMinutes * 60);
+  
+  return cloudinary.utils.url(publicId, {
+    resource_type: 'video',
+    type: 'authenticated',
+    sign_url: true,
+    secure: true,
+    expires_at: expiresAt
+  });
+};

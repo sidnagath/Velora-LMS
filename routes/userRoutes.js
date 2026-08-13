@@ -32,11 +32,13 @@ router.get("/user/wishlist", noCache, isUser, ensureActiveUser, wishlistControll
 router.get("/user/cart", noCache, isUser, ensureActiveUser, cartController.getCartPage);
 router.get("/user/checkout", noCache, isUser, ensureActiveUser, checkoutController.getCheckoutPage);
 router.get("/user/payment-success/:orderId", noCache, isUser, ensureActiveUser, checkoutController.getPaymentSuccess);
+router.get("/user/payment-failure/:orderId", noCache, isUser, ensureActiveUser, checkoutController.getPaymentFailure);
 router.get("/user/orders", noCache, isUser, ensureActiveUser, userOrderController.getUserOrders);
 router.get("/user/orders/:id/invoice", noCache, isUser, ensureActiveUser, userOrderController.downloadInvoice);
 router.get("/user/coupons", noCache, isUser, ensureActiveUser, profileController.getMyCoupons);
 router.get("/user/my-courses", noCache, isUser, ensureActiveUser, courseController.getMyCourses);
 router.get("/user/my-courses/:courseId", noCache,isUser, ensureActiveUser, courseController.getMyCourseDetails);
+router.get("/user/my-courses/:courseId/lessons/:lessonId/video", noCache, isUser, ensureActiveUser, courseController.streamLessonVideo);
 router.get("/user/my-courses/:courseId/certificate", noCache, isUser, ensureActiveUser, courseController.getCourseCertificate);
 router.get("/user/wallet", noCache, isUser, ensureActiveUser, profileController.getWallet);
 

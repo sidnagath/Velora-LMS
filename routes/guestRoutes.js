@@ -21,6 +21,8 @@ router.post("/api/v1/auth/admin-login", guestAuthController.postAdminLogin);
 router.get("/auth/login",noCache,isUserGuest,guestAuthController.getLogin);
 router.post("/api/v1/auth/login", guestAuthController.postLogin);
 
+router.get("/account-blocked", noCache, isUserGuest, guestAuthController.getAccountBlocked);
+
 router.get("/auth/google",noCache,passport.authenticate("google",{scope: ["profile", "email"], prompt: "select_account"}));
 router.get("/auth/google/callback",noCache,guestAuthController.googleAuthCallback);
 

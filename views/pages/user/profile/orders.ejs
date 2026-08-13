@@ -291,8 +291,9 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
       </button>
     </div>
-    <form id="refundForm" onsubmit="submitRefund(event)">
+    <form id="refundForm" method="POST" onsubmit="submitRefund(event)">
       <div class="p-6">
+        <p id="error-general" class="mt-1 text-sm text-red-500 hidden"></p>
         <input type="hidden" id="refundOrderId" name="orderId">
         <label for="refundReasonSelect" class="block text-sm font-bold text-gray-700 mb-2">Reason for Refund <span class="text-red-500">*</span></label>
         <select id="refundReasonSelect" required class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm font-medium p-3 border mb-3" onchange="toggleRefundReasonText()">
@@ -304,8 +305,10 @@
           <option value="Better Alternative">Better Alternative</option>
           <option value="Other">Other (Please specify)</option>
         </select>
-        <div id="refundReasonTextContainer" class="hidden">
-            <textarea id="refundReasonText" rows="3" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm font-medium p-3 border" placeholder="Please explain your reason in detail..."></textarea>
+        <p id="error-reason" class="mt-1 text-sm text-red-500 hidden"></p>
+        <div id="refundReasonTextContainer" class="hidden mt-3">
+            <textarea id="refundReasonText" name="comments" rows="3" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm font-medium p-3 border" placeholder="Please explain your reason in detail..."></textarea>
+            <p id="error-comments" class="mt-1 text-sm text-red-500 hidden"></p>
         </div>
         <p class="mt-2 text-xs text-gray-500 font-medium">Refund requests must be made within 5 days of purchase.</p>
       </div>
@@ -362,6 +365,11 @@
     btn.innerText = 'Submitting...';
 
     try {
+    document.querySelectorAll('#refundForm [id^="error-"]').forEach(el => {
+        el.textContent = '';
+        el.classList.add('hidden');
+    });
+
     const response = await fetch(`/api/v1/user/orders/${orderId}/refund`, {
         method: "POST",
         headers: {
@@ -380,12 +388,29 @@
             });
         }, 100);
     } else {
-        closeRefundModal();
-        setTimeout(() => {
-            Swal.fire({ text: data.message, icon: "error" }).then(() => {
-                document.getElementById('refundModal').classList.remove('hidden');
-            });
-        }, 100);
+        let hasInlineError = false;
+        if (data.errors) {
+            for (const [field, msg] of Object.entries(data.errors)) {
+                const span = document.getElementById(`error-${field}`);
+                if (span) {
+                    span.textContent = msg;
+                    span.classList.remove('hidden');
+                    hasInlineError = true;
+                }
+            }
+        }
+        if (!hasInlineError) {
+            closeRefundModal();
+            setTimeout(() => {
+                Swal.fire({ text: data.message || 'An error occurred', icon: "error" }).then(() => {
+                    document.getElementById('refundModal').classList.remove('hidden');
+                });
+            }, 100);
+        } else {
+            btn.disabled = false;
+            btn.innerText = "Submit Request";
+            return;
+        }
     }
 
 } catch (err) {

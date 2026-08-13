@@ -28,7 +28,7 @@
                </p>
                <% } %>
 
-            <form id="ajaxForm" data-action="/api/v1/auth/verify-signupotp" class="w-full text-left space-y-6">
+            <form id="ajaxForm" method="POST" data-action="/api/v1/auth/verify-signupotp" class="w-full text-left space-y-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
@@ -36,11 +36,7 @@
                     </div>
                 </div>
 
-                <% if(errors?.otp){ %>
-               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-               <%= errors.otp %>
-               </p>
-               <% } %>
+                <p id="error-otp" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.otp ? '' : 'hidden' %>"><%= errors?.otp || '' %></p>
 
                 <button type="submit" class="btn-primary w-full text-center block mb-6">Verify Code</button>
             </form>
@@ -82,89 +78,63 @@
 </main>
 
 <script>
+let otpExpiry = <%= otpExpires || 0 %>;
+let timerInterval;
 
-const otpExpiry =
-    <%= otpExpires || 0 %>;
+const timerElement = document.getElementById("otpTimer");
+const resendBtn = document.getElementById("resendBtn");
+const timerText = document.getElementById("timerText");
+const originalTimerHTML = timerText.innerHTML;
 
- const timerElement =
-  document.getElementById(
-    "otpTimer"
-  );
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    
+    // Reset UI
+    timerText.innerHTML = `OTP expires in <span id="otpTimer" class="font-semibold text-[#0B5ED7]">00:00</span>`;
+    const newTimerElement = document.getElementById("otpTimer");
+    
+    resendBtn.disabled = true;
+    resendBtn.classList.remove("text-blue-600");
+    resendBtn.classList.add("text-gray-400", "cursor-not-allowed");
 
-const resendBtn =
-  document.getElementById(
-    "resendBtn"
-  );
+    function updateTimer() {
+        const remaining = Math.floor((otpExpiry - Date.now()) / 1000);
 
-const timerText =
-  document.getElementById(
-    "timerText"
-  );
+        if (remaining <= 0) {
+            clearInterval(timerInterval);
+            timerText.innerHTML = '<span class="text-red-500 font-medium">OTP expired</span>';
+            resendBtn.disabled = false;
+            resendBtn.classList.remove("text-gray-400", "cursor-not-allowed");
+            resendBtn.classList.add("text-blue-600");
+            return;
+        }
 
-function updateTimer() {
+        const minutes = String(Math.floor(remaining / 60)).padStart(2, "0");
+        const seconds = String(remaining % 60).padStart(2, "0");
+        newTimerElement.innerText = `${minutes}:${seconds}`;
+    }
 
-  const remaining =
-    Math.floor(
-      (otpExpiry - Date.now())
-      / 1000
-    );
-
-  if (remaining <= 0) {
-
-    timerElement.innerText =
-      "00:00";
-
-    timerText.innerHTML =
-      '<span class="text-red-500 font-medium">OTP expired</span>';
-
-    resendBtn.disabled =
-      false;
-
-    resendBtn.classList.remove(
-      "text-gray-400",
-      "cursor-not-allowed"
-    );
-
-    resendBtn.classList.add(
-      "text-blue-600"
-    );
-
-    return;
-
-  }
-
-  const minutes =
-    String(
-      Math.floor(
-        remaining / 60
-      )
-    ).padStart(2, "0");
-
-  const seconds =
-    String(
-      remaining % 60
-    ).padStart(2, "0");
-
-  timerElement.innerText =
-    `${minutes}:${seconds}`;
-
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
 }
 
-updateTimer();
-
-setInterval(
-  updateTimer,
-  1000
-);
+startTimer();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-async function handleAjaxSubmit(e) {
+document.getElementById('ajaxForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
     const url = form.getAttribute('data-action');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
+    
+    const errorEl = document.getElementById('error-otp');
+    if (errorEl) {
+        errorEl.innerText = '';
+        errorEl.classList.add('hidden');
+    }
     
     try {
         const response = await fetch(url, {
@@ -189,23 +159,63 @@ async function handleAjaxSubmit(e) {
                 }
             });
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: result.message || 'Something went wrong'
-            });
+            if (result.errors) {
+                let hasInlineError = false;
+                for (const field in result.errors) {
+                    const errEl = document.getElementById(`error-${field}`);
+                    if (errEl) {
+                        errEl.innerText = result.errors[field];
+                        errEl.classList.remove('hidden');
+                        hasInlineError = true;
+                    }
+                }
+                if (!hasInlineError) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Validation failed' });
+                }
+            } else {
+                Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Verification failed' });
+            }
         }
     } catch (err) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Network error. Please try again.'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Network error. Please try again.' });
     }
-}
+});
 
-document.getElementById('ajaxForm')?.addEventListener('submit', handleAjaxSubmit);
-document.getElementById('ajaxResendForm')?.addEventListener('submit', handleAjaxSubmit);
+document.getElementById('ajaxResendForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const url = form.getAttribute('data-action');
+    
+    try {
+        const response = await fetch(url, { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'OTP Resent',
+                text: result.message,
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+                showConfirmButton: false
+            });
+            // Update the expiry time and restart timer
+            if (result.data?.otpExpires) {
+                otpExpiry = result.data.otpExpires;
+                startTimer();
+            } else {
+                // fallback if backend doesn't send it, assume 60 seconds
+                otpExpiry = Date.now() + 60000;
+                startTimer();
+            }
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Failed to resend OTP' });
+        }
+    } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Network error. Please try again.' });
+    }
+});
 </script>
 
   <%- include('../../partials/footer') %>

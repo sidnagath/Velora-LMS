@@ -23,7 +23,8 @@
       <div class="bg-white rounded-3xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.03)] p-8 mb-8 relative">
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-20 rounded-t-3xl"></div>
 
-        <form id="editCouponForm" class="space-y-8" data-coupon-id="<%= coupon._id %>">
+        <form id="editCouponForm" method="PATCH" class="space-y-8" data-coupon-id="<%= coupon._id %>">
+          <p id="error-general" class="hidden text-red-500"></p>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             
@@ -33,6 +34,7 @@
               <input type="text" id="code" name="code" 
                 class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl px-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.code ? 'border-red-400 bg-red-50' : '' %>"
                 placeholder="e.g. VELORA2024" value="<%= coupon.code %>">
+              <p id="error-code" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.code) { %>
                 <p class="input-error"><%= errors.code %></p>
               <% } else { %>
@@ -53,6 +55,7 @@
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
+              <p id="error-discountType" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.discountType) { %><p class="input-error"><%= errors.discountType %></p><% } %>
             </div>
 
@@ -67,6 +70,7 @@
                   <span class="text-gray-400 font-bold text-sm" id="valIcon"><%= coupon.discountType === 'percentage' ? '%' : '$' %></span>
                 </div>
               </div>
+              <p id="error-discountValue" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.discountValue) { %><p class="input-error"><%= errors.discountValue %></p><% } %>
             </div>
 
@@ -81,6 +85,7 @@
                   class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl pl-10 pr-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.minOrderValue ? 'border-red-400 bg-red-50' : '' %>"
                   placeholder="0.00" value="<%= coupon.minOrderValue %>">
               </div>
+              <p id="error-minOrderValue" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.minOrderValue) { %><p class="input-error"><%= errors.minOrderValue %></p><% } %>
             </div>
 
@@ -95,6 +100,7 @@
                   class="w-full bg-gray-100 border border-transparent text-gray-900 rounded-xl pl-10 pr-5 py-3.5 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition outline-none font-medium text-sm <%= errors?.maxDiscountAmount ? 'border-red-400 bg-red-50' : '' %>"
                   placeholder="0.00" value="<%= coupon.maxDiscount || '' %>">
               </div>
+              <p id="error-maxDiscountAmount" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.maxDiscountAmount) { %><p class="input-error"><%= errors.maxDiscountAmount %></p><% } %>
             </div>
 
@@ -109,6 +115,7 @@
                   <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
               </div>
+              <p id="error-expiryDate" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.expiryDate) { %><p class="input-error"><%= errors.expiryDate %></p><% } %>
             </div>
 
@@ -123,6 +130,7 @@
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-5">
                 </div>
               </div>
+              <p id="error-usageLimit" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if (errors?.usageLimit) { %><p class="input-error"><%= errors.usageLimit %></p><% } %>
             </div>
 
@@ -220,6 +228,10 @@
 
   document.getElementById('editCouponForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    ['code', 'discountType', 'discountValue', 'minOrderValue', 'maxDiscountAmount', 'expiryDate', 'usageLimit', 'general'].forEach(id => {
+      const el = document.getElementById('error-' + id);
+      if (el) { el.classList.add('hidden'); el.innerText = ''; }
+    });
     const formData = new FormData(this);
     const data = Object.fromEntries(formData.entries());
     const couponId = this.dataset.couponId;
@@ -236,7 +248,18 @@
           window.location.href = '/admin/coupons';
         });
       } else {
-        Swal.fire('Error', result.message || 'Validation failed', 'error');
+        const hasInlineError = result.errors && Object.keys(result.errors).length > 0;
+        if (hasInlineError) {
+          for (const key in result.errors) {
+            const el = document.getElementById('error-' + key);
+            if (el) {
+              el.innerText = result.errors[key];
+              el.classList.remove('hidden');
+            }
+          }
+        } else {
+          Swal.fire('Error', result.message || 'Validation failed', 'error');
+        }
       }
     } catch (err) {
       console.error(err);

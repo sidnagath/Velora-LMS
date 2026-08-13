@@ -1,0 +1,42 @@
+<%- include('../../partials/header') %>
+
+<main class="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-12">
+  <div class="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden relative">
+    
+    <!-- Decorative top bar -->
+    <div class="h-2 w-full bg-red-600"></div>
+    
+    <div class="p-8 text-center">
+      <!-- Icon -->
+      <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-100 mb-6">
+        <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+      </div>
+
+      <!-- Content -->
+      <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-2">Account Blocked</h2>
+      <p class="text-gray-500 mb-6 leading-relaxed">
+        Your access to Velora has been temporarily restricted by an administrator. For security reasons, your current session has been terminated.
+      </p>
+
+      <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100 text-left">
+        <h4 class="text-sm font-bold text-gray-900 mb-1">What happens next?</h4>
+        <p class="text-xs text-gray-600">
+          If you believe this is an error, please reach out to our support team for assistance in reinstating your account access.
+        </p>
+        <a href="mailto:support@velora.com" class="inline-block mt-3 text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline">
+          Contact Support &rarr;
+        </a>
+      </div>
+
+      <!-- Action Button -->
+      <a href="/auth/login" class="w-full inline-flex justify-center items-center py-3.5 px-6 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
+        Return to Login
+      </a>
+    </div>
+    
+  </div>
+</main>
+
+<%- include('../../partials/footer') %>

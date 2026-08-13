@@ -429,8 +429,29 @@
           });
           
           const orderData = await orderRes.json();
+          document.querySelectorAll('[id^="error-"]').forEach(el => {
+              el.textContent = '';
+              el.classList.add('hidden');
+          });
           if (!orderData.success) {
-            Swal.fire({ text: orderData.message || "Failed to create order", icon: "error" });
+            let hasInlineError = false;
+            if (orderData.errors) {
+                for (const [field, msg] of Object.entries(orderData.errors)) {
+                    const span = document.getElementById(`error-${field}`);
+                    if (span) {
+                        span.textContent = msg;
+                        span.classList.remove('hidden');
+                        hasInlineError = true;
+                    }
+                }
+            }
+            if (!hasInlineError) {
+                Swal.fire({ text: orderData.message || "Failed to create order", icon: "error" }).then(() => {
+                   if (orderData.message && orderData.message.includes("Checkout blocked")) {
+                       window.location.href = "/user/cart";
+                   }
+                });
+            }
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
             return;
@@ -467,7 +488,11 @@
                 // Redirect to success page
                 window.location.href = "/user/payment-success/" + verifyData.orderId;
               } else {
-                Swal.fire({ text: "Payment verification failed. Please contact support.", icon: "error" });
+                Swal.fire({ text: verifyData.message || "Payment verification failed. Please contact support.", icon: "error" }).then(() => {
+                   if (verifyData.message && verifyData.message.includes("Payment verified but fulfillment blocked")) {
+                       window.location.href = "/user/cart";
+                   }
+                });
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
               }

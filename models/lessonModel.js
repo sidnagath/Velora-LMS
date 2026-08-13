@@ -36,6 +36,11 @@ const lessonSchema = new mongoose.Schema(
       type: String
     },
 
+    // CLOUDINARY PUBLIC ID FOR SECURE URL SIGNING
+    videoPublicId: {
+      type: String
+    },
+
     // VIDEO DURATION
     duration: {
       type: String

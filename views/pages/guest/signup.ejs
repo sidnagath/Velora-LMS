@@ -30,13 +30,8 @@
                         </div>
                         <input type="text" name="name" value="<%= formData?.name || '' %>" class="input-field pl-11" placeholder="Alex Rivera">
                     </div>
+                    <p id="error-name" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.name ? '' : 'hidden' %>"><%= errors?.name || '' %></p>
                 </div>
-
-                <% if(errors?.name){ %>
-                <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-                <%= errors.name %>
-                </p>
-                <% } %>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Email Address</label>
@@ -48,13 +43,8 @@
                         </div>
                         <input type="email" name="email" value="<%= formData?.email || '' %>" class="input-field pl-11" placeholder="alex@example.com">
                     </div>
+                    <p id="error-email" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.email ? '' : 'hidden' %>"><%= errors?.email || '' %></p>
                 </div>
-
-               <% if(errors?.email){ %>
-               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-               <%= errors.email %>
-               </p>
-               <% } %>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Password</label>
@@ -72,13 +62,8 @@
                             </svg>
                         </div>
                     </div>
+                    <p id="error-password" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.password ? '' : 'hidden' %>"><%= errors?.password || '' %></p>
                 </div>
-
-               <% if(errors?.password){ %>
-               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-               <%= errors.password %>
-               </p>
-               <% } %>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Confirm Password</label>
@@ -96,12 +81,8 @@
                             </svg>
                         </div>
                     </div>
+                    <p id="error-confirmPassword" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.confirmPassword ? '' : 'hidden' %>"><%= errors?.confirmPassword || '' %></p>
                 </div>
-               <% if(errors?.confirmPassword){ %>
-               <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-               <%= errors.confirmPassword %>
-               </p>
-               <% } %>
                                                     
             <button type="submit" class="btn-primary mt-6">Create Account</button>
     </form>
@@ -160,6 +141,15 @@ document.getElementById('ajaxForm')?.addEventListener('submit', async (e) => {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     
+    // Clear previous errors
+    ['name', 'email', 'password', 'confirmPassword'].forEach(field => {
+        const errorEl = document.getElementById(`error-${field}`);
+        if (errorEl) {
+            errorEl.innerText = '';
+            errorEl.classList.add('hidden');
+        }
+    });
+    
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -179,11 +169,33 @@ document.getElementById('ajaxForm')?.addEventListener('submit', async (e) => {
                 window.location.href = result.data.redirectUrl || '/';
             });
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: result.message || 'Something went wrong'
-            });
+            if (result.errors && Object.keys(result.errors).length > 0) {
+                // Populate inline errors
+                let hasInlineError = false;
+                for (const field in result.errors) {
+                    const errorEl = document.getElementById(`error-${field}`);
+                    if (errorEl) {
+                        errorEl.innerText = result.errors[field];
+                        errorEl.classList.remove('hidden');
+                        hasInlineError = true;
+                    }
+                }
+                
+                if (!hasInlineError) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Validation failed'
+                    });
+                }
+            } else {
+                // Generic error (like server error)
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message || 'Something went wrong'
+                });
+            }
         }
     } catch (err) {
         Swal.fire({

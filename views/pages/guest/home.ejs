@@ -125,16 +125,23 @@
                             <img src="<%= course.thumbnail %>" alt="Thumbnail" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         </div>
                         <div class="p-5 flex-grow flex flex-col">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="flex justify-between items-center mb-3 relative">
                                 <span class="text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded <%= course.level === 'Beginner' ? 'bg-blue-100 text-blue-700' : course.level === 'Intermediate' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700' %>"><%= course.level %></span>
+                                <% if(course.status === 'draft') { %>
+                                <span class="text-[10px] font-bold uppercase tracking-wider py-1 px-2 rounded bg-gray-900 text-white shadow-sm ml-2">NOT AVAILABLE YET</span>
+                                <% } %>
                             </div>
                             <h3 class="font-bold text-gray-900 mb-1 flex-grow"><%= course.title %></h3>
                             <p class="text-xs text-gray-500 mb-4 line-clamp-2"><%= course.description %></p>
                             <div class="flex justify-between items-center pt-3 border-t border-gray-100 mt-auto">
+                                <% if(course.status === 'draft') { %>
+                                    <span class="font-extrabold text-gray-400 text-sm uppercase tracking-wide">Coming Soon</span>
+                                <% } else { %>
                                 <span class="font-bold <%= course.pricingType === 'free' ? 'text-[#0B5ED7]' : 'text-gray-900' %>"><%= course.pricingType === 'free' ? 'Free' : '₹' + (course.discountPrice || course.basePrice) %></span>
                                 <button class="w-8 h-8 rounded-full bg-blue-50 text-[#0B5ED7] flex items-center justify-center hover:bg-[#0B5ED7] hover:text-white transition-colors" title="View Course">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                 </button>
+                                <% } %>
                             </div>
                         </div>
                     </div>

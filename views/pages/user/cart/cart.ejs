@@ -5,9 +5,11 @@
   let totalDiscount = 0;
   if (cart && cart.length > 0) {
     cart.forEach(course => {
-      subtotal += course.basePrice || 0;
-      const priceToPay = course.discountPrice > 0 ? course.discountPrice : (course.basePrice || 0);
-      totalDiscount += (course.basePrice || 0) - priceToPay;
+      if (course.status === 'published') {
+        subtotal += course.basePrice || 0;
+        const priceToPay = course.discountPrice > 0 ? course.discountPrice : (course.basePrice || 0);
+        totalDiscount += (course.basePrice || 0) - priceToPay;
+      }
     });
   }
   const total = subtotal - totalDiscount;
@@ -211,7 +213,7 @@
           <div class="space-y-6 w-full">
             <% if (cart && cart.length > 0) { %>
               <% cart.forEach(course => { %>
-                <div class="cart-card-fixed">
+                <div class="cart-card-fixed <%= course.status !== 'published' ? 'opacity-60 grayscale-[50%]' : '' %>">
                   
                   <!-- Delete Icon -->
                   <form action="/api/v1/user/cart/<%= course._id %>" onsubmit="handleCartAction(event, 'DELETE')" class="cart-card-trash">
@@ -247,9 +249,16 @@
                       </div>
 
                       <!-- Price -->
-                      <div class="font-extrabold text-[#0B5ED7] mb-2.5" style="font-size: 20px;">
-                        <%= course.currency === 'USD' ? '$' : '₹' %><%= course.discountPrice > 0 ? course.discountPrice : course.basePrice %>
-                      </div>
+                      <% if (course.status !== 'published') { %>
+                        <div class="font-extrabold text-red-500 mb-2.5 flex items-center gap-1.5" style="font-size: 14px; background: #FEF2F2; padding: 4px 10px; border-radius: 8px; width: fit-content; border: 1px solid #FCA5A5;">
+                          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                          NOT AVAILABLE YET
+                        </div>
+                      <% } else { %>
+                        <div class="font-extrabold text-[#0B5ED7] mb-2.5" style="font-size: 20px;">
+                          <%= course.currency === 'USD' ? '$' : '₹' %><%= course.discountPrice > 0 ? course.discountPrice : course.basePrice %>
+                        </div>
+                      <% } %>
 
                       <!-- Category Pill -->
                       <div>
@@ -291,10 +300,18 @@
               <span class="text-[28px] font-extrabold text-[#0B5ED7]">₹<%= total.toFixed(2) %></span>
             </div>
             
-            <a href="/user/checkout" class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-4 rounded-xl text-base flex items-center justify-center transition-colors mb-4">
-              Checkout
-              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            </a>
+            <% const unavailableCourseNames = cart.filter(c => c.status !== 'published').map(c => c.title).join(', '); %>
+            <% if(unavailableCourseNames.length > 0) { %>
+                <button onclick="Swal.fire({ icon: 'error', title: 'Checkout Blocked', text: 'The following courses are no longer available: <%= unavailableCourseNames.replace(/'/g, `\\'`) %>. Please remove them from your cart to proceed.', confirmButtonColor: '#0B5ED7' })" class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-4 rounded-xl text-base flex items-center justify-center transition-colors mb-4 border-0 cursor-pointer shadow-sm">
+                  Checkout
+                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            <% } else { %>
+                <a href="/user/checkout" class="w-full bg-[#0B5ED7] hover:bg-[#0A58CA] text-white font-bold py-4 rounded-xl text-base flex items-center justify-center transition-colors mb-4 shadow-sm">
+                  Checkout
+                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            <% } %>
             
             <p class="text-center text-xs text-gray-500 font-medium">Secure checkout powered by Velora Pay.</p>
           </div>

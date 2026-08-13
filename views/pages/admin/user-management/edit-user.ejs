@@ -13,7 +13,8 @@
 
     <div class="p-8 max-w-5xl mx-auto w-full">
       <!-- HEADER -->
-       <form id="editUserForm" data-user-id="<%= user._id %>">
+       <form id="editUserForm" method="PATCH" data-user-id="<%= user._id %>">
+        <p id="error-general" class="hidden text-red-500"></p>
       <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Edit User</h1>
         <p class="text-gray-500 mt-2 text-sm max-w-2xl">
@@ -44,6 +45,7 @@ user.authProvider === "google"; %>
               <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Full Name</label>
                 <input type="text" name="name" value="<%= (formData && formData.name) || user.name || '' %>" class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
+              <p id="error-name" class="input-error mt-1 text-sm text-red-500 hidden"></p>
 <% if(errors?.name){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
 <%= errors.name %>
@@ -53,6 +55,7 @@ user.authProvider === "google"; %>
               <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Email Address</label>
                 <input type="email" name="email" value="<%= formData?.email || user.email || '' %>"   <%= isGoogleUser ? "readonly disabled" : "" %> class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors <%= isGoogleUser ? 'opacity-70 cursor-not-allowed' : '' %>">
+              <p id="error-email" class="input-error mt-1 text-sm text-red-500 hidden"></p>
 <% if(isGoogleUser) { %>
 <p class="mt-2 text-xs text-gray-500">
   Email is managed through your Google account and cannot be changed.
@@ -67,6 +70,7 @@ user.authProvider === "google"; %>
               <div>
                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Phone Number (Optional)</label>
                 <input type="tel" name="phone" value="<%= formData?.phone || user.phone || '' %>" class="block w-full px-4 py-3 bg-gray-100 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-colors">
+              <p id="error-phone" class="input-error mt-1 text-sm text-red-500 hidden"></p>
 <% if(errors?.phone){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
 <%= errors.phone %>
@@ -87,6 +91,7 @@ user.authProvider === "google"; %>
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
                   </div>
                 </div>
+                <p id="error-password" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               </div>
 
  <div>
@@ -102,6 +107,7 @@ user.authProvider === "google"; %>
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
                   </div>
                 </div>
+                <p id="error-confirmPassword" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               </div>
 
             </div>
@@ -268,6 +274,7 @@ user.authProvider === "google"; %>
   <p class="text-xs text-gray-500">
     JPG, PNG or WEBP. Max 2MB.
   </p>
+  <p id="error-avatar" class="input-error mt-1 text-sm text-red-500 hidden"></p>
 
 <% if(errors?.avatar){ %>
 <p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;text-align:center;">
@@ -422,6 +429,10 @@ user.authProvider === "google"; %>
 
   document.getElementById('editUserForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    ['name', 'email', 'phone', 'password', 'confirmPassword', 'avatar', 'general'].forEach(id => {
+      const el = document.getElementById('error-' + id);
+      if (el) { el.classList.add('hidden'); el.innerText = ''; }
+    });
     const formData = new FormData(this);
     const userId = this.dataset.userId;
 
@@ -441,7 +452,18 @@ user.authProvider === "google"; %>
           window.location.href = '/admin/users';
         });
       } else {
-        Swal.fire('Error', data.message || 'Validation failed', 'error');
+        const hasInlineError = data.errors && Object.keys(data.errors).length > 0;
+        if (hasInlineError) {
+          for (const key in data.errors) {
+            const el = document.getElementById('error-' + key);
+            if (el) {
+              el.innerText = data.errors[key];
+              el.classList.remove('hidden');
+            }
+          }
+        } else {
+          Swal.fire('Error', data.message || 'Validation failed', 'error');
+        }
       }
     } catch (err) {
       Swal.fire('Error', 'An unexpected error occurred', 'error');

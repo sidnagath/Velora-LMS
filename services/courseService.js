@@ -518,7 +518,7 @@ exports.getPublishedCourses = async (query) => {
       if (selectedCategoryDoc) selectedCategoryId = selectedCategoryDoc._id;
     }
 
-    const filter = { status: "published", isDeleted: false };
+    const filter = { status: { $in: ["published", "draft"] }, isDeleted: false };
 
     if (selectedCategoryId) {
       filter.category = selectedCategoryId;
@@ -532,7 +532,7 @@ exports.getPublishedCourses = async (query) => {
     const sortMap = {
       priceLowToHigh: { basePrice: 1, _id: -1 },
       priceHighToLow: { basePrice: -1, _id: -1 },
-      newest: { rating: -1, reviewsCount: -1, createdAt: -1, _id: -1 }
+      newest: { createdAt: -1, _id: -1 }
     };
     const sort = sortMap[sortBy] || sortMap.newest;
 
@@ -576,7 +576,7 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
       isDeleted: false
     };
     if (!isAdmin) {
-      query.status = "published";
+      query.status = { $in: ["published", "draft"] };
     }
     const course = await Course.findOne(query).populate("category").lean();
 
@@ -718,7 +718,7 @@ if (allLessons.length > 0) {
   if(lessonId){
     activeLesson = allLessons.find(lesson => lesson._id.toString() === lessonId);
   }
-  if(!activeLesson){
+  if (!activeLesson) {
     activeLesson = allLessons[0];
   }
 
@@ -733,7 +733,7 @@ if (allLessons.length > 0) {
 
 const totalLessons = allLessons.length;
 
- return {
+return {
             success: true,
             data: {
               course,
@@ -803,19 +803,84 @@ exports.markLessonComplete = async (userId, courseId, lessonId) => {
 
 exports.validateCertificateAccess = async (userId, courseId) => {
   try {
-    const enrollment = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } }).populate('courseId', 'title category').lean();
+    const course = await Course.findOne({ 
+      _id: courseId, 
+      status: "published" 
+    })
+    .populate('modules')
+    .lean();
     
+    if (!course) {
+      return { success: false, message: "Course not found or inactive" };
+    }
+
+    const enrollment = await Enrollment.findOne({
+      userId: userId,
+      courseId: courseId,
+      status: { $in: ['active', 'completed'] }
+    });
+
     if (!enrollment) {
-      return { success: false, message: "Enrollment not found." };
+      return { success: false, message: "You are not enrolled in this course" };
     }
-    
-    if (enrollment.progress !== 100) {
-      return { success: false, message: "Course must be 100% complete to get a certificate." };
+
+    if (enrollment.progress < 100) {
+      return { success: false, message: "You must complete the course to get a certificate" };
     }
-    
-    return { success: true, data: { enrollment, course: enrollment.courseId } };
+
+    return { 
+      success: true, 
+      data: {
+        course,
+        enrollment
+      }
+    };
   } catch (error) {
-    console.error('Error validating certificate access:', error);
-    return { success: false, message: "Failed to validate certificate." };
+    console.error("Certificate Validation Error:", error);
+    throw error;
+  }
+};
+
+exports.getAuthorizedVideoUrl = async (userId, courseId, lessonId) => {
+  try {
+    // 1. Verify user is enrolled and active
+    // Accept either active or completed status so completed users can still view videos
+    const enrollment = await Enrollment.findOne({
+      userId: userId,
+      courseId: courseId,
+      status: { $in: ['active', 'completed'] }
+    });
+
+    if (!enrollment) {
+      return { success: false, message: "Unauthorized: Active enrollment required." };
+    }
+
+    // 2. Fetch the lesson and populate the module
+    const lesson = await Lesson.findById(lessonId).populate('moduleId');
+    if (!lesson || !lesson.moduleId) {
+      return { success: false, message: "Lesson not found." };
+    }
+
+    // 3. Check if the lesson belongs to the course
+    if (lesson.moduleId.courseId.toString() !== courseId.toString()) {
+      return { success: false, message: "Lesson does not belong to this course." };
+    }
+
+    // 4. Generate highly restrictive signed URL (valid for only 10 minutes)
+    // The player immediately follows the redirect, so 10 minutes is plenty of time
+    // to establish the streaming session.
+    let videoUrl = lesson.video;
+    if (lesson.videoPublicId) {
+      videoUrl = cloudinaryUtil.generateSignedVideoUrl(lesson.videoPublicId, 10);
+    }
+
+    if (!videoUrl) {
+       return { success: false, message: "Video not available." };
+    }
+
+    return { success: true, url: videoUrl };
+  } catch (error) {
+    console.error("Authorized Video URL generation error:", error);
+    throw error;
   }
 };

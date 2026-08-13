@@ -150,12 +150,30 @@ exports.getCourseCertificate = async (req, res) => {
       course: result.data.course,
       user,
       currentDate,
-      // Pass a dummy certificate ID or real one if implemented
       certificateId: `VEL-${userId.toString().slice(-4)}-${courseId.toString().slice(-4)}`
     });
   } catch (error) {
     console.error('Error loading certificate:', error);
     req.flash('error', 'An error occurred while loading the certificate.');
     res.redirect('/user/my-courses');
+  }
+};
+
+exports.streamLessonVideo = async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+    const userId = req.session.user.id;
+    
+    const result = await courseService.getAuthorizedVideoUrl(userId, courseId, lessonId);
+    
+    if (!result.success) {
+      return res.status(401).send("Unauthorized: " + result.message);
+    }
+    
+    // 302 Redirect to the short-lived Cloudinary signed URL
+    return res.redirect(302, result.url);
+  } catch (error) {
+    console.error("Stream video error:", error);
+    return res.status(500).send("Server error");
   }
 };

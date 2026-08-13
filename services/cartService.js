@@ -4,7 +4,7 @@ const Module = require("../models/moduleModel");
 
 class CartService {
   async getCart(userId, searchQuery = "") {
-    const matchQuery = { status: "published", isDeleted: false };
+    const matchQuery = { isDeleted: false };
     if (searchQuery && searchQuery.trim() !== "") {
       matchQuery.title = { $regex: searchQuery.trim(), $options: "i" };
     }
@@ -22,7 +22,7 @@ class CartService {
       return { success: false, message: "User not found" };
     }
 
-    const cartItems = user.cart || [];
+    const cartItems = (user.cart || []).filter(c => c !== null);
     const cartWithModules = await Promise.all(cartItems.map(async (course) => {
       const modulesCount = await Module.countDocuments({ courseId: course._id });
       return { ...course.toObject(), modulesCount };

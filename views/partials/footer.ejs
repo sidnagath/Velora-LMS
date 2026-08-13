@@ -75,7 +75,8 @@
       let sibling = current.nextElementSibling;
       while (sibling) {
         if (sibling.matches('.input-error, .text-red-500, [style*="color: #EF4444"], [style*="color:#EF4444"]')) {
-          sibling.style.display = 'none';
+          sibling.classList.add('hidden');
+          sibling.style.display = ''; // Clear any inline display
         }
         sibling = sibling.nextElementSibling;
       }

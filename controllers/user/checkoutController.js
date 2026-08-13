@@ -15,8 +15,8 @@ exports.getCheckoutPage = async (req, res) => {
     ]);
 
     if (!checkoutResult.success) {
-      req.flash("error", "Failed to load checkout.");
-      return res.redirect("/");
+      req.flash("error", checkoutResult.message || "Failed to load checkout.");
+      return res.redirect("/user/cart");
     }
 
     res.render("pages/user/checkout/checkout", {
@@ -55,6 +55,33 @@ exports.getPaymentSuccess = async (req, res) => {
     
     res.render("pages/user/checkout/payment-success", {
       title: "Payment Success",
+      isLoggedIn: true,
+      order: result.data.order,
+      cartCount: cartCount.success ? cartCount.count : 0
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "An error occurred.");
+    return res.redirect("/");
+  }
+};
+
+exports.getPaymentFailure = async (req, res) => {
+  try {
+    const userId = req.session.user?.id;
+    const { orderId } = req.params;
+    
+    const result = await orderService.getPaymentFailureData(orderId, userId);
+    
+    if (!result.success) {
+      req.flash("error", result.message || "Order not found");
+      return res.redirect("/");
+    }
+    
+    const cartCount = await cartService.getCartCount(userId);
+    
+    res.render("pages/user/checkout/payment-failure", {
+      title: "Payment Failed",
       isLoggedIn: true,
       order: result.data.order,
       cartCount: cartCount.success ? cartCount.count : 0

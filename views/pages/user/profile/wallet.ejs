@@ -60,9 +60,9 @@
     <div class="flex-1 space-y-6">
       
       <!-- Top Section -->
-      <div class="flex flex-col md:flex-row gap-6 mb-8">
+      <div class="mb-8">
         <!-- Balance Card -->
-        <div class="flex-1 rounded-3xl p-10 text-white relative overflow-hidden" style="background: linear-gradient(135deg, #4A78D5, #678CE1);">
+        <div class="rounded-3xl p-10 text-white relative overflow-hidden" style="background: linear-gradient(135deg, #4A78D5, #678CE1);">
           <div class="relative z-10">
             <h3 class="text-sm font-medium text-blue-100 mb-2">Available Balance</h3>
             <div class="text-5xl font-bold tracking-tight mb-8">
@@ -71,35 +71,23 @@
             <p class="text-sm text-blue-100 max-w-sm leading-relaxed">Use your wallet balance during checkout for instant course enrollment and special rewards.</p>
           </div>
         </div>
-
-        <!-- Action Buttons Card -->
-        <div class="bg-white rounded-3xl p-8 shadow-xl w-full md:w-80 shrink-0 flex flex-col justify-center gap-4 border border-gray-100">
-          <button class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3.5 px-6 rounded-2xl transition-colors flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Add Money
-          </button>
-          <button class="w-full bg-purple-400 hover:bg-purple-500 text-white font-bold py-3.5 px-6 rounded-2xl transition-colors flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            Withdraw
-          </button>
-        </div>
       </div>
 
       <!-- Transaction History -->
       <div class="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <h3 class="text-xl font-bold text-gray-900">Transaction History</h3>
-          <div class="flex bg-gray-100 rounded-full p-1 text-sm font-semibold">
-            <button class="px-5 py-1.5 bg-white text-blue-600 rounded-full shadow-sm">All</button>
-            <button class="px-5 py-1.5 text-gray-500 hover:text-gray-700 rounded-full transition-colors">Credits</button>
-            <button class="px-5 py-1.5 text-gray-500 hover:text-gray-700 rounded-full transition-colors">Debits</button>
+          <div class="flex bg-gray-100 rounded-full p-1 text-sm font-semibold" id="tx-filters">
+            <button data-filter="all" class="filter-btn px-5 py-1.5 bg-white text-blue-600 rounded-full shadow-sm">All</button>
+            <button data-filter="credit" class="filter-btn px-5 py-1.5 text-gray-500 hover:text-gray-700 rounded-full transition-colors">Credits</button>
+            <button data-filter="debit" class="filter-btn px-5 py-1.5 text-gray-500 hover:text-gray-700 rounded-full transition-colors">Debits</button>
           </div>
         </div>
         
         <% if(wallet.transactions && wallet.transactions.length > 0) { %>
           <div class="space-y-6">
             <% wallet.transactions.forEach(tx => { %>
-              <div class="flex justify-between items-center">
+              <div class="tx-row flex justify-between items-center" data-type="<%= tx.type %>">
                 <div class="flex items-center gap-4">
                   <% if(tx.type === 'credit') { %>
                     <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
@@ -127,9 +115,7 @@
               </div>
             <% }) %>
           </div>
-          <div class="mt-8 pt-6 border-t border-gray-100 text-center">
-            <a href="#" class="text-sm font-bold text-blue-700 hover:underline">View All Transactions</a>
-          </div>
+          <!-- View All Transactions link placeholder if needed -->
         <% } else { %>
           <div class="text-center py-12">
             <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -143,5 +129,35 @@
     </div>
   </div>
 </main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const txRows = document.querySelectorAll('.tx-row');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Reset styles for all buttons
+        filterBtns.forEach(b => {
+          b.className = 'filter-btn px-5 py-1.5 text-gray-500 hover:text-gray-700 rounded-full transition-colors';
+        });
+
+        // Set active style for clicked button
+        btn.className = 'filter-btn px-5 py-1.5 bg-white text-blue-600 rounded-full shadow-sm';
+
+        const filterValue = btn.getAttribute('data-filter');
+
+        // Show/hide rows based on filter
+        txRows.forEach(row => {
+          if (filterValue === 'all' || row.getAttribute('data-type') === filterValue) {
+            row.style.display = 'flex';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
 
 <%- include('../../../partials/footer') %>

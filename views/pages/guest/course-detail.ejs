@@ -381,8 +381,8 @@
       <div class="cd-sidebar-card">
 
         <!-- Video Preview -->
-        <div class="cd-video-thumb" style="cursor: <%= course.trailer ? 'auto' : 'pointer' %>;">
-          <% if (course.trailer) { %>
+        <div class="cd-video-thumb" style="cursor: <%= course.trailer && course.status !== 'draft' ? 'auto' : 'default' %>;">
+          <% if (course.trailer && course.status !== 'draft') { %>
             <video 
               controls 
               preload="metadata" 
@@ -405,6 +405,12 @@
 
         <!-- Sidebar Body -->
         <div class="cd-sidebar-body">
+          <% if(course.status === 'draft') { %>
+            <div style="background: #111827; color: white; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; border-radius: 0.75rem;">
+                <h3 style="font-weight: 800; font-size: 1.25rem; margin-bottom: 0.5rem;">Coming Soon</h3>
+                <p style="font-size: 0.875rem; color: #9CA3AF;">This course is currently being prepared and is not yet available for enrollment. Stay tuned!</p>
+            </div>
+          <% } else { %>
           <!-- Price -->
           <div class="cd-price-row">
             <% if (course.pricingType === 'free') { %>
@@ -431,6 +437,7 @@
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
             Add to Wishlist
           </button>
+          <% } %>
 
           <!-- Course Includes -->
           <div class="cd-includes-title">This course includes:</div>

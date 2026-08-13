@@ -13,13 +13,11 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-2">Welcome Back Admin</h2>
                 <p class="text-gray-500 text-sm mb-8">Enter your credentials to access the admin control panel.</p>
 
-<% if(errors?.general){ %>
-<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:10px;margin-bottom:14px;">
-  <%= errors.general %>
+<p id="error-general" class="text-red-500 text-[13px] font-medium mt-1.5 mb-4 <%= errors?.general ? '' : 'hidden' %>">
+  <%= errors?.general || '' %>
 </p>
-<% } %>
 
-                <form action="/api/v1/auth/admin-login" method="POST" class="space-y-5">
+                <form id="ajaxForm" data-action="/api/v1/auth/admin-login" class="space-y-5">
                     <div>
                         <label
                             class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Username</label>
@@ -35,15 +33,9 @@
                         </div>
                     </div>
 
-<% if(errors?.email){ %>
-
-<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-
-  <%= errors.email %>
-
+<p id="error-email" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.email ? '' : 'hidden' %>">
+  <%= errors?.email || '' %>
 </p>
-
-<% } %>
 
                     <div>
                         <label
@@ -66,15 +58,9 @@
                         </div>
                     </div>
                     
-<% if(errors?.password){ %>
-
-<p style="color:#EF4444;font-size:13px;font-weight:500;margin-top:6px;">
-
-  <%= errors.password %>
-
+<p id="error-password" class="text-red-500 text-[13px] font-medium mt-1.5 <%= errors?.password ? '' : 'hidden' %>">
+  <%= errors?.password || '' %>
 </p>
-
-<% } %>
 
                     <button type="submit" class="btn-primary mt-6">Login</button>
                 </form>
@@ -91,5 +77,75 @@
     </main>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<script>
+document.getElementById('ajaxForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const url = form.getAttribute('data-action');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Clear previous errors
+    ['general', 'email', 'password'].forEach(field => {
+        const errorEl = document.getElementById(`error-${field}`);
+        if (errorEl) {
+            errorEl.innerText = '';
+            errorEl.classList.add('hidden');
+        }
+    });
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: result.message,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = result.data.redirectUrl || '/admin/dashboard';
+            });
+        } else {
+            if (result.errors && Object.keys(result.errors).length > 0) {
+                let hasInlineError = false;
+                for (const field in result.errors) {
+                    const errorEl = document.getElementById(`error-${field}`);
+                    if (errorEl) {
+                        errorEl.innerText = result.errors[field];
+                        errorEl.classList.remove('hidden');
+                        hasInlineError = true;
+                    }
+                }
+                
+                if (!hasInlineError) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'Validation failed'
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message || 'Something went wrong'
+                });
+            }
+        }
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Network error. Please try again.'
+        });
+    }
+});
+</script>
       <%- include('../../partials/footer') %>

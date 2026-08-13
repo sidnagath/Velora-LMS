@@ -27,12 +27,14 @@
                <%= errors.general %>
                </p>
                <% } %>
+               <p id="error-general" class="mt-1 text-sm text-red-500 hidden"></p>
 
-            <form id="verifyOtpForm" action="/api/v1/user/profile/verify-email" method="POST" class="w-full text-left space-y-6">
+            <form id="verifyOtpForm" action="/api/v1/user/profile/verify-email-otp" method="POST" class="w-full text-left space-y-6">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 tracking-wide uppercase mb-2">Verification Code</label>
                     <div class="relative">
                         <input type="text" name="otp" class="input-field bg-gray-50 text-center tracking-[0.5em] text-lg font-semibold" placeholder="••••••">
+                        <p id="error-otp" class="mt-1 text-sm text-red-500 hidden"></p>
                     </div>
                 </div>
 
@@ -180,12 +182,30 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const result = await res.json();
         
+        document.querySelectorAll('[id^="error-"]').forEach(el => {
+            el.textContent = '';
+            el.classList.add('hidden');
+        });
+
         if (result.success) {
           Swal.fire({ icon: 'success', title: 'Success', text: result.message }).then(() => {
             window.location.href = '/user/profile';
           });
         } else {
-          Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+          let hasInlineError = false;
+          if (result.errors) {
+              for (const [field, msg] of Object.entries(result.errors)) {
+                  const span = document.getElementById(`error-${field}`);
+                  if (span) {
+                      span.textContent = msg;
+                      span.classList.remove('hidden');
+                      hasInlineError = true;
+                  }
+              }
+          }
+          if (!hasInlineError) {
+              Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'An error occurred' });
+          }
         }
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });

@@ -599,6 +599,19 @@ exports.verifyAndFulfillOrder = async (dbOrderIds, userId, razorpay_order_id, ra
         return { success: true, message: "Payment already verified.", data: { orderIds: dbOrderIds } };
       }
 
+      // 🚨 Check course statuses before fulfillment
+      for (const order of orders) {
+         const course = await Course.findById(order.courseId);
+         if (!course || course.status !== 'published' || course.isDeleted) {
+             // Block fulfillment!
+             await Order.updateMany(
+               { _id: { $in: dbOrderIds }, userId },
+               { $set: { paymentStatus: "failed", failureReason: "Course became unavailable during payment" } }
+             );
+             return { success: false, message: `Payment verified but fulfillment blocked: "${course ? course.title : 'A course'}" is no longer available. Please contact support for a refund.` };
+         }
+      }
+
       // Update Order Status for all orders
       await Order.updateMany(
         { _id: { $in: dbOrderIds }, userId },
@@ -689,6 +702,45 @@ exports.getPaymentSuccessData = async (orderId, userId) => {
     return { success: true, data: { order: aggregatedOrder } };
   } catch (error) {
     console.error("Error fetching payment success data:", error);
+    return { success: false, message: "An error occurred." };
+  }
+};
+
+exports.getPaymentFailureData = async (orderId, userId) => {
+  try {
+    const primaryOrder = await Order.findOne({ _id: orderId, userId });
+    if (!primaryOrder) {
+      return { success: false, message: "Order not found" };
+    }
+    
+    let query = { _id: orderId, userId };
+    if (primaryOrder.razorpayOrderId) {
+       query = { razorpayOrderId: primaryOrder.razorpayOrderId, userId };
+    }
+    
+    const orders = await Order.find(query).populate('courseId');
+    
+    let totalFinalAmount = 0;
+    let courses = [];
+    
+    orders.forEach(o => {
+       totalFinalAmount += o.finalAmount;
+       if (o.courseId) courses.push(o.courseId);
+    });
+    
+    const aggregatedOrder = {
+       orderId: primaryOrder.razorpayOrderId || primaryOrder.orderId,
+       createdAt: primaryOrder.createdAt,
+       paymentStatus: primaryOrder.paymentStatus,
+       failureReason: primaryOrder.failureReason || "Payment was cancelled or failed.",
+       courses: courses,
+       finalAmount: totalFinalAmount,
+       _id: primaryOrder._id 
+    };
+
+    return { success: true, data: { order: aggregatedOrder } };
+  } catch (error) {
+    console.error("Error fetching payment failure data:", error);
     return { success: false, message: "An error occurred." };
   }
 };

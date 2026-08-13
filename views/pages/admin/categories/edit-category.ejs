@@ -27,7 +27,7 @@
       </div>
       <% } %>
 
-      <form id="editCategoryForm" data-id="<%= category._id %>" enctype="multipart/form-data">
+      <form id="editCategoryForm" method="PATCH" data-id="<%= category._id %>" enctype="multipart/form-data">
 
         <!-- CATEGORY DETAILS CARD -->
         <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm mb-6">
@@ -54,9 +54,7 @@
                 value="<%= formData?.name || category.name || '' %>"
                 placeholder="e.g. Web Development"
                 class="w-full pl-4 pr-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900 <%= errors?.name ? 'border-red-400 bg-red-50' : '' %>">
-              <% if(errors?.name){ %>
-              <p class="input-error"><%= errors.name %></p>
-              <% } %>
+              <p id="error-name" class="input-error <%= errors?.name ? '' : 'hidden' %>"><%= errors?.name || '' %></p>
             </div>
 
             <!-- Description -->
@@ -70,9 +68,7 @@
                 rows="4"
                 placeholder="Briefly describe what this category covers..."
                 class="w-full pl-4 pr-5 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-medium text-gray-900 resize-none <%= errors?.description ? 'border-red-400 bg-red-50' : '' %>"><%= formData?.description || category.description || '' %></textarea>
-              <% if(errors?.description){ %>
-              <p class="input-error"><%= errors.description %></p>
-              <% } %>
+              <p id="error-description" class="input-error <%= errors?.description ? '' : 'hidden' %>"><%= errors?.description || '' %></p>
             </div>
 
             <!-- Status -->
@@ -141,9 +137,7 @@
 
             <input type="file" name="thumbnail" id="thumbnailInput" class="hidden" accept="image/*" onchange="initImageCrop(this, 'thumbnailPreview', 16/9)">
           </div>
-          <% if(errors?.thumbnail){ %>
-          <p class="input-error mt-2"><%= errors.thumbnail %></p>
-          <% } %>
+          <p id="error-thumbnail" class="input-error mt-2 <%= errors?.thumbnail ? '' : 'hidden' %>"><%= errors?.thumbnail || '' %></p>
         </div>
 
         <!-- FOOTER ACTIONS -->
@@ -192,6 +186,15 @@
       if (blob) formData.set('thumbnail', blob, 'thumbnail.jpg');
     }
 
+    // Clear previous errors
+    ['name', 'description', 'thumbnail'].forEach(field => {
+      const errorEl = document.getElementById(`error-${field}`);
+      if (errorEl) {
+        errorEl.innerText = '';
+        errorEl.classList.add('hidden');
+      }
+    });
+
     try {
       const response = await fetch(`/api/v1/admin/categories/${id}`, {
         method: 'PATCH',
@@ -203,7 +206,22 @@
           window.location.href = '/admin/categories';
         });
       } else {
-        Swal.fire('Error', data.message || 'Validation failed', 'error');
+        if (data.errors) {
+          let hasInlineError = false;
+          for (const field in data.errors) {
+            const errorEl = document.getElementById(`error-${field}`);
+            if (errorEl) {
+              errorEl.innerText = data.errors[field];
+              errorEl.classList.remove('hidden');
+              hasInlineError = true;
+            }
+          }
+          if (!hasInlineError) {
+            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Validation failed' });
+          }
+        } else {
+          Swal.fire('Error', data.message || 'Validation failed', 'error');
+        }
       }
     } catch (err) {
       console.error(err);

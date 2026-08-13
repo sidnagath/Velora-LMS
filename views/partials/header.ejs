@@ -22,6 +22,14 @@
             showConfirmButton: true
         });
     </script>
+    <script>
+        // Force reload if page is restored from back/forward cache (bfcache)
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; }
     </style>

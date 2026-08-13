@@ -47,11 +47,15 @@
             </div>
 
             <!-- Video Player Placeholder -->
-            <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-xl group">
+            <div class="relative rounded-2xl overflow-hidden bg-gray-900 border border-gray-800/50 shadow-2xl mx-auto" style="aspect-ratio: 16/9; max-width: 1200px;">
                 <% if (typeof activeLesson !== 'undefined' && activeLesson.video) { %>
                     <!-- Real Video Player Integration -->
                     <video class="w-full h-full object-cover" id="courseVideo" controls controlsList="nodownload">
-                        <source src="<%= activeLesson.video %>" type="video/mp4">
+                        <% if (activeLesson.videoPublicId) { %>
+                            <source src="/user/my-courses/<%= course._id %>/lessons/<%= activeLesson._id %>/video" type="video/mp4">
+                        <% } else { %>
+                            <source src="<%= activeLesson.video %>" type="video/mp4">
+                        <% } %>
                         Your browser does not support the video tag.
                     </video>
                     <!-- Overlay Speed Control -->
@@ -299,13 +303,28 @@
                     <% } %>
                 </div>
 
-                <!-- Complete Course Button (Can wire this to a form later) -->
+                <!-- Bottom Action -->
                 <div class="p-4 border-t border-gray-100 bg-white">
-                    <form action="/user/courses/<%= typeof course !== 'undefined' ? course._id : '' %>/complete" method="POST">
-                        <button type="submit" class="w-full py-3 bg-[#6366f1] hover:bg-[#4f46e5] text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
-                            Complete Course
+                    <% if (progressPercent === 100) { %>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-center p-3 bg-green-50 text-green-700 rounded-xl border border-green-100 font-bold">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Course Completed
+                            </div>
+                            <a href="/user/my-courses/<%= typeof course !== 'undefined' ? course._id : '' %>/certificate" class="w-full flex items-center justify-center py-3 bg-[#0B5ED7] hover:bg-[#0A58CA] text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Get Certificate
+                            </a>
+                        </div>
+                    <% } else if (progressPercent > 0) { %>
+                        <button onclick="document.getElementById('courseVideo').play()" class="w-full flex items-center justify-center py-3 bg-[#0B5ED7] hover:bg-[#0A58CA] text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                            Continue Learning
                         </button>
-                    </form>
+                    <% } else { %>
+                        <button onclick="document.getElementById('courseVideo').play()" class="w-full flex items-center justify-center py-3 bg-[#0B5ED7] hover:bg-[#0A58CA] text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                            Start Course
+                        </button>
+                    <% } %>
                 </div>
             </div>
         </div>

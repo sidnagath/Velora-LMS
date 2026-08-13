@@ -22,15 +22,13 @@
 
       <form
         id="editProfileForm"
-        method="PUT"
+        method="PATCH"
         action="/api/v1/user/profile"
         class="space-y-8"
       >
-<% if(errors?.general){ %>
-<p class="mt-1 text-sm font-medium text-red-500" style="color: #EF4444;">
-  <%= errors.general %>
+<p id="error-general" class="mt-1 text-sm font-medium text-red-500 <%= errors?.general ? '' : 'hidden' %>" style="color: #EF4444;">
+  <%= errors?.general || '' %>
 </p>
-<% } %>
 
 
         <!-- FORM GRID -->
@@ -49,11 +47,9 @@
 
               class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
             >
-<% if(errors?.name){ %>
-<p class="mt-1 text-sm font-medium text-red-500" style="color: #EF4444;">
-  <%= errors.name %>
-</p>
-<% } %>
+            <p id="error-name" class="mt-1 text-sm font-medium text-red-500 <%= errors?.name ? '' : 'hidden' %>" style="color: #EF4444;">
+              <%= errors?.name || '' %>
+            </p>
           </div>
 
           <div>
@@ -76,11 +72,9 @@
 </p>
 <% } %>
 
-<% if(errors?.email){ %>
-<p class="mt-1 text-sm font-medium text-red-500" style="color: #EF4444;">
-  <%= errors.email %>
-</p>
-<% } %>
+            <p id="error-email" class="mt-1 text-sm font-medium text-red-500 <%= errors?.email ? '' : 'hidden' %>" style="color: #EF4444;">
+              <%= errors?.email || '' %>
+            </p>
           </div>
 
         </div>
@@ -97,11 +91,9 @@
 
             class="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
           >
-<% if(errors?.phone){ %>
-<p class="mt-1 text-sm font-medium text-red-500" style="color: #EF4444;">
-  <%= errors.phone %>
-</p>
-<% } %>
+          <p id="error-phone" class="mt-1 text-sm font-medium text-red-500 <%= errors?.phone ? '' : 'hidden' %>" style="color: #EF4444;">
+            <%= errors?.phone || '' %>
+          </p>
         </div>
 
         <!-- ACTIONS -->
@@ -142,9 +134,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
       
+      // Clear previous errors
+      ['name', 'email', 'phone', 'general'].forEach(field => {
+        const errorEl = document.getElementById(`error-${field}`);
+        if (errorEl) {
+            errorEl.innerText = '';
+            errorEl.classList.add('hidden');
+        }
+      });
+      
       try {
         const res = await fetch(form.action, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
@@ -152,13 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await res.json();
         
         if (result.success) {
-          if (result.redirectUrl) {
+          if (result.data && result.data.redirect) {
             Swal.fire({
               icon: 'info',
               title: 'Email Change Verification',
               text: result.message
             }).then(() => {
-              window.location.href = result.redirectUrl;
+              window.location.href = result.data.redirect;
             });
           } else {
             Swal.fire({ icon: 'success', title: 'Success', text: result.message }).then(() => {
@@ -166,7 +167,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
           }
         } else {
-          Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+          if (result.errors && Object.keys(result.errors).length > 0) {
+            let hasInlineError = false;
+            for (const field in result.errors) {
+              const errorEl = document.getElementById(`error-${field}`);
+              if (errorEl) {
+                errorEl.innerText = result.errors[field];
+                errorEl.classList.remove('hidden');
+                hasInlineError = true;
+              }
+            }
+            if (!hasInlineError) {
+              Swal.fire({ icon: 'error', title: 'Error', text: result.message || 'Validation failed' });
+            }
+          } else {
+             Swal.fire({ icon: 'error', title: 'Error', text: result.message });
+          }
         }
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred' });

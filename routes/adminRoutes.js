@@ -8,6 +8,7 @@ const moduleController = require('../controllers/admin/moduleController');
 const lessonController = require('../controllers/admin/lessonController');
 const resourceController = require('../controllers/admin/resourceController');
 const couponController = require("../controllers/admin/couponController");
+const reportController = require("../controllers/admin/reportController");
 const authController = require('../controllers/admin/authController');
 const { isAdmin } = require('../middleware/adminMiddleware');
 const {noCache} = require('../middleware/noCache');
@@ -18,8 +19,9 @@ const upload = require("../config/multer");
 // PAGE RENDER ROUTES
 // =======================
 
-router.get("/admin/dashboard", noCache, isAdmin, dashboardController.getAdminDashboard);
-router.get("/admin/analytics", noCache, isAdmin, dashboardController.getAnalytics);
+// Dashboard
+router.get("/admin/dashboard",noCache, isAdmin, dashboardController.getDashboard);
+
 
 // User Management
 router.get("/admin/users", noCache, isAdmin, userController.getAdminUsers);
@@ -48,6 +50,9 @@ router.get("/admin/orders/:id", noCache, isAdmin, orderController.getAdminOrderD
 router.get("/admin/coupons", noCache, isAdmin, couponController.getAdminCoupons);
 router.get("/admin/coupons/create", noCache, isAdmin, couponController.getAdminCreateCoupon);
 router.get("/admin/coupons/:couponId/edit", noCache, isAdmin, couponController.getAdminEditCoupon);
+
+// Reports
+router.get("/admin/reports",noCache, isAdmin, reportController.getReports);
 
 // Logout
 router.get("/admin/logout", noCache, authController.getAdminLogout);

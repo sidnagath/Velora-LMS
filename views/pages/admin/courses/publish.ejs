@@ -48,7 +48,8 @@
       <!-- FLASH BANNER -->
       <%- include('../../../partials/admin-banner') %>
 
-      <form id="publishForm" data-course-id="<%= course._id %>" class="space-y-8">
+      <form id="publishForm" method="POST" data-course-id="<%= course._id %>" class="space-y-8">
+        <p id="error-general" class="hidden text-red-500"></p>
         
         <!-- COURSE PREVIEW CARD -->
         <div class="relative rounded-3xl overflow-hidden bg-blue-900 min-h-[16rem] flex flex-col md:flex-row md:items-center p-8 md:p-12 shadow-2xl">
@@ -124,6 +125,7 @@
                 <span class="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-gray-400" id="currencySymbol">₹</span>
                 <input type="number" name="basePrice" id="basePriceInput" value="<%= course.basePrice || '149.00' %>" step="0.01" class="w-full pl-10 pr-6 py-4 rounded-2xl border <%= errors?.basePrice ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50/50' %> text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
               </div>
+              <p id="error-basePrice" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if(errors?.basePrice){ %>
               <p class="text-red-500 text-xs font-bold mt-2" style="color: #EF4444;"><%= errors.basePrice %></p>
               <% } %>
@@ -134,6 +136,7 @@
                 <span class="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-gray-400" id="discountCurrencySymbol">₹</span>
                 <input type="number" name="discountPrice" id="discountPriceInput" value="<%= course.discountPrice || '' %>" step="0.01" placeholder="0.00" class="w-full pl-10 pr-6 py-4 rounded-2xl border <%= errors?.discountPrice ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50/50' %> text-gray-900 font-bold focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all outline-none">
               </div>
+              <p id="error-discountPrice" class="input-error mt-1 text-sm text-red-500 hidden"></p>
               <% if(errors?.discountPrice){ %>
               <p class="text-red-500 text-xs font-bold mt-2" style="color: #EF4444;"><%= errors.discountPrice %></p>
               <% } %>
@@ -290,6 +293,10 @@
 
   document.getElementById('publishForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    ['basePrice', 'discountPrice', 'general'].forEach(id => {
+      const el = document.getElementById('error-' + id);
+      if (el) { el.classList.add('hidden'); el.innerText = ''; }
+    });
     const courseId = this.dataset.courseId;
     const formData = new FormData(this);
     // FormData will collect all inputs
@@ -306,7 +313,18 @@
           window.location.href = '/admin/courses';
         });
       } else {
-        Swal.fire('Error', data.message || 'Action failed', 'error');
+        const hasInlineError = data.errors && Object.keys(data.errors).length > 0;
+        if (hasInlineError) {
+          for (const key in data.errors) {
+            const el = document.getElementById('error-' + key);
+            if (el) {
+              el.innerText = data.errors[key];
+              el.classList.remove('hidden');
+            }
+          }
+        } else {
+          Swal.fire('Error', data.message || 'Action failed', 'error');
+        }
       }
     } catch (error) {
       Swal.fire('Error', 'An unexpected error occurred.', 'error');

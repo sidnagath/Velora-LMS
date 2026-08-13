@@ -16,6 +16,15 @@ class CheckoutService{
 
     const cart = cartResult.cart;
 
+    // Validate if any course is not published
+    const unavailableCourses = cart.filter(course => course.status !== 'published');
+    if (unavailableCourses.length > 0) {
+      return {
+        success: false,
+        message: `Checkout blocked: "${unavailableCourses[0].title}" is no longer available for purchase.`
+      };
+    }
+
     let subtotal = 0;
     cart.forEach(course => {
       // Assuming course might have discountPrice or price/basePrice

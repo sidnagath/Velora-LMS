@@ -41,9 +41,11 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
   if (Object.keys(errors).length > 0) return { success: false, errors };
 
   let videoUrl = "";
+  let videoPublicId = "";
   if (videoFile) {
-    const uploadResult = await cloudinaryUtil.uploadToCloudinary(videoFile.path, 'lesson_videos', 'video');
+    const uploadResult = await cloudinaryUtil.uploadToCloudinary(videoFile.path, 'lesson_videos', 'video', true, 'authenticated');
     videoUrl = uploadResult ? uploadResult.secure_url : "";
+    videoPublicId = uploadResult ? uploadResult.public_id : "";
   }
 
   const lessonCount = await Lesson.countDocuments({ moduleId });
@@ -53,6 +55,7 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
     description: trimmedDesc,
     duration: trimmedDuration || null,
     video: videoUrl,
+    videoPublicId: videoPublicId,
     order: lessonCount + 1
   });
 

@@ -12,13 +12,12 @@ exports.ensureActiveUser = async (req, res, next) => {
       req.session.user.id
     );
 
-    if (!user || user.status === "inactive") {
-
+    if (!user || user.status === "inactive" || user.isDeleted) {
       delete req.session.user;
-
-      return res.redirect(
-        "/login?error=account_blocked"
-      );
+      if (req.session.passport) {
+        delete req.session.passport.user;
+      }
+      return res.redirect("/account-blocked");
     }
 
     next();
