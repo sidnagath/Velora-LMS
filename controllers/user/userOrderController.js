@@ -31,10 +31,10 @@ exports.getUserOrders = async (req, res) => {
 
 exports.cancelPayment = async (req, res) => {
   try {
-    const { dbOrderId } = req.body;
+    const { dbOrderIds } = req.body;
     const userId = req.session.user.id;
     
-    const result = await orderService.cancelPayment(dbOrderId, userId);
+    const result = await orderService.cancelPayment(dbOrderIds, userId);
     if (!result.success) {
       return res.status(400).json({ success: false, message: result.message });
     }
@@ -48,10 +48,10 @@ exports.cancelPayment = async (req, res) => {
 
 exports.failPayment = async (req, res) => {
   try {
-    const { dbOrderId, reason } = req.body;
+    const { dbOrderIds, reason } = req.body;
     const userId = req.session.user.id;
     
-    const result = await orderService.failPayment(dbOrderId, userId, reason);
+    const result = await orderService.failPayment(dbOrderIds, userId, reason);
     if (!result.success) {
       return res.status(400).json({ success: false, message: result.message });
     }
@@ -74,7 +74,7 @@ exports.retryPayment = async (req, res) => {
       return res.json({ 
         success: true, 
         order: result.data.order,
-        dbOrderId: result.data.dbOrderId 
+        dbOrderIds: result.data.dbOrderIds 
       });
     } else {
       return res.status(400).json({ success: false, message: result.message });
@@ -229,4 +229,27 @@ exports.refund = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error while processing refund' });
 }
   
+};
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const userId = req.session.user?.id;
+    const reason = req.body.reason || "Cancelled by user";
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const result = await orderService.cancelPendingOrder(orderId, userId, false, reason);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    return res.status(500).json({ success: false, message: 'Server error while cancelling order' });
+  }
 };

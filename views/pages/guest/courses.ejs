@@ -251,85 +251,73 @@
             </div>
 
 <!-- PAGINATION -->
-
-
 <div class="mt-12 flex justify-center items-center space-x-2">
 
+    <% const buildCourseQuery = (p) => {
+      const qs = new URLSearchParams();
+      if (typeof search !== 'undefined' && search) qs.set('search', search);
+      if (typeof selectedCategoryId !== 'undefined' && selectedCategoryId) qs.set('category', selectedCategoryId);
+      if (typeof selectedLevel !== 'undefined' && selectedLevel) qs.set('level', selectedLevel);
+      if (typeof selectedPrice !== 'undefined' && selectedPrice) qs.set('price', selectedPrice);
+      if (typeof sortBy !== 'undefined' && sortBy) qs.set('sortBy', sortBy);
+      qs.set('page', p);
+      return '/courses?' + qs.toString();
+    }; %>
+
     <!-- PREVIOUS -->
-
     <% if(currentPage > 1) { %>
-
         <a
-          href="/courses?page=<%= currentPage - 1 %>&category=<%= selectedCategoryId || '' %>&level=<%= selectedLevel %>&price=<%= selectedPrice %>&search=<%= search %>"
+          href="<%= buildCourseQuery(currentPage - 1) %>"
           class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
         >
-
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 19l-7-7 7-7"
-                />
-
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
-
         </a>
-
+    <% } else { %>
+        <span class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-300 bg-gray-50 cursor-not-allowed">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </span>
     <% } %>
-
-
 
     <!-- PAGE NUMBERS -->
-
-    <% for(let i = 1; i <= totalPages; i++) { %>
-
-        <a
-          href="/courses?page=<%= i %>&category=<%= selectedCategoryId || '' %>&level=<%= selectedLevel %>&price=<%= selectedPrice %>&search=<%= search %>"
-
-          class="
-            w-10 h-10 rounded-full flex items-center justify-center transition-colors
-
-            <%= currentPage === i
-
-            ? 'bg-[#0B5ED7] text-white font-bold shadow-md shadow-blue-500/20'
-
-            : 'text-gray-700 font-semibold hover:bg-gray-100' %>
-          "
-        >
-
-          <%= i %>
-
-        </a>
-
+    <% if (totalPages > 0) { %>
+        <% for(let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++) { %>
+            <a
+              href="<%= buildCourseQuery(i) %>"
+              class="
+                w-10 h-10 rounded-full flex items-center justify-center transition-colors
+                <%= currentPage === i
+                ? 'bg-[#0B5ED7] text-white font-bold shadow-md shadow-blue-500/20'
+                : 'text-gray-700 font-semibold hover:bg-gray-100' %>
+              "
+            >
+              <%= i %>
+            </a>
+        <% } %>
     <% } %>
-
-
 
     <!-- NEXT -->
-
     <% if(currentPage < totalPages) { %>
-
         <a
-          href="/courses?page=<%= currentPage + 1 %>&category=<%= selectedCategoryId || '' %>&level=<%= selectedLevel %>&price=<%= selectedPrice %>&search=<%= search %>"
+          href="<%= buildCourseQuery(currentPage + 1) %>"
           class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
         >
-
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
-
         </a>
-
+    <% } else { %>
+        <span class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-300 bg-gray-50 cursor-not-allowed">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </span>
     <% } %>
+
+</div>
 
     
 

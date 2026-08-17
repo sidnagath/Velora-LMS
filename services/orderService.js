@@ -3,6 +3,8 @@ const User = require('../models/userModel');
 const Course = require('../models/courseModel');
 const Enrollment = require('../models/enrollmentModel');
 const Coupon = require('../models/couponModel');
+const Wallet = require('../models/walletModel');
+const mongoose = require('mongoose');
 const checkoutService = require('./checkoutService');
 const razorpayService = require('./razorpayService');
 const walletService = require('./walletService');
@@ -240,8 +242,13 @@ exports.retryPayment = async (dbOrderIds, userId) => {
     
     // Check if any is not eligible
     for (let order of orders) {
-      if (order.paymentStatus !== 'failed' && order.paymentStatus !== 'cancelled') {
+      if (order.paymentStatus !== 'failed' && order.paymentStatus !== 'cancelled' && order.paymentStatus !== 'pending') {
         return { success: false, message: 'Invalid order or order is not eligible for retry.' };
+      }
+      
+      const isEnrolled = await Enrollment.findOne({ userId, courseId: order.courseId, status: { $ne: 'cancelled' } });
+      if (isEnrolled) {
+        return { success: false, message: 'You are already enrolled in one or more courses in this order.' };
       }
     }
     
@@ -344,12 +351,24 @@ exports.getInvoiceData = async (orderId, userId) => {
   }
 };
 
-exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId) => {
+exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId, expectedCourseIds) => {
   try {
     // 1. Fetch user's cart
     const checkoutResult = await checkoutService.getCheckoutData(userId);
     if (!checkoutResult.success || checkoutResult.cart.length === 0) {
-      return { success: false, message: "Cart is empty or invalid." };
+      return { success: false, message: "Cart is empty or invalid.", redirectUrl: "/user/cart" };
+    }
+
+    if (expectedCourseIds && Array.isArray(expectedCourseIds)) {
+      const actualCourseIds = checkoutResult.cart.map(c => c._id.toString());
+      const missingCourses = expectedCourseIds.filter(id => !actualCourseIds.includes(id));
+      if (missingCourses.length > 0) {
+        return { 
+          success: false, 
+          message: "One or more courses are no longer available. Your checkout has been updated.",
+          redirectUrl: "/user/checkout"
+        };
+      }
     }
 
     // 2. Prevent repurchasing already enrolled courses or pending/paid orders
@@ -398,7 +417,7 @@ exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId) => 
 
     if (appliedCouponId) {
       const coupon = await Coupon.findById(appliedCouponId);
-      if (coupon && coupon.status === "active" && new Date(coupon.expiryDate) >= new Date() && cartSubtotal >= coupon.minOrderValue) {
+      if (coupon && coupon.status === "active" && new Date(coupon.expiryDate) >= new Date() && cartSubtotal >= coupon.minOrderValue && coupon.usageCount < coupon.usageLimit) {
         if (coupon.discountType === "flat") {
           couponDiscount = coupon.discountValue;
         } else if (coupon.discountType === "percentage") {
@@ -410,6 +429,12 @@ exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId) => 
         if (couponDiscount > cartSubtotal) {
           couponDiscount = cartSubtotal;
         }
+      } else {
+        return { 
+          success: false, 
+          message: "This coupon is no longer available or valid for this order. The discount has been removed.",
+          redirectUrl: "/user/checkout"
+        };
       }
     }
     
@@ -477,14 +502,21 @@ exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId) => 
       }
 
       // Create Enrollments
-      const enrollments = savedOrders.map(order => ({
-        userId,
-        courseId: order.courseId,
-        orderId: order._id,
-        progress: 0,
-        status: "active"
-      }));
-      await Enrollment.insertMany(enrollments);
+      const enrollmentPromises = savedOrders.map(order => 
+        Enrollment.findOneAndUpdate(
+          { userId, courseId: order.courseId },
+          { 
+            $set: { 
+              orderId: order._id, 
+              progress: 0, 
+              status: "active",
+              completedLessons: []
+            } 
+          },
+          { upsert: true, new: true }
+        )
+      );
+      await Promise.all(enrollmentPromises);
 
       // Clear Cart
       await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
@@ -578,6 +610,215 @@ exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId) => 
   }
 };
 
+exports.processWalletCheckout = async (userId, appliedCouponId, expectedCourseIds) => {
+  try {
+    const checkoutResult = await checkoutService.getCheckoutData(userId);
+    if (!checkoutResult.success || checkoutResult.cart.length === 0) {
+      return { success: false, message: "Cart is empty or invalid.", redirectUrl: "/user/cart" };
+    }
+
+    if (expectedCourseIds && Array.isArray(expectedCourseIds)) {
+      const actualCourseIds = checkoutResult.cart.map(c => c._id.toString());
+      const missingCourses = expectedCourseIds.filter(id => !actualCourseIds.includes(id));
+      if (missingCourses.length > 0) {
+        return { 
+          success: false, 
+          message: "One or more courses are no longer available. Your checkout has been updated.",
+          redirectUrl: "/user/checkout"
+        };
+      }
+    }
+
+    const courseIds = [];
+    for (const course of checkoutResult.cart) {
+      courseIds.push(course._id);
+      
+      const existingOrder = await Order.findOne({
+        userId,
+        courseId: course._id,
+        paymentStatus: { $in: ["pending", "paid"] }
+      });
+      
+      if (existingOrder) {
+        if (existingOrder.paymentStatus === 'paid') {
+          return { success: false, message: `You have already purchased "${course.title}".` };
+        } else {
+          return { success: false, message: `You have a pending order for "${course.title}". Please complete or cancel it from your Orders page.` };
+        }
+      }
+
+      const isEnrolled = await Enrollment.findOne({ userId, courseId: course._id, status: { $ne: 'cancelled' } });
+      if (isEnrolled) {
+        return { success: false, message: `You are already enrolled in "${course.title}". Please remove it from your cart.` };
+      }
+    }
+
+    let baseSubtotal = 0;
+    let courseDiscount = 0;
+    
+    checkoutResult.cart.forEach(course => {
+      const price = course.basePrice || course.price || 0;
+      const dPrice = course.discountPrice || 0;
+      baseSubtotal += price;
+      if (dPrice > 0 && dPrice < price) {
+        courseDiscount += (price - dPrice);
+      }
+    });
+    
+    const cartSubtotal = baseSubtotal - courseDiscount;
+    let couponDiscount = 0;
+    let finalAmount = cartSubtotal;
+
+    if (appliedCouponId) {
+      const coupon = await Coupon.findById(appliedCouponId);
+      if (coupon && coupon.status === "active" && new Date(coupon.expiryDate) >= new Date() && cartSubtotal >= coupon.minOrderValue && coupon.usageCount < coupon.usageLimit) {
+        if (coupon.discountType === "flat") {
+          couponDiscount = coupon.discountValue;
+        } else if (coupon.discountType === "percentage") {
+          couponDiscount = (cartSubtotal * coupon.discountValue) / 100;
+          if (coupon.maxDiscount > 0 && couponDiscount > coupon.maxDiscount) {
+            couponDiscount = coupon.maxDiscount;
+          }
+        }
+        if (couponDiscount > cartSubtotal) {
+          couponDiscount = cartSubtotal;
+        }
+      } else {
+        return { 
+          success: false, 
+          message: "This coupon is no longer available or valid for this order. The discount has been removed.",
+          redirectUrl: "/user/checkout"
+        };
+      }
+    }
+    
+    // Calculate GST Exclusively
+    const taxableAmount = cartSubtotal - couponDiscount;
+    const gstAmount = taxableAmount * 0.18;
+    finalAmount = taxableAmount + gstAmount;
+
+    // Handle 100% discount (Free order - theoretically shouldn't use wallet, but supported)
+    if (finalAmount <= 0) {
+      finalAmount = 0;
+    }
+
+    // Fetch Wallet with lock
+    let wallet = await Wallet.findOne({ user: userId });
+    if (!wallet) {
+      wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
+    }
+
+    if (wallet.balance < finalAmount) {
+      return { success: false, message: "Insufficient wallet balance." };
+    }
+
+    // Deduct Balance
+    wallet.balance -= finalAmount;
+    
+    // Create Orders
+    const createdOrders = [];
+    let orderGroupBaseIds = [];
+    
+    let remainingCouponDiscount = couponDiscount;
+
+    for (let i = 0; i < checkoutResult.cart.length; i++) {
+      const course = checkoutResult.cart[i];
+      const price = course.basePrice || course.price || 0;
+      const dPrice = course.discountPrice || 0;
+      let cDiscount = 0;
+      if (dPrice > 0 && dPrice < price) {
+        cDiscount = (price - dPrice);
+      }
+      const courseSubtotal = price - cDiscount;
+      
+      let itemCouponDiscount = 0;
+      if (cartSubtotal > 0) {
+          if (i === checkoutResult.cart.length - 1) {
+            itemCouponDiscount = remainingCouponDiscount;
+          } else {
+            itemCouponDiscount = (courseSubtotal / cartSubtotal) * couponDiscount;
+            remainingCouponDiscount -= itemCouponDiscount;
+          }
+      }
+      
+      const itemTaxableAmount = Math.max(0, courseSubtotal - itemCouponDiscount);
+      const itemGstAmount = itemTaxableAmount * 0.18;
+      const itemFinalAmount = itemTaxableAmount + itemGstAmount;
+      
+      const order = new Order({
+        userId,
+        courseId: course._id,
+        subtotal: price,
+        courseDiscount: cDiscount,
+        couponDiscount: itemCouponDiscount,
+        finalAmount: itemFinalAmount,
+        couponId: appliedCouponId || null,
+        paymentMethod: 'wallet',
+        paymentStatus: 'paid'
+      });
+      
+      await order.save();
+      createdOrders.push(order);
+      orderGroupBaseIds.push(order._id);
+    }
+
+    // Record Transaction
+    if (finalAmount > 0) {
+      wallet.transactions.push({
+        type: "debit",
+        amount: finalAmount,
+        description: "Course Purchase",
+        order: createdOrders[0]._id // Associate with the first order in the group
+      });
+      await wallet.save();
+    }
+
+    // Handle Coupon Usage
+    if (appliedCouponId) {
+      const coupon = await Coupon.findByIdAndUpdate(
+        appliedCouponId,
+        { $inc: { usageCount: 1 } },
+        { new: true }
+      );
+      
+      if (coupon && coupon.usageCount >= coupon.usageLimit) {
+        coupon.status = "inactive";
+        await coupon.save();
+      }
+    }
+
+    // Create Enrollments
+    const enrollmentPromises = createdOrders.map(order => 
+      Enrollment.findOneAndUpdate(
+        { userId, courseId: order.courseId },
+        { 
+          $set: { 
+            orderId: order._id, 
+            progress: 0, 
+            status: "active",
+            completedLessons: []
+          } 
+        },
+        { upsert: true, new: true }
+      )
+    );
+    await Promise.all(enrollmentPromises);
+
+    // Clear User Cart
+    await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
+
+    return { 
+      success: true, 
+      message: "Payment successful.",
+      data: { orderIds: orderGroupBaseIds }
+    };
+
+  } catch (error) {
+    console.error("Wallet Checkout Error:", error);
+    return { success: false, message: "Failed to process wallet payment: " + error.message };
+  }
+};
+
 exports.verifyAndFulfillOrder = async (dbOrderIds, userId, razorpay_order_id, razorpay_payment_id, razorpay_signature) => {
   try {
     const verification = razorpayService.verifySignature(
@@ -634,14 +875,21 @@ exports.verifyAndFulfillOrder = async (dbOrderIds, userId, razorpay_order_id, ra
       }
 
       // Create Enrollments for all courses
-      const enrollments = orders.map(order => ({
-        userId,
-        courseId: order.courseId,
-        orderId: order._id,
-        progress: 0,
-        status: "active"
-      }));
-      await Enrollment.insertMany(enrollments);
+      const enrollmentPromises = orders.map(order => 
+        Enrollment.findOneAndUpdate(
+          { userId, courseId: order.courseId },
+          { 
+            $set: { 
+              orderId: order._id, 
+              progress: 0, 
+              status: "active",
+              completedLessons: []
+            } 
+          },
+          { upsert: true, new: true }
+        )
+      );
+      await Promise.all(enrollmentPromises);
 
       // Clear User Cart
       await User.findByIdAndUpdate(userId, { $set: { cart: [] } });
@@ -671,7 +919,21 @@ exports.getPaymentSuccessData = async (orderId, userId) => {
       return { success: false, message: "Order not found" };
     }
     
-    const orders = await Order.find({ razorpayPaymentId: primaryOrder.razorpayPaymentId, userId }).populate('courseId');
+    let orders;
+    if (primaryOrder.razorpayPaymentId) {
+      orders = await Order.find({ razorpayPaymentId: primaryOrder.razorpayPaymentId, userId }).populate('courseId');
+    } else if (primaryOrder.paymentMethod === 'wallet') {
+      const startTime = new Date(primaryOrder.createdAt.getTime() - 2000);
+      const endTime = new Date(primaryOrder.createdAt.getTime() + 2000);
+      orders = await Order.find({ 
+        userId, 
+        paymentMethod: 'wallet', 
+        createdAt: { $gte: startTime, $lte: endTime } 
+      }).populate('courseId');
+    } else {
+      await primaryOrder.populate('courseId');
+      orders = [primaryOrder];
+    }
     
     let totalSubtotal = 0;
     let totalCourseDiscount = 0;
@@ -815,10 +1077,27 @@ exports.requestRefund=async(orderId,userId,reason)=>{
     return {success:false, message:"Order not found"}
    }
 
+   if(order.paymentStatus === "refunded" || order.refundStatus === "approved"){
+     return {success:false, message:"This course has already been refunded."}
+   }
+
+   // Check if the user has already received a refund for this course in a past order
+   if (order.courseId) {
+     const previousRefund = await Order.findOne({
+       userId: userId,
+       courseId: order.courseId,
+       _id: { $ne: order._id },
+       $or: [{ paymentStatus: "refunded" }, { refundStatus: "approved" }]
+     });
+     
+     if (previousRefund) {
+       return { success: false, message: "You have already been refunded for this course previously. A course can only be refunded once." };
+     }
+   }
+
   if(order.paymentStatus!=="paid"){
     return {success:false, message:"Only paid orders can be refunded"}
   }
-
 
   if(order.refundStatus){
     return {success:false, message:"Refund already been requested for this order"}
@@ -951,4 +1230,40 @@ exports.rejectRefund = async (id) => {
         console.error("Error rejecting refund:", error);
         return { success: false, message: "Server error while rejecting refund" };
     }
+};
+
+exports.cancelPendingOrder = async (orderId, userId, isAdmin, reason) => {
+  try {
+    const query = { _id: orderId };
+    if (!isAdmin) {
+      query.userId = userId;
+    }
+    
+    const order = await Order.findOne(query);
+    
+    if (!order) {
+      return { success: false, message: "Order not found or unauthorized." };
+    }
+    
+    if (order.paymentStatus !== "pending") {
+      return { success: false, message: `Cannot cancel order with status: ${order.paymentStatus}.` };
+    }
+    
+    order.paymentStatus = "cancelled";
+    order.cancelledAt = new Date();
+    order.cancelReason = reason || (isAdmin ? "Cancelled by admin" : "Cancelled by user");
+    
+    await order.save();
+    
+    // Attempt to cancel any associated enrollment, if it exists
+    await Enrollment.updateMany(
+      { orderId: order._id },
+      { $set: { status: "cancelled" } }
+    );
+    
+    return { success: true, message: "Order successfully cancelled.", order };
+  } catch (error) {
+    console.error("Cancel Order Error:", error);
+    return { success: false, message: "Failed to cancel order." };
+  }
 };

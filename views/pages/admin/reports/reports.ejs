@@ -14,7 +14,7 @@
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Analytics & Reports</h1>
           <p class="text-gray-500 mt-2 text-sm">Comprehensive metrics for your platform's performance.</p>
         </div>
-        <button class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-5 rounded-xl shadow-sm flex items-center transition-colors text-sm">
+        <button onclick="exportReport()" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-5 rounded-xl shadow-sm flex items-center transition-colors text-sm">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           Export Report
         </button>
@@ -462,5 +462,12 @@
     </div>
   </div>
 </main>
+
+<script>
+  function exportReport() {
+    const qs = new URLSearchParams(window.location.search).toString();
+    window.location.href = '/admin/reports/export?' + qs;
+  }
+</script>
 
 <%- include('../../../partials/footer') %>

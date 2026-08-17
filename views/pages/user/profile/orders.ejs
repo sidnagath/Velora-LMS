@@ -206,6 +206,11 @@
                             Request Refund
                           </button>
                         <% } %>
+                      <% } else if (order.paymentStatus === 'pending') { %>
+                        <button onclick="cancelPendingOrder('<%= order._id %>')" class="inline-flex justify-center items-center py-2 px-5 border border-red-200 rounded-lg shadow-sm text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors mb-2">
+                          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                          Cancel Order
+                        </button>
                       <% } %>
                     </div>
 
@@ -454,7 +459,7 @@
 
     try {
       // 1. Trigger retry payment API
-      const res = await fetch("/api/v1/user/order/retry", {
+      const res = await fetch("/api/v1/user/payment/retry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dbOrderId })
@@ -485,7 +490,7 @@
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
-              dbOrderId: data.dbOrderId
+              dbOrderIds: data.dbOrderIds
             })
           });
           
@@ -503,7 +508,7 @@
             await fetch("/api/v1/user/payment/cancel", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ dbOrderId: data.dbOrderId })
+              body: JSON.stringify({ dbOrderIds: data.dbOrderIds })
             });
             window.location.reload();
           }
@@ -517,7 +522,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
-              dbOrderId: data.dbOrderId, 
+              dbOrderIds: data.dbOrderIds, 
               reason: response.error.description 
             })
           });
@@ -530,6 +535,41 @@
       Swal.fire({ text: "An error occurred. Please try again.", icon: "error" });
       retryBtn.innerText = originalText;
       retryBtn.disabled = false;
+    }
+  }
+
+  async function cancelPendingOrder(orderId) {
+    const result = await Swal.fire({
+      title: 'Cancel Order?',
+      text: "Are you sure you want to cancel this pending order?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, cancel it'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`/api/v1/user/orders/${orderId}/cancel`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: "Cancelled by user via dashboard" })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          Swal.fire('Cancelled!', 'Your order has been cancelled.', 'success').then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire('Error!', data.message || 'Failed to cancel order', 'error');
+        }
+      } catch (error) {
+        console.error(error);
+        Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+      }
     }
   }
 </script>

@@ -207,6 +207,16 @@ exports.createCourse = async (data, files, fileValidationErrors) => {
       return { success: false, errors, data: { categories } };
     }
 
+    // Idempotency / Deduplication check
+    const existingCourse = await Course.findOne({ 
+      title: { $regex: `^${title}$`, $options: 'i' }, 
+      isDeleted: false 
+    });
+    
+    if (existingCourse) {
+      return { success: true, data: { course: existingCourse } };
+    }
+
     let thumbnailPath = "";
     if (thumbnailFile) {
       const thumbResult = await cloudinaryUtil.uploadToCloudinary(thumbnailFile.path, 'course_thumbnails', 'image');
@@ -439,8 +449,9 @@ exports.publishCourse = async (courseId, data) => {
     }
 
     if (isPublishing) {
-      if (modules.length === 0) errors.general = "Add at least one module before publishing";
-      else if (lessons.length === 0) errors.general = "Add at least one lesson before publishing";
+      if (modules.length === 0 || lessons.length === 0) {
+        errors.general = "Please add at least one module and one lesson before publishing this course.";
+      }
       else if (!course.title) errors.general = "Course title missing";
       else if (!course.description) errors.general = "Course description missing";
       else if (!course.thumbnail) errors.general = "Course thumbnail missing";
@@ -576,7 +587,7 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
       isDeleted: false
     };
     if (!isAdmin) {
-      query.status = { $in: ["published", "draft"] };
+      query.status = "published";
     }
     const course = await Course.findOne(query).populate("category").lean();
 
@@ -652,9 +663,15 @@ exports.getMyCoursesData = async (userId) => {
       userId,
       status: { $in: ['active', 'completed'] }
     })
-      .populate('courseId')
+      .populate({
+        path: 'courseId',
+        populate: { path: 'category' }
+      })
       .sort({ createdAt: -1 });
-    return { success: true, enrollments };
+
+    const validEnrollments = enrollments.filter(e => e.courseId != null);
+
+    return { success: true, enrollments: validEnrollments };
   } catch (err) {
     console.error(err);
     return { success: false, message: "Error fetching user courses" };

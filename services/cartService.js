@@ -43,6 +43,11 @@ class CartService {
       return { success: false, message: "You are already enrolled in this course." };
     }
 
+    const course = await Course.findById(courseId);
+    if (!course || course.isDeleted || course.status !== "published") {
+      return { success: false, message: "This course is no longer available." };
+    }
+
     const index = user.cart.findIndex(id => id.toString() === courseId.toString());
     let isAdded = false;
     let message = "";
@@ -86,8 +91,15 @@ class CartService {
       return { success: false, message: "You are already enrolled in this course." };
     }
 
-    // Remove from cart
+    const course = await Course.findById(courseId);
+    
+    // Remove from cart first
     user.cart = user.cart.filter(id => id.toString() !== courseId.toString());
+
+    if (!course || course.isDeleted) {
+      await user.save();
+      return { success: false, message: "Course is no longer available and has been removed from your cart." };
+    }
 
     // Add to wishlist if not already there
     const inWishlist = user.wishlist.some(id => id.toString() === courseId.toString());

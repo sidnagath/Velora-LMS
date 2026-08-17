@@ -3,7 +3,7 @@ const Course = require("../models/courseModel");
 
 class WishlistService {
   async getWishlist(userId, searchQuery = "") {
-    const matchQuery = { status: "published", isDeleted: false };
+    const matchQuery = { isDeleted: false };
     if (searchQuery && searchQuery.trim() !== "") {
       matchQuery.title = { $regex: searchQuery.trim(), $options: "i" };
     }
@@ -34,6 +34,13 @@ class WishlistService {
     const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
     if (isEnrolled) {
       return { success: false, message: "You are already enrolled in this course." };
+    }
+    
+    const course = await Course.findById(courseId);
+    if (!course || course.isDeleted) {
+      user.wishlist = user.wishlist.filter(id => id.toString() !== courseId.toString());
+      await user.save();
+      return { success: false, message: "This course is no longer available." };
     }
 
     const index = user.wishlist.findIndex(id => id.toString() === courseId.toString());
@@ -68,9 +75,16 @@ class WishlistService {
     if (isEnrolled) {
       return { success: false, message: "You are already enrolled in this course." };
     }
+    
+    const course = await Course.findById(courseId);
 
-    //Remove from Wishlist
+    //Remove from Wishlist first
     user.wishlist=user.wishlist.filter(id=>id.toString()!==courseId.toString());
+    
+    if (!course || course.isDeleted || course.status !== "published") {
+      await user.save();
+      return { success: false, message: "Course is no longer available for purchase and has been removed from your wishlist." };
+    }
 
     //Add to Cart if not already there
     const inCart = user.cart.some(id => id.toString() === courseId.toString());

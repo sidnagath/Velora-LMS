@@ -16,17 +16,18 @@ class CheckoutService{
 
     const cart = cartResult.cart;
 
-    // Validate if any course is not published
-    const unavailableCourses = cart.filter(course => course.status !== 'published');
-    if (unavailableCourses.length > 0) {
+    // Filter out unpublished or unavailable courses
+    const validCart = cart.filter(course => course.status === 'published' && !course.isDeleted);
+    
+    if (validCart.length === 0) {
       return {
         success: false,
-        message: `Checkout blocked: "${unavailableCourses[0].title}" is no longer available for purchase.`
+        message: "No valid courses remaining in your cart. They may have been removed or become unavailable."
       };
     }
 
     let subtotal = 0;
-    cart.forEach(course => {
+    validCart.forEach(course => {
       // Assuming course might have discountPrice or price/basePrice
       const priceToUse = course.discountPrice > 0 ? course.discountPrice : (course.basePrice || course.price || 0);
       subtotal += priceToUse;
@@ -40,7 +41,7 @@ class CheckoutService{
 
     return {
       success: true,
-      cart,
+      cart: validCart,
       subtotal,
       total,
       coupons

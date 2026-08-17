@@ -40,21 +40,21 @@ exports.getDashboard = async (req, res) => {
         status: { $in: ['active', 'completed'] } 
       }).populate('courseId').sort({ updatedAt: -1 }).lean();
       
-      enrolledCourseIds = enrollments.map(e => e.courseId._id.toString());
+      // Filter out enrollments where the course was hard-deleted
+      const validEnrollments = enrollments.filter(e => e.courseId != null);
+
+      enrolledCourseIds = validEnrollments.map(e => e.courseId._id.toString());
       
-      enrolledCount = enrollments.length;
-      completedCount = enrollments.filter(e => e.status === 'completed' || e.progress === 100).length;
+      enrolledCount = validEnrollments.length;
+      completedCount = validEnrollments.filter(e => e.status === 'completed' || e.progress === 100).length;
       
-      // Better overall progress: only average courses that have been started (progress > 0), 
-      // or if all are 0, then 0. 
-      // Another way: simple average of all enrolled. Let's stick to simple average of all enrolled courses.
       if (enrolledCount > 0) {
-        const totalProgress = enrollments.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+        const totalProgress = validEnrollments.reduce((acc, curr) => acc + (curr.progress || 0), 0);
         overallProgress = Math.round(totalProgress / enrolledCount);
       }
       
       // Top 3 for "Continue Learning" section
-      continueLearningCourses = enrollments.slice(0, 3);
+      continueLearningCourses = validEnrollments.slice(0, 3);
     }
 
     // Get Wallet Balance

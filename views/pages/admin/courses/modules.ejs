@@ -682,9 +682,9 @@
       currentVideo.innerText = "Current: " + fileName;
       currentVideo.style.display = 'block';
       
-      videoPreview.src = '';
-      videoPreview.classList.add('hidden');
-      videoPreview.dataset.originalSrc = '';
+      videoPreview.src = video;
+      videoPreview.classList.remove('hidden');
+      videoPreview.dataset.originalSrc = video;
     } else {
       videoLabel.innerText = "Video *";
       currentVideo.style.display = 'none';

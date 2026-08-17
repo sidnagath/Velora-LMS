@@ -224,7 +224,10 @@ exports.postAdminLogin = async (req, res) => {
       return res.status(400).json({ success: false, message: result.errors?.general || 'Login failed', errors: result.errors });
     }
     req.session.admin = result.admin;
-    return res.status(200).json({ success: true, message: 'Admin logged in successfully.', data: { redirectUrl: '/admin/dashboard' } });
+    req.session.save((err) => {
+      if (err) console.error("Session save error:", err);
+      return res.status(200).json({ success: true, message: 'Admin logged in successfully.', data: { redirectUrl: '/admin/dashboard' } });
+    });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ success: false, message: 'Something went wrong', data: {} });
@@ -232,6 +235,9 @@ exports.postAdminLogin = async (req, res) => {
 };
 
 exports.getAdminLogout = (req, res) => {
-  req.session.destroy();
-  res.redirect("/auth/admin-login");
+  req.session.destroy((err) => {
+    if (err) console.error("Session destroy error:", err);
+    res.clearCookie('connect.sid');
+    res.redirect("/auth/admin-login");
+  });
 };

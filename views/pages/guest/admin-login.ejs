@@ -1,4 +1,11 @@
   <%- include('../../partials/header') %>
+<script>
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  });
+</script>
 
     <main class="flex-grow flex items-center justify-center py-16 px-4">
         <div class="w-full max-w-md">
@@ -110,7 +117,8 @@ document.getElementById('ajaxForm')?.addEventListener('submit', async (e) => {
                 timer: 1500,
                 showConfirmButton: false
             }).then(() => {
-                window.location.href = result.data.redirectUrl || '/admin/dashboard';
+                window.history.replaceState(null, '', window.location.href);
+                window.location.replace(result.data.redirectUrl || '/admin/dashboard');
             });
         } else {
             if (result.errors && Object.keys(result.errors).length > 0) {

@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentMethod: {
       type: String,
-      enum: ["razorpay", "free"],
+      enum: ["razorpay", "free", "wallet"],
       default: "razorpay"
     },
     razorpayOrderId: {
@@ -88,6 +88,14 @@ const orderSchema = new mongoose.Schema(
     },
 
     failureReason: {
+      type: String,
+      default: null
+    },
+    cancelledAt: {
+      type: Date,
+      default: null
+    },
+    cancelReason: {
       type: String,
       default: null
     }

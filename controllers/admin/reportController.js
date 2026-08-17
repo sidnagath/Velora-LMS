@@ -41,3 +41,34 @@ exports.getReports = async (req, res) => {
     res.redirect('/admin/dashboard');
   }
 };
+
+const pdfService = require('../../services/pdfService');
+
+exports.exportReportPDF = async (req, res) => {
+  try {
+    const filters = {
+      dateRange: req.query.dateRange || 'last30',
+      startDate: req.query.startDate || '',
+      endDate: req.query.endDate || '',
+      categoryId: req.query.categoryId || 'all',
+      courseId: req.query.courseId || 'all'
+    };
+
+    const result = await reportService.getReportData(filters);
+
+    if (!result.success) {
+      req.flash('error', 'Failed to load report data for export');
+      return res.redirect('/admin/reports');
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="Velora-Analytics-Report.pdf"');
+
+    await pdfService.generateReportPDF(result.data, filters, res);
+
+  } catch (error) {
+    console.error("Export PDF Error:", error);
+    req.flash('error', 'Unable to generate PDF report');
+    res.redirect('/admin/reports');
+  }
+};

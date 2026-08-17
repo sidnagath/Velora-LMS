@@ -3,15 +3,17 @@ const profileService = require("../../services/profileService");
 const cartService = require("../../services/cartService");
 const razorpayService = require("../../services/razorpayService");
 const orderService = require("../../services/orderService");
+const Wallet = require("../../models/walletModel");
 
 exports.getCheckoutPage = async (req, res) => {
   try {
     const userId = req.session.user?.id;
     
-    // Fetch checkout data and cart count concurrently
-    const [checkoutResult, cartCount] = await Promise.all([
+    // Fetch checkout data, cart count, and wallet concurrently
+    const [checkoutResult, cartCount, wallet] = await Promise.all([
       checkoutService.getCheckoutData(userId),
-      cartService.getCartCount(userId)
+      cartService.getCartCount(userId),
+      Wallet.findOne({ user: userId })
     ]);
 
     if (!checkoutResult.success) {
@@ -27,6 +29,7 @@ exports.getCheckoutPage = async (req, res) => {
       total: checkoutResult.total,
       coupons: checkoutResult.coupons || [],
       cartCount: cartCount.success ? cartCount.count : 0,
+      walletBalance: wallet ? wallet.balance : 0,
       razorpayKeyId: (process.env.RAZORPAY_KEY_ID || "").trim()
     });
   } catch (err) {
@@ -122,9 +125,9 @@ exports.applyCoupon = async (req, res) => {
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.session.user.id;
-    const { appliedCouponId } = req.body;
+    const { appliedCouponId, expectedCourseIds } = req.body;
 
-    const result = await orderService.createPendingOrderAndRazorpayOrder(userId, appliedCouponId);
+    const result = await orderService.createPendingOrderAndRazorpayOrder(userId, appliedCouponId, expectedCourseIds);
     
     if (result.success) {
       if (result.data.bypassRazorpay) {
@@ -146,6 +149,28 @@ exports.createRazorpayOrder = async (req, res) => {
   } catch (error) {
     console.error("Create Order Error:", error);
     return res.status(500).json({ success: false, message: "Server error creating order." });
+  }
+};
+
+exports.processWalletPayment = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const { appliedCouponId, expectedCourseIds } = req.body;
+
+    const result = await orderService.processWalletCheckout(userId, appliedCouponId, expectedCourseIds);
+    
+    if (result.success) {
+      return res.json({ 
+        success: true, 
+        message: result.message,
+        orderId: result.data.orderIds[0] 
+      });
+    } else {
+      return res.status(400).json({ success: false, message: result.message });
+    }
+  } catch (error) {
+    console.error("Wallet Checkout Error:", error);
+    return res.status(500).json({ success: false, message: "Server error during wallet checkout." });
   }
 };
 

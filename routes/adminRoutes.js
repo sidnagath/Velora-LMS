@@ -53,6 +53,7 @@ router.get("/admin/coupons/:couponId/edit", noCache, isAdmin, couponController.g
 
 // Reports
 router.get("/admin/reports",noCache, isAdmin, reportController.getReports);
+router.get("/admin/reports/export", noCache, isAdmin, reportController.exportReportPDF);
 
 // Logout
 router.get("/admin/logout", noCache, authController.getAdminLogout);
@@ -98,6 +99,7 @@ router.delete('/api/v1/admin/courses/:courseId/resources/link', noCache, isAdmin
 router.patch("/api/v1/admin/orders/:id/status", noCache, isAdmin, orderController.updateOrderStatus);
 router.post("/api/v1/admin/orders/:id/refund/approve", noCache, isAdmin, orderController.approveRefund);
 router.post("/api/v1/admin/orders/:id/refund/reject", noCache, isAdmin, orderController.rejectRefund);
+router.post("/api/v1/admin/orders/:id/cancel", noCache, isAdmin, orderController.cancelOrder);
 
 // Coupons API
 router.post("/api/v1/admin/coupons", noCache, isAdmin, couponController.postAdminCreateCoupon);

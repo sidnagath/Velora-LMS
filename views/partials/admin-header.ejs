@@ -1,4 +1,11 @@
 <header class="bg-white border-b sticky top-0 z-10 px-8 py-4 flex items-center justify-between">
+<script>
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  });
+</script>
   <div class="relative w-full max-w-2xl">
     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
       <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

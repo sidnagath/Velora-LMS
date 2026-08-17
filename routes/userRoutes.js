@@ -60,9 +60,11 @@ router.post("/api/v1/user/cart/toggle", isUser, ensureActiveUser, cartController
 
 router.post("/api/v1/user/checkout/coupon", isUser, ensureActiveUser, checkoutController.applyCoupon);
 router.post("/api/v1/user/order", isUser, ensureActiveUser, checkoutController.createRazorpayOrder);
+router.post("/api/v1/user/order/wallet", isUser, ensureActiveUser, checkoutController.processWalletPayment);
 router.post("/api/v1/user/order/verify", isUser, ensureActiveUser, checkoutController.verifyPayment);
 
 router.post("/api/v1/user/orders/:id/refund", isUser, ensureActiveUser, userOrderController.refund);
+router.post("/api/v1/user/orders/:id/cancel", isUser, ensureActiveUser, userOrderController.cancelOrder);
 router.post("/api/v1/user/payment/cancel", isUser, ensureActiveUser, userOrderController.cancelPayment);
 router.post("/api/v1/user/payment/failed", isUser, ensureActiveUser, userOrderController.failPayment);
 router.post("/api/v1/user/payment/retry", isUser, ensureActiveUser, userOrderController.retryPayment);

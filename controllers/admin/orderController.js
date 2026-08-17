@@ -117,3 +117,22 @@ try{
 }
 
 }
+
+exports.cancelOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const reason = req.body.reason || "Cancelled by admin";
+    
+    // admin doesn't need to pass a specific userId for ownership check
+    const result = await orderService.cancelPendingOrder(orderId, null, true, reason);
+    
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    
+    return res.json(result);
+  } catch (error) {
+    console.error('Error cancelling order by admin:', error);
+    return res.status(500).json({ success: false, message: 'Server error while cancelling order' });
+  }
+};

@@ -1,14 +1,22 @@
-exports.isAdmin =
-(req, res, next) => {
+const Admin = require("../models/adminModel");
 
-  if (req.session.admin) {
+exports.isAdmin = async (req, res, next) => {
+  try {
+    if (!req.session.admin) {
+      return res.redirect("/auth/admin-login");
+    }
 
-    return next();
+    const adminId = req.session.admin._id || req.session.admin.id;
+    const admin = await Admin.findById(adminId);
 
+    if (!admin) {
+      delete req.session.admin;
+      return res.redirect("/auth/admin-login");
+    }
+    
+    next();
+  } catch (err) {
+    console.log(err);
+    return res.redirect("/auth/admin-login");
   }
-
-  return res.redirect(
-    "/auth/admin-login"
-  );
-
 };

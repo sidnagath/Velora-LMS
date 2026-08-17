@@ -478,6 +478,13 @@ trailerInput.addEventListener(
 
   document.getElementById('basicInfoForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn.disabled) return;
+    
+    const originalBtnText = submitBtn.innerText;
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Saving...';
     const isEdit = this.dataset.isEdit === 'true';
     const courseId = this.dataset.courseId;
     const url = isEdit ? `/api/v1/admin/courses/${courseId}` : `/api/v1/admin/courses`;
@@ -526,9 +533,13 @@ trailerInput.addEventListener(
         } else {
           Swal.fire('Error', data.message || 'Validation failed', 'error');
         }
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalBtnText;
       }
     } catch (err) {
       Swal.fire('Error', 'An unexpected error occurred', 'error');
+      submitBtn.disabled = false;
+      submitBtn.innerText = originalBtnText;
     }
   });
 

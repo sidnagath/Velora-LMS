@@ -313,6 +313,18 @@
           window.location.href = '/admin/courses';
         });
       } else {
+        let swalFired = false;
+
+        if (data.errors && data.errors.general) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Action Required',
+            text: data.errors.general
+          });
+          delete data.errors.general;
+          swalFired = true;
+        }
+
         const hasInlineError = data.errors && Object.keys(data.errors).length > 0;
         if (hasInlineError) {
           for (const key in data.errors) {
@@ -322,7 +334,7 @@
               el.classList.remove('hidden');
             }
           }
-        } else {
+        } else if (!swalFired && (!data.errors || Object.keys(data.errors).length === 0)) {
           Swal.fire('Error', data.message || 'Action failed', 'error');
         }
       }
