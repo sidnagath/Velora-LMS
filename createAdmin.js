@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const Admin = require('./models/adminModel');
 
-mongoose.connect("mongodb://127.0.0.1:27017/velora-trial")
+mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/velora-trial")
   .then(() => console.log("DB connected"))
   .catch(err => console.log(err));
 

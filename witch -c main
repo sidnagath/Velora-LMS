@@ -1,0 +1,30 @@
+* [33m768b4b8[m[33m ([m[1;31morigin/week-4-wallet-reports[m[33m, [m[1;32mweek-4-wallet-reports[m[33m)[m fix payment validation and multi-course invoices
+* [33mf0e4702[m complete checkout payment and refund flows
+* [33m614e56b[m fix auth session and browser cache handling
+* [33mcf6890e[m[33m ([m[1;31morigin/week-3-coupon-orders-payment-gateway[m[33m, [m[1;32mweek-3-coupon-orders-payment-gateway[m[33m)[m Updated UI: analytics, dashboard, filters, certificate flow, and course improvements
+* [33m52a4bd2[m Add wallet, refund workflow, and order access fixes
+* [33m1ee5ddd[m Implement coupon management, order management, and Razorpay payment gateway
+* [33m5a3c610[m[33m ([m[1;31morigin/week-2-cart-wishlist-checkout[m[33m, [m[1;32mweek-2-cart-wishlist-checkout[m[33m)[m feat: improve validation, course isting, and media handling
+* [33m1a6e6d9[m Implement validation improvements
+* [33ma2f7372[m Implement wishlist cart checkout flow and UI improvements
+* [33mfb309cc[m Add wishlist cart flow checkout UI and service layer improvements
+* [33med7ed68[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/week-1-velora-foundation[m[33m, [m[1;32mweek-1-velora-foundation[m[33m)[m Improve project structure and prepare for service layer refactor
+* [33m4a44420[m Refactor controllers by resource
+* [33m285fe21[m Remove unused curriculum files and dead code
+* [33m866539c[m Fix review remarks and improve course workflow
+* [33m920c087[m Implement OTP expiry timers and entity-specific success/error banners
+* [33m63de957[m Fix course,module and category issues
+* [33m55b98d9[m Fix lessons flow, session separation, password redirects and OTP validation
+* [33m1d3d0c5[m Fix category ObjectId migration and course/category relationships
+* [33m4b5701e[m Add admin filters, validation fixes, profile updates, and course management improvements
+* [33m263b16c[m Fix dashboard stats, pagination, validation UI, and course management flow
+* [33md628b24[m Fix validation handling, pagination, course edit duplication, and admin course flow
+* [33m0592a6e[m Added reusable layouts and frontend styling
+* [33m0bbd310[m Added lesson resource management functionality
+* [33mb5296a9[m Implemented lesson management and video uploads
+* [33med966ae[m Implemented module management system
+* [33m3442eae[m Implemented course creation and publishing flow
+* [33m73dd6f4[m Added admin dashboard and user management
+* [33meb7443c[m Implemented user authentication and authorization
+* [33m3a6fbf5[m Initialized Velora LMS project setup
+* [33m9827e2d[m[33m ([m[1;31morigin/week-1-auth-user-management-review-1[m[33m)[m Initial commit for week 1 auth and user management
