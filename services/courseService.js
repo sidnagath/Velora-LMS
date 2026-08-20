@@ -6,7 +6,7 @@ const Lesson = require('../models/lessonModel');
 const Resource = require('../models/resourceModel');
 const User = require('../models/userModel');
 const cloudinaryUtil = require('../config/cloudinary');
-const Enrollment=require('../models/enrollmentModel');
+const Enrollment = require('../models/enrollmentModel');
 
 
 const calculateTotalDuration = (lessons) => {
@@ -16,8 +16,8 @@ const calculateTotalDuration = (lessons) => {
       const raw = String(l.duration).trim();
       if (raw.includes(':')) {
         const parts = raw.split(':').map(Number);
-        if (parts.length === 3) totalMinutes += (parts[0]*60) + parts[1] + (parts[2]/60);
-        else if (parts.length === 2) totalMinutes += parts[0] + (parts[1]/60);
+        if (parts.length === 3) totalMinutes += (parts[0] * 60) + parts[1] + (parts[2] / 60);
+        else if (parts.length === 2) totalMinutes += parts[0] + (parts[1] / 60);
       } else {
         const n = parseFloat(raw);
         if (!isNaN(n)) totalMinutes += n;
@@ -32,7 +32,7 @@ const formatDuration = (totalMinutes) => {
   let h = Math.floor(totalMinutes / 60);
   let m = Math.floor(totalMinutes % 60);
   let s = Math.round((totalMinutes - Math.floor(totalMinutes)) * 60);
-  
+
   if (s === 60) {
     s = 0;
     m += 1;
@@ -41,7 +41,7 @@ const formatDuration = (totalMinutes) => {
     m -= 60;
     h += 1;
   }
-  
+
   if (h > 0) {
     return `${h}h ${m}m ${s}s`;
   }
@@ -61,12 +61,12 @@ const formatLessonDurationAsMMSS = (durationRaw) => {
   if (isNaN(n) || n < 0) return '00:00';
   let minutes = Math.floor(n);
   let seconds = Math.round((n - minutes) * 60);
-  
+
   if (seconds === 60) {
     seconds = 0;
     minutes += 1;
   }
-  
+
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 exports.getAdminCoursesList = async (query) => {
@@ -75,15 +75,15 @@ exports.getAdminCoursesList = async (query) => {
     const search = query.search?.trim() || "";
 
     // FILTERS
-    const filterStatus   = query.status   || "";
-    const filterLevel    = query.level    || "";
+    const filterStatus = query.status || "";
+    const filterLevel = query.level || "";
     const filterCategory = query.category || "";
-    const sortBy         = query.sortBy   || "newestUpdated";
+    const sortBy = query.sortBy || "newestUpdated";
 
     // PAGE
-    const page  = Number(query.page) || 1;
+    const page = Number(query.page) || 1;
     const LIMIT = 10;
-    const skip  = (page - 1) * LIMIT;
+    const skip = (page - 1) * LIMIT;
 
     // BUILD FILTER
     const filter = {};
@@ -95,8 +95,8 @@ exports.getAdminCoursesList = async (query) => {
       ];
     }
 
-    if (filterStatus)   filter.status   = filterStatus;
-    if (filterLevel)    filter.level    = filterLevel;
+    if (filterStatus) filter.status = filterStatus;
+    if (filterLevel) filter.level = filterLevel;
     if (filterCategory) {
       if (mongoose.Types.ObjectId.isValid(filterCategory)) {
         filter.category = filterCategory;
@@ -108,9 +108,9 @@ exports.getAdminCoursesList = async (query) => {
     // BUILD SORT
     const sortMap = {
       newestUpdated: { updatedAt: -1 },
-      oldestUpdated: { updatedAt:  1 },
-      titleAZ:       { title:      1 },
-      titleZA:       { title:     -1 }
+      oldestUpdated: { updatedAt: 1 },
+      titleAZ: { title: 1 },
+      titleZA: { title: -1 }
     };
     const sort = sortMap[sortBy] || { updatedAt: -1 };
 
@@ -122,9 +122,9 @@ exports.getAdminCoursesList = async (query) => {
 
     const totalPages = Math.ceil(totalCourses / LIMIT);
 
-    const publishedCourses  = await Course.countDocuments({ status: "published" });
-    const draftCourses      = await Course.countDocuments({ status: "draft" });
-    const instructorsCount  = await Course.distinct("instructor");
+    const publishedCourses = await Course.countDocuments({ status: "published" });
+    const draftCourses = await Course.countDocuments({ status: "draft" });
+    const instructorsCount = await Course.distinct("instructor");
 
     // Gather all active categories for the filter dropdown
     const allCategories = await Category.find({ status: "active" }).sort({ name: 1 });
@@ -182,16 +182,18 @@ exports.createCourse = async (data, files, fileValidationErrors) => {
       Object.assign(errors, fileValidationErrors);
     }
 
-    if (!title) {errors.title = "Enter course title";
+    if (!title) {
+      errors.title = "Enter course title";
     } else if (title.length < 5) {
-    errors.title = "Title must be at least 5 characters";
-} else if (title.length > 100) {
-    errors.title = "Title cannot exceed 100 characters";
-}
-    if (!description) {errors.description = "Enter course description";
+      errors.title = "Title must be at least 5 characters";
+    } else if (title.length > 100) {
+      errors.title = "Title cannot exceed 100 characters";
+    }
+    if (!description) {
+      errors.description = "Enter course description";
     } else if (description.length < 10) {
-    errors.description = "Description must be at least 10 characters";
-}
+      errors.description = "Description must be at least 10 characters";
+    }
     if (!category) {
       errors.category = "Select category";
     } else if (!mongoose.Types.ObjectId.isValid(category)) {
@@ -208,11 +210,11 @@ exports.createCourse = async (data, files, fileValidationErrors) => {
     }
 
     // Idempotency / Deduplication check
-    const existingCourse = await Course.findOne({ 
-      title: { $regex: `^${title}$`, $options: 'i' }, 
-      isDeleted: false 
+    const existingCourse = await Course.findOne({
+      title: { $regex: `^${title}$`, $options: 'i' },
+      isDeleted: false
     });
-    
+
     if (existingCourse) {
       return { success: true, data: { course: existingCourse } };
     }
@@ -336,7 +338,7 @@ exports.updateCourse = async (courseId, data, files, fileValidationErrors) => {
       const thumbResult = await cloudinaryUtil.uploadToCloudinary(thumbnailFile.path, 'course_thumbnails', 'image');
       if (thumbResult) thumbnailPath = thumbResult.secure_url;
     }
-    
+
     let trailerPath = existingCourse.trailer;
     if (trailerFile) {
       const trailerResult = await cloudinaryUtil.uploadToCloudinary(trailerFile.path, 'course_trailers', 'video');
@@ -537,7 +539,7 @@ exports.getPublishedCourses = async (query) => {
       filter.category = { $in: activeCategoryIds };
     }
     if (level) filter.level = { $regex: new RegExp(`^${level}$`, "i") };
-    
+
     if (search) filter.title = { $regex: search, $options: "i" };
 
     const sortMap = {
@@ -607,27 +609,27 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
     const modulesWithLessons = await Promise.all(
       modules.map(async (mod) => {
         const lessons = await Lesson.find({ moduleId: mod._id }).sort({ order: 1 }).lean();
-        
+
         const formattedLessons = lessons.map(lesson => ({
           ...lesson,
           durationFormatted: formatLessonDurationAsMMSS(lesson.duration)
         }));
 
         allLessons = allLessons.concat(formattedLessons);
-        
+
         const moduleMinutes = calculateTotalDuration(formattedLessons);
         const moduleDurationFormatted = formatDuration(moduleMinutes);
-        
+
         return { ...mod, lessons: formattedLessons, moduleDurationFormatted };
       })
     );
 
     const totalLessons = allLessons.length;
-    
+
     // Calculate Duration
     const totalMinutes = calculateTotalDuration(allLessons);
     const totalDurationFormatted = formatDuration(totalMinutes);
-    
+
     // Count Resources
     const totalResourcesCount = await Resource.countDocuments({ courseId: course._id });
 
@@ -659,7 +661,10 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
 exports.getMyCoursesData = async (userId) => {
   try {
     const Enrollment = require('../models/enrollmentModel');
-    const enrollments = await Enrollment.find({ 
+    const Module = require('../models/moduleModel');
+    const Lesson = require('../models/lessonModel');
+
+    let enrollments = await Enrollment.find({
       userId,
       status: { $in: ['active', 'completed'] }
     })
@@ -667,9 +672,17 @@ exports.getMyCoursesData = async (userId) => {
         path: 'courseId',
         populate: { path: 'category' }
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     const validEnrollments = enrollments.filter(e => e.courseId != null);
+
+    for (let enrollment of validEnrollments) {
+      const modules = await Module.find({ courseId: enrollment.courseId._id }).lean();
+      const moduleIds = modules.map(m => m._id);
+      const totalLessons = await Lesson.countDocuments({ moduleId: { $in: moduleIds } });
+      enrollment.totalLessons = totalLessons;
+    }
 
     return { success: true, enrollments: validEnrollments };
   } catch (err) {
@@ -680,18 +693,20 @@ exports.getMyCoursesData = async (userId) => {
 
 
 exports.myCourseDetails = async (courseId, userId, lessonId) => {
-    try {
-const enrollment= await Enrollment.findOne({userId,courseId,status: { $in: ["active", "completed"] }}).lean();
+  try {
+    const enrollment = await Enrollment.findOne({ userId, courseId, status: { $in: ["active", "completed"] } }).lean();
 
-if(!enrollment){
-  return {success:false,
-    errors:{ general:"Course not found" }
-  }
-}
-    const course = await Course.findOne({   
-    _id: courseId,
-    isDeleted: false,
-    status: "published"}).populate("category").lean();
+    if (!enrollment) {
+      return {
+        success: false,
+        errors: { general: "Course not found" }
+      }
+    }
+    const course = await Course.findOne({
+      _id: courseId,
+      isDeleted: false,
+      status: "published"
+    }).populate("category").lean();
 
 
     if (!course) {
@@ -707,7 +722,7 @@ if(!enrollment){
     const modulesWithLessons = await Promise.all(
       modules.map(async (module) => {
         let lessons = await Lesson.find({
-            moduleId: module._id
+          moduleId: module._id
         }).sort({ order: 1 }).lean();
 
         lessons = lessons.map(lesson => ({
@@ -716,8 +731,8 @@ if(!enrollment){
         }));
 
         return {
-            ...module,
-            lessons
+          ...module,
+          lessons
         };
       })
     );
@@ -726,57 +741,57 @@ if(!enrollment){
     const allLessons = modulesWithLessons.reduce((acc, module) => acc.concat(module.lessons), []);
 
 
-let activeLesson = null;
-let previousLesson = null;
-let nextLesson = null;
-let resources = [];
+    let activeLesson = null;
+    let previousLesson = null;
+    let nextLesson = null;
+    let resources = [];
 
-if (allLessons.length > 0) {
-  if(lessonId){
-    activeLesson = allLessons.find(lesson => lesson._id.toString() === lessonId);
-  }
-  if (!activeLesson) {
-    activeLesson = allLessons[0];
-  }
+    if (allLessons.length > 0) {
+      if (lessonId) {
+        activeLesson = allLessons.find(lesson => lesson._id.toString() === lessonId);
+      }
+      if (!activeLesson) {
+        activeLesson = allLessons[0];
+      }
 
-  if (activeLesson) {
-    let activeIndex = allLessons.findIndex(lesson => lesson._id.toString() === activeLesson._id.toString());
-    previousLesson = activeIndex > 0 ? allLessons[activeIndex - 1] : null;
-    nextLesson = activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
+      if (activeLesson) {
+        let activeIndex = allLessons.findIndex(lesson => lesson._id.toString() === activeLesson._id.toString());
+        previousLesson = activeIndex > 0 ? allLessons[activeIndex - 1] : null;
+        nextLesson = activeIndex < allLessons.length - 1 ? allLessons[activeIndex + 1] : null;
 
-    resources = await Resource.find({ lessonId: activeLesson._id }).lean();
-  }
-}
-
-const totalLessons = allLessons.length;
-
-return {
-            success: true,
-            data: {
-              course,
-              modules: modulesWithLessons,
-              enrollment,
-              completedLessons: (enrollment.completedLessons || []).map(id => id.toString()),
-              ...(activeLesson && { activeLesson }),
-              ...(previousLesson && { previousLesson }),
-              ...(nextLesson && { nextLesson }),
-              resources,
-              totalLessons
-            }
-          };
-
-       
-
-
-}catch (error) {
-        console.log(error);
-        return {
-            success: false,
-            errors: {
-                general: "Failed to load course"
-            }
-        };
+        resources = await Resource.find({ lessonId: activeLesson._id }).lean();
+      }
     }
+
+    const totalLessons = allLessons.length;
+
+    return {
+      success: true,
+      data: {
+        course,
+        modules: modulesWithLessons,
+        enrollment,
+        completedLessons: (enrollment.completedLessons || []).map(id => id.toString()),
+        ...(activeLesson && { activeLesson }),
+        ...(previousLesson && { previousLesson }),
+        ...(nextLesson && { nextLesson }),
+        resources,
+        totalLessons
+      }
+    };
+
+
+
+
+  } catch (error) {
+    console.log(error);
+    return {
+      success: false,
+      errors: {
+        general: "Failed to load course"
+      }
+    };
+  }
 };
 
 exports.markLessonComplete = async (userId, courseId, lessonId) => {
@@ -799,15 +814,15 @@ exports.markLessonComplete = async (userId, courseId, lessonId) => {
     // Fetch updated enrollment to get accurate completed count
     const updatedEnrollment = await Enrollment.findById(enrollment._id);
     const completedCount = updatedEnrollment.completedLessons.length;
-    
+
     let progress = 0;
     if (totalLessons > 0) {
       progress = Math.round((completedCount / totalLessons) * 100);
     }
-    
+
     updatedEnrollment.progress = progress;
     if (progress === 100) {
-       updatedEnrollment.status = "completed";
+      updatedEnrollment.status = "completed";
     }
     await updatedEnrollment.save();
 
@@ -820,13 +835,11 @@ exports.markLessonComplete = async (userId, courseId, lessonId) => {
 
 exports.validateCertificateAccess = async (userId, courseId) => {
   try {
-    const course = await Course.findOne({ 
-      _id: courseId, 
-      status: "published" 
-    })
-    .populate('modules')
-    .lean();
-    
+    const course = await Course.findOne({
+      _id: courseId,
+      status: "published"
+    }).lean();
+
     if (!course) {
       return { success: false, message: "Course not found or inactive" };
     }
@@ -845,8 +858,8 @@ exports.validateCertificateAccess = async (userId, courseId) => {
       return { success: false, message: "You must complete the course to get a certificate" };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
         course,
         enrollment
@@ -892,7 +905,7 @@ exports.getAuthorizedVideoUrl = async (userId, courseId, lessonId) => {
     }
 
     if (!videoUrl) {
-       return { success: false, message: "Video not available." };
+      return { success: false, message: "Video not available." };
     }
 
     return { success: true, url: videoUrl };

@@ -10,6 +10,7 @@ const resourceController = require('../controllers/admin/resourceController');
 const couponController = require("../controllers/admin/couponController");
 const reportController = require("../controllers/admin/reportController");
 const authController = require('../controllers/admin/authController');
+const orderController = require("../controllers/admin/orderController");
 const { isAdmin } = require('../middleware/adminMiddleware');
 const {noCache} = require('../middleware/noCache');
 const {isAdminGuest}=require('../middleware/adminGuestMiddleware');
@@ -42,7 +43,6 @@ router.get('/admin/courses/:courseId/modules', noCache, isAdmin, moduleControlle
 router.get('/admin/courses/:courseId/publish', noCache, isAdmin, courseController.getAdminCoursePublish);
 
 // Orders
-const orderController = require("../controllers/admin/orderController");
 router.get("/admin/orders", noCache, isAdmin, orderController.getAdminOrders);
 router.get("/admin/orders/:id", noCache, isAdmin, orderController.getAdminOrderDetails);
 

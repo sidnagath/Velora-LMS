@@ -10,6 +10,10 @@ const passport =require("passport");
 
 require("./config/passport");
 
+// CUSTOM MIDDLEWARE
+const { flashLocals } = require('./middleware/flashMiddleware');
+const { noCache } = require('./middleware/noCache');
+const { notFoundHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
@@ -85,10 +89,7 @@ app.use(session({
 
 const flash = require('connect-flash');
 app.use(flash());
-app.use((req, res, next) => {
-  res.locals.flashMessages = req.flash();
-  next();
-});
+app.use(flashLocals);
 
 // PASSPORT
 
@@ -98,10 +99,7 @@ app.use(passport.session());
 
 
 // DISABLE CACHE TO PREVENT BACK BUTTON ISSUES
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  next();
-});
+app.use(noCache);
 
 // ROUTES
 
@@ -111,6 +109,8 @@ app.use("/", userRoutes);
 
 app.use("/", adminRoutes);
 
+// 404 CATCH-ALL ROUTE
+app.use(notFoundHandler);
 
 // SERVER
 

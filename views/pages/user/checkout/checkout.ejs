@@ -544,33 +544,7 @@
 
           // RAZORPAY CHECKOUT FLOW
           
-          // Show confirmation first
-          const rzpResult = await Swal.fire({
-            title: 'Confirm Your Order',
-            html: `
-              <div style="margin: 1rem 0; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; text-align: left;">
-                <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #64748b;">Final Payable Amount:</span>
-                  <span style="font-weight: 700; color: #0f172a;">₹${currentTotal.toFixed(2)}</span>
-                </div>
-              </div>
-              <p style="font-size: 0.875rem; color: #64748b;">Are you ready to proceed securely to payment?</p>
-            `,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#0B5ED7',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: 'Proceed to Payment',
-            cancelButtonText: 'Cancel'
-          });
-
-          if (!rzpResult.isConfirmed) {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-            return;
-          }
-
-          // 2. Call backend to create order securely
+          // 1. Call backend to recalculate totals and create order securely
           const orderRes = await fetch("/api/v1/user/order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -617,6 +591,51 @@
             return;
           }
 
+          // Use exact server-calculated amount
+          const serverPayableAmount = orderData.order.formattedAmount || (orderData.order.amount / 100).toFixed(2);
+
+          // Update page summary DOM if server summary returned
+          if (orderData.order.summary) {
+            const s = orderData.order.summary;
+            if (finalTotalAmount) finalTotalAmount.textContent = "₹" + Number(s.finalTotal).toFixed(2);
+            const taxableEl = document.getElementById("taxableAmount");
+            if (taxableEl) taxableEl.textContent = "₹" + Number(s.taxableAmount).toFixed(2);
+            const gstEl = document.getElementById("gstAmount");
+            if (gstEl) gstEl.textContent = "₹" + Number(s.gstAmount).toFixed(2);
+          }
+
+          // Show confirmation modal with exact server-calculated amount
+          const rzpResult = await Swal.fire({
+            title: 'Confirm Your Order',
+            html: `
+              <div style="margin: 1rem 0; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; text-align: left;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: #64748b;">Final Payable Amount:</span>
+                  <span style="font-weight: 700; color: #0f172a;">₹${serverPayableAmount}</span>
+                </div>
+              </div>
+              <p style="font-size: 0.875rem; color: #64748b;">Are you ready to proceed securely to payment?</p>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0B5ED7',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Proceed to Payment',
+            cancelButtonText: 'Cancel'
+          });
+
+          if (!rzpResult.isConfirmed) {
+            // User cancelled confirmation popup, cancel the pending order
+            await fetch("/api/v1/user/payment/cancel", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ dbOrderIds: orderData.dbOrderIds })
+            });
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+          }
+
           // 3. Open Razorpay Checkout Modal
           const options = {
             key: "<%= razorpayKeyId %>", 
@@ -660,9 +679,7 @@
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ dbOrderIds: orderData.dbOrderIds })
                 });
-                Swal.fire({ text: "Payment cancelled.", icon: "warning" });
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
+                window.location.href = `/user/payment-failure/${orderData.dbOrderIds[0]}`;
               }
             },
             prefill: {
@@ -686,9 +703,7 @@
                   reason: response.error.description 
                 })
              });
-             Swal.fire({ text: "Payment Failed: " + response.error.description, icon: "error" });
-             submitBtn.innerHTML = originalText;
-             submitBtn.disabled = false;
+             window.location.href = `/user/payment-failure/${orderData.dbOrderIds[0]}`;
           });
           rzp.open();
           

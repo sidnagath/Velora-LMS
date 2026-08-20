@@ -41,7 +41,7 @@ class ProfileService {
   }
 
   async updateProfileDetails(userId, profileData) {
-    const { name, email, phone } = profileData;
+    const { name, email, phone, currentPassword } = profileData;
     const user = await User.findById(userId);
     
     if (!user) {
@@ -52,6 +52,7 @@ class ProfileService {
     let trimmedName = name?.trim();
     let trimmedEmail = email?.trim();
     let trimmedPhone = phone?.trim() || "";
+    let trimmedCurrentPassword = currentPassword?.trim() || "";
 
     const nameRegex = /^[A-Za-z ]{3,30}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -76,6 +77,18 @@ class ProfileService {
 
     if (user.authProvider === "google") {
       trimmedEmail = user.email; // Override manual email change
+    }
+
+    // EMAIL CHANGED -> PASSWORD VALIDATION
+    if (trimmedEmail !== user.email) {
+      if (!trimmedCurrentPassword) {
+        errors.currentPassword = "Current password is required";
+      } else {
+        const isMatch = await bcrypt.compare(trimmedCurrentPassword, user.password);
+        if (!isMatch) {
+          errors.currentPassword = "Current password is incorrect";
+        }
+      }
     }
 
     if (Object.keys(errors).length > 0) {

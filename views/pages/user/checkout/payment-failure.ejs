@@ -14,55 +14,50 @@
       </div>
 
       <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Payment Failed</h1>
-      <p class="text-gray-500 text-lg mb-8">We couldn't process your payment. <%= order.failureReason || 'Please try again.' %></p>
+      <p class="text-gray-500 text-lg mb-8">We could not process your payment. No charges were made. Please try again or use a different payment method.</p>
 
-      <div class="bg-gray-50 rounded-xl p-6 mb-8 text-left border border-red-50">
-        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Order Details</h3>
+      <div class="bg-red-50 rounded-xl p-6 mb-8 text-left border border-red-100">
+        <h3 class="text-sm font-bold text-red-500 uppercase tracking-wider mb-4">Order Details</h3>
         
         <div class="flex justify-between items-center mb-3">
-          <span class="text-gray-600 font-medium">Order ID</span>
-          <span class="text-red-700 font-bold text-sm bg-red-50 border border-red-100 px-2 py-1 rounded"><%= order.orderId %></span>
+          <span class="text-red-800 font-medium">Order ID</span>
+          <span class="text-red-900 font-bold text-sm bg-red-100 px-2 py-1 rounded"><%= order.orderId || order._id %></span>
         </div>
         
         <div class="flex justify-between items-center mb-3">
-          <span class="text-gray-600 font-medium">Date</span>
+          <span class="text-red-800 font-medium">Date</span>
           <span class="text-gray-900 font-medium"><%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
         </div>
-        
-        <div class="flex justify-between items-center mb-3">
-          <span class="text-gray-600 font-medium">Status</span>
-          <span class="text-red-600 font-bold text-sm bg-red-100 px-2 py-1 rounded"><%= order.paymentStatus.toUpperCase() %></span>
-        </div>
 
-        <div class="border-t border-gray-200 my-4"></div>
+        <div class="border-t border-red-200 my-4"></div>
 
-        <h4 class="text-sm font-bold text-gray-900 mb-3">Attempted Courses</h4>
+        <h4 class="text-sm font-bold text-gray-900 mb-3">Attempted Purchase</h4>
         <ul class="space-y-2 mb-4">
           <% if (order.courses && order.courses.length > 0) { %>
             <% order.courses.forEach(course => { %>
               <li class="flex items-start text-sm">
-                <svg class="w-4 h-4 text-red-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <svg class="w-4 h-4 text-red-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 <span class="text-gray-700 font-medium"><%= course.title %></span>
               </li>
             <% }) %>
           <% } %>
         </ul>
 
-        <div class="border-t border-gray-200 my-4"></div>
+        <div class="border-t border-red-200 my-4"></div>
 
         <div class="flex justify-between items-center">
-          <span class="text-gray-800 font-bold text-lg">Total Amount</span>
-          <span class="text-gray-900 font-extrabold text-2xl">₹<%= order.finalAmount.toFixed(2) %></span>
+          <span class="text-gray-800 font-bold text-lg">Amount Due</span>
+          <span class="text-red-600 font-extrabold text-2xl">₹<%= order.finalAmount.toFixed(2) %></span>
         </div>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/user/orders" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-colors flex items-center justify-center gap-2">
+        <a href="/user/cart" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-colors flex items-center justify-center gap-2 shadow-sm">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          Retry Payment from Orders
+          Try Again
         </a>
-        <a href="/user/cart" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-8 rounded-full transition-colors text-center border border-gray-200">
-          Back to Cart
+        <a href="/user/orders" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-bold py-3 px-8 rounded-full transition-colors text-center shadow-sm">
+          View Orders
         </a>
       </div>
 

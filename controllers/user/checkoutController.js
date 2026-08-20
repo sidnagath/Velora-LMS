@@ -69,6 +69,8 @@ exports.getPaymentSuccess = async (req, res) => {
   }
 };
 
+
+
 exports.getPaymentFailure = async (req, res) => {
   try {
     const userId = req.session.user?.id;
@@ -99,8 +101,9 @@ exports.getPaymentFailure = async (req, res) => {
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponId, cartSubtotal } = req.body;
+    const userId = req.session.user?.id;
     
-    const result = await orderService.applyCoupon(couponId, cartSubtotal);
+    const result = await orderService.applyCoupon(couponId, userId, cartSubtotal);
 
     if (result.success) {
       return res.json({

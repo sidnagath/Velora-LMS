@@ -32,7 +32,7 @@
                     <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </div>
-                    <span class="bg-green-50 text-green-600 text-xs font-bold px-2.5 py-1 rounded-full">+12.5%</span>
+                   
                 </div>
                 <h3 class="text-gray-500 text-sm font-bold mb-1 uppercase tracking-wider">Total Revenue</h3>
                 <p class="text-3xl font-black text-gray-900">₹<%= stats.totalRevenue %></p>
@@ -44,7 +44,7 @@
                     <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-500 flex items-center justify-center">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                     </div>
-                    <span class="bg-green-50 text-green-600 text-xs font-bold px-2.5 py-1 rounded-full">+4.2%</span>
+                    
                 </div>
                 <h3 class="text-gray-500 text-sm font-bold mb-1 uppercase tracking-wider">Monthly Orders</h3>
                 <p class="text-3xl font-black text-gray-900"><%= stats.monthlyOrders.toLocaleString() %></p>
@@ -56,7 +56,7 @@
                     <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                     </div>
-                    <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Stable</span>
+                    
                 </div>
                 <h3 class="text-gray-500 text-sm font-bold mb-1 uppercase tracking-wider">Avg. Order Value</h3>
                 <p class="text-3xl font-black text-gray-900">₹<%= stats.avgOrderValue %></p>
@@ -476,58 +476,5 @@
         </script>
         <%- include('../../../partials/confirm-modal') %>
 
-        <!-- Bottom Widgets -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-            <!-- Revenue Trend Chart Placeholder -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col">
-                <div class="flex justify-between items-start mb-8">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-1">Revenue Trend</h3>
-                        <p class="text-sm text-gray-500">Past 7 days performance</p>
-                    </div>
-                    <div class="flex items-center space-x-4 text-xs font-bold uppercase tracking-wider">
-                        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-[#0B5ED7] mr-1.5"></span> REVENUE</div>
-                        <div class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-purple-500 mr-1.5"></span> REFUNDS</div>
-                    </div>
-                </div>
-                
-                <div class="flex-grow flex items-end justify-between px-4 mt-auto h-48">
-                    <div class="w-10 bg-gray-100 rounded-t-lg h-24 relative group"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">MON</span></div>
-                    <div class="w-10 bg-gray-100 rounded-t-lg h-32 relative group"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">TUE</span></div>
-                    <div class="w-10 bg-gray-100 rounded-t-lg h-28 relative group"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">WED</span></div>
-                    <div class="w-10 bg-[#0B5ED7] rounded-t-lg h-48 relative shadow-md"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-900">THU</span></div>
-                    <div class="w-10 bg-gray-100 rounded-t-lg h-36 relative group"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">FRI</span></div>
-                    <div class="w-10 bg-gray-100 rounded-t-lg h-28 relative group"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">SAT</span></div>
-                    <div class="w-10 bg-gray-100 rounded-t-lg h-40 relative group"><span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs font-bold text-gray-400">SUN</span></div>
-                </div>
-            </div>
-
-            <!-- Top Performer -->
-            <!-- <div class="bg-[#0B5ED7] rounded-2xl p-8 shadow-sm flex flex-col justify-between overflow-hidden relative" style="background-image: linear-gradient(135deg, #0B5ED7 0%, #064096 100%);"> -->
-                <!-- Decorative BG pattern -->
-                <!-- <svg class="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/4 opacity-10 w-96 h-96 text-white" fill="currentColor" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"></circle></svg>
-                
-                <div class="relative z-10">
-                    <span class="inline-block bg-white/20 backdrop-blur text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest mb-6 border border-white/30">Top Performer</span>
-                    <h3 class="text-3xl font-extrabold text-white mb-3">Modern React Patterns</h3>
-                    <p class="text-blue-100 text-sm font-medium leading-relaxed max-w-sm">Master advanced component design and performance optimization.</p>
-                </div>
-                
-                <div class="flex justify-between items-end mt-12 relative z-10 border-t border-white/20 pt-6">
-                    <div>
-                        <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-1">Enrollments</p>
-                        <p class="text-white text-2xl font-black">324</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-blue-200 text-[10px] font-bold uppercase tracking-widest mb-1">Revenue</p>
-                        <p class="text-white text-2xl font-black">$12,480</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        </div> -->
-
-    </div>
 </main>
 <%- include('../../../partials/footer') %>
