@@ -1,39 +1,33 @@
-const express = require('express');
+import 'dotenv/config.js';
+import express from 'express';
+import session from 'express-session';
+import path from 'path';
+import passport from 'passport';
+import { flashLocals } from './middleware/flashMiddleware.js';
+import { noCache } from './middleware/noCache.js';
+import { notFoundHandler } from './middleware/errorMiddleware.js';
+import connectDB from './config/db.js';
+import userRoutes from './routes/userRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import guestRoutes from './routes/guestRoutes.js';
+import flash from 'connect-flash';
+import './config/passport.js';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const session =require('express-session');
 
-const path = require('path');
-
-require("dotenv").config();
-
-const passport =require("passport");
-
-require("./config/passport");
 
 // CUSTOM MIDDLEWARE
-const { flashLocals } = require('./middleware/flashMiddleware');
-const { noCache } = require('./middleware/noCache');
-const { notFoundHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
 const PORT =
-process.env.PORT || 3000;
-
-const connectDB =require("./config/db");
+  process.env.PORT || 3000;
 
 connectDB();
 
-
-
 // ROUTES
-
-const userRoutes =require("./routes/userRoutes");
-
-const adminRoutes =require("./routes/adminRoutes");
-
-const guestRoutes =require("./routes/guestRoutes");
-
 
 // VIEW ENGINE
 
@@ -44,23 +38,17 @@ app.set(
   path.join(__dirname, 'views')
 );
 
-
-
 // STATIC
 
 app.use(express.static("public"));
 
-app.use("/uploads",express.static("public/uploads"));
-
-
+app.use("/uploads", express.static("public/uploads"));
 
 // BODY PARSER
 
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
-
-
 
 // SESSION
 
@@ -87,7 +75,6 @@ app.use(session({
 
 }));
 
-const flash = require('connect-flash');
 app.use(flash());
 app.use(flashLocals);
 
@@ -96,7 +83,6 @@ app.use(flashLocals);
 app.use(passport.initialize());
 
 app.use(passport.session());
-
 
 // DISABLE CACHE TO PREVENT BACK BUTTON ISSUES
 app.use(noCache);

@@ -1,15 +1,16 @@
-const User = require('../models/userModel');
-const Course = require('../models/courseModel');
-const Order = require('../models/orderModel');
-const mongoose = require('mongoose');
+import User from '../models/userModel.js';
+import Course from '../models/courseModel.js';
+import Order from '../models/orderModel.js';
+import mongoose from 'mongoose';
 
-exports.getDashboardData = async () => {
+
+export const getDashboardData = async () => {
   try {
     // 1. Top Summary Cards
     const totalUsers = await User.countDocuments();
     const totalCourses = await Course.countDocuments({ status: "published", isDeleted: false });
     const totalOrders = await Order.countDocuments({ paymentStatus: "paid" });
-    
+
     const revenueResult = await Order.aggregate([
       { $match: { paymentStatus: "paid" } },
       { $group: { _id: null, total: { $sum: "$finalAmount" } } }
@@ -77,13 +78,13 @@ exports.getDashboardData = async () => {
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dd = String(d.getDate()).padStart(2, '0');
       const dateStr = `${yyyy}-${mm}-${dd}`;
-      
+
       const sale = salesAgg.find(x => x._id === dateStr);
       if (sale) {
         salesRevenues[i] = sale.total;
         orderCounts[i] = sale.count;
       }
-      
+
       const user = usersAgg.find(x => x._id === dateStr);
       if (user) userCounts[i] = user.count;
     }
@@ -133,4 +134,8 @@ exports.getDashboardData = async () => {
     console.error("Dashboard Service Error:", error);
     return { success: false, errors: { general: "Failed to fetch dashboard data" } };
   }
+};
+
+export default {
+  getDashboardData
 };

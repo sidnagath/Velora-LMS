@@ -1,15 +1,19 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const path = require('path');
-const fs = require('fs');
-const connectDB = require('../config/db');
-const cloudinaryUtil = require('../config/cloudinary');
+import mongoose from 'mongoose';
+import path from 'path';
+import fs from 'fs';
+import connectDB from '../config/db.js';
+import cloudinaryUtil from '../config/cloudinary.js';
+import User from '../models/userModel.js';
+import Category from '../models/categoryModel.js';
+import Course from '../models/courseModel.js';
+import Lesson from '../models/lessonModel.js';
+import Resource from '../models/resourceModel.js';
+import 'dotenv/config.js';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const User = require('../models/userModel');
-const Category = require('../models/categoryModel');
-const Course = require('../models/courseModel');
-const Lesson = require('../models/lessonModel');
-const Resource = require('../models/resourceModel');
+
 
 async function migrateFile(doc, field, folder, resourceType, isArray = false, arrayField = '') {
   let migrated = false;
@@ -18,7 +22,7 @@ async function migrateFile(doc, field, folder, resourceType, isArray = false, ar
   const processPath = async (itemPath) => {
     if (!itemPath || typeof itemPath !== 'string') return null;
     if (itemPath.startsWith('http://') || itemPath.startsWith('https://')) return null; // already migrated
-    
+
     // It's a local path like /uploads/filename.ext or just filename.ext
     let filename = itemPath;
     if (itemPath.startsWith('/uploads/')) {

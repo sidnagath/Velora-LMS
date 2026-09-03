@@ -1,7 +1,9 @@
-const User = require('../models/userModel');
-const bcrypt = require('bcrypt');
+import User from '../models/userModel.js';
+import bcrypt from 'bcrypt';
+import cloudinaryUtil from '../config/cloudinary.js';
 
-exports.getUsersList = async (queryParams) => {
+
+export const getUsersList = async (queryParams) => {
   try {
     const search = queryParams.search || "";
     const filterStatus = queryParams.status || "";
@@ -61,9 +63,7 @@ exports.getUsersList = async (queryParams) => {
   }
 };
 
-const cloudinaryUtil = require('../config/cloudinary');
-
-exports.createUser = async (userData, avatarFile, fileValidationErrors) => {
+export const createUser = async (userData, avatarFile, fileValidationErrors) => {
   try {
     const { name, email, phone, password, confirmPassword, status } = userData;
 
@@ -166,7 +166,7 @@ exports.createUser = async (userData, avatarFile, fileValidationErrors) => {
   }
 };
 
-exports.getUserById = async (id) => {
+export const getUserById = async (id) => {
   try {
     const user = await User.findById(id);
     if (!user) return { success: false, error: "User not found" };
@@ -176,7 +176,7 @@ exports.getUserById = async (id) => {
   }
 };
 
-exports.updateUser = async (id, userData, avatarFile, fileValidationErrors) => {
+export const updateUser = async (id, userData, avatarFile, fileValidationErrors) => {
   try {
     const { name, email, phone, status, password } = userData;
 
@@ -284,7 +284,7 @@ exports.updateUser = async (id, userData, avatarFile, fileValidationErrors) => {
   }
 };
 
-exports.deleteUser = async (id) => {
+export const deleteUser = async (id) => {
   try {
     const userToDelete = await User.findById(id);
     const userName = userToDelete ? userToDelete.name : "User";
@@ -298,4 +298,13 @@ exports.deleteUser = async (id) => {
   } catch (error) {
     return { success: false, error: error.message };
   }
+};
+
+
+export default {
+  getUsersList,
+  createUser,
+  getUserById,
+  updateUser,
+  deleteUser
 };

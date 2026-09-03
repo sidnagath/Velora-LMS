@@ -1,6 +1,8 @@
-const orderService = require('../../services/orderService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import orderService from '../../services/orderService.js';
 
-exports.getAdminOrders = async (req, res) => {
+
+export const getAdminOrders = async (req, res) => {
   try {
     const queryObj = {
       page: req.query.page,
@@ -39,7 +41,7 @@ exports.getAdminOrders = async (req, res) => {
   }
 };
 
-exports.getAdminOrderDetails = async (req, res) => {
+export const getAdminOrderDetails = async (req, res) => {
   try {
     const result = await orderService.getOrderById(req.params.id);
 
@@ -62,77 +64,85 @@ exports.getAdminOrderDetails = async (req, res) => {
   }
 };
 
-exports.updateOrderStatus = async (req, res) => {
+export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const orderId = req.params.id;
-    
+
     const result = await orderService.updateOrderStatus(orderId, status);
-    
+
     if (!result.success) {
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
-    
-    return res.status(200).json({ success: true, message: result.message });
+
+    return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: result.message });
   } catch (error) {
     console.error('Error updating order status:', error);
-    return res.status(500).json({ success: false, message: 'Server error updating status' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error updating status' });
   }
 };
 
-
-exports.approveRefund= async (req,res)=>{
+export const approveRefund = async (req,res)=>{
 try{
 
   const orderId=req.params.id;
   const result= await orderService.approveRefund(orderId);
 
   if(!result.success){
-    return res.status(400).json({ success: false, message: result.message });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
   }
 
-  return res.status(200).json({ success: true, message: result.message });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: result.message });
 
 }catch(error){
  console.error('Error updating refund status:', error);
- return res.status(500).json({ success: false, message: 'Server error updating refund status' });
+ return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error updating refund status' });
 }
 }
 
-exports.rejectRefund= async (req,res)=>{
+export const rejectRefund = async (req,res)=>{
 try{
 
   const orderId=req.params.id;
   const result= await orderService.rejectRefund(orderId);
 
   if(!result.success){
-    return res.status(400).json({ success: false, message: result.message });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
   }
 
-  return res.status(200).json({ success: true, message: result.message });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: result.message });
 
 }catch(error){
  console.error('Error updating refund status:', error);
- return res.status(500).json({ success: false, message: 'Server error updating refund status' });
+ return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error updating refund status' });
 }
 
 }
 
-exports.cancelOrder = async (req, res) => {
+export const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
     const reason = req.body.reason || "Cancelled by admin";
-    
+
     // admin doesn't need to pass a specific userId for ownership check
     const result = await orderService.cancelPendingOrder(orderId, null, true, reason);
-    
+
     if (!result.success) {
-      return res.status(400).json(result);
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(result);
     }
-    
+
     return res.json(result);
   } catch (error) {
     console.error('Error cancelling order by admin:', error);
-    return res.status(500).json({ success: false, message: 'Server error while cancelling order' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error while cancelling order' });
   }
+};
+
+export default {
+  getAdminOrders,
+  getAdminOrderDetails,
+  updateOrderStatus,
+  approveRefund,
+  rejectRefund,
+  cancelOrder
 };

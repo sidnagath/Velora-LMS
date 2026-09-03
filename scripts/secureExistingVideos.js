@@ -1,7 +1,10 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const cloudinary = require('cloudinary').v2;
-const Lesson = require('../models/lessonModel');
+import mongoose from 'mongoose';
+import cloudinary from 'cloudinary';
+import Lesson from '../models/lessonModel.js';
+import 'dotenv/config.js';
+
+
+.v2;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -24,34 +27,34 @@ const extractPublicId = (url) => {
   const regex = /res\.cloudinary\.com\/[^\/]+\/([^\/]+)\/([^\/]+)\/v\d+\/(.+)\.\w+$/;
   const match = url.match(regex);
   if (match) return match[3];
-  
+
   const regexNoVersion = /res\.cloudinary\.com\/[^\/]+\/([^\/]+)\/([^\/]+)\/(.+)\.\w+$/;
   const matchNoVersion = url.match(regexNoVersion);
   if (matchNoVersion) return matchNoVersion[3];
-  
+
   return null;
 };
 
 const secureVideos = async () => {
   await connectDB();
-  
+
   try {
     const lessons = await Lesson.find({ video: { $ne: null, $ne: "" }, videoPublicId: { $exists: false } });
     console.log(`Found ${lessons.length} lessons to secure.`);
-    
+
     let successCount = 0;
     let skippedCount = 0;
     let failCount = 0;
-    
+
     for (const lesson of lessons) {
       const publicId = extractPublicId(lesson.video);
-      
+
       if (!publicId) {
         console.error(`Skipped ${lesson._id}: Could not extract publicId from ${lesson.video}`);
         skippedCount++;
         continue;
       }
-      
+
       try {
         console.log(`Verifying video asset: ${publicId}`);
         // Verify it exists as a video
@@ -61,7 +64,7 @@ const secureVideos = async () => {
         failCount++;
         continue;
       }
-      
+
       try {
         console.log(`Securing video: ${publicId}`);
         // Change delivery type from upload to authenticated by renaming to itself
@@ -69,11 +72,11 @@ const secureVideos = async () => {
           to_type: 'authenticated',
           resource_type: 'video'
         });
-        
+
         lesson.videoPublicId = publicId;
         lesson.video = result.secure_url;
         await lesson.save();
-        
+
         console.log(`Success ${lesson._id}: Migrated to authenticated delivery.`);
         successCount++;
       } catch (err) {
@@ -89,7 +92,7 @@ const secureVideos = async () => {
          }
       }
     }
-    
+
     console.log(`\nMigration completed.`);
     console.log(`Success: ${successCount}`);
     console.log(`Skipped: ${skippedCount}`);

@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
+
 
 const lessonSchema = new mongoose.Schema(
 
@@ -16,7 +17,6 @@ const lessonSchema = new mongoose.Schema(
 
     },
 
-
     // LESSON TITLE
     title: {
       type: String,
@@ -28,8 +28,6 @@ const lessonSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-
-
 
     // VIDEO FILE
     video: {
@@ -66,9 +64,7 @@ const lessonSchema = new mongoose.Schema(
   }
 );
 
-
-
-module.exports = mongoose.model(
+export default mongoose.model(
   "Lesson",
   lessonSchema
 );

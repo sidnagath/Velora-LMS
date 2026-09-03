@@ -1,4 +1,4 @@
-exports.getAdminLogout = (req, res) => {
+export const getAdminLogout = (req, res) => {
   delete req.session.admin;
 
   req.session.save((err) => {
@@ -14,4 +14,9 @@ exports.getAdminLogout = (req, res) => {
 
     res.redirect("/auth/admin-login");
   });
+};
+
+
+export default {
+  getAdminLogout
 };

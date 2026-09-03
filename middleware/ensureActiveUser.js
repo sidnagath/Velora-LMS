@@ -1,6 +1,7 @@
-const User = require("../models/userModel");
+import User from '../models/userModel.js';
 
-exports.ensureActiveUser = async (req, res, next) => {
+
+export const ensureActiveUser = async (req, res, next) => {
 
   try {
 
@@ -32,4 +33,8 @@ exports.ensureActiveUser = async (req, res, next) => {
 
   }
 
+};
+
+export default {
+  ensureActiveUser
 };

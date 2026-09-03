@@ -1,6 +1,8 @@
-const userService = require('../../services/userService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import userService from '../../services/userService.js';
 
-exports.getAdminUsers = async (req, res) => {
+
+export const getAdminUsers = async (req, res) => {
   const result = await userService.getUsersList(req.query);
 
   if (!result.success) {
@@ -32,7 +34,7 @@ exports.getAdminUsers = async (req, res) => {
   });
 };
 
-exports.getAdminCreateUser = (req, res) => {
+export const getAdminCreateUser = (req, res) => {
   res.render("pages/admin/user-management/create-user", {
     title: "Velora - Admin Create User",
     isLoggedIn: true,
@@ -42,17 +44,17 @@ exports.getAdminCreateUser = (req, res) => {
   });
 };
 
-exports.postAdminCreateUser = async (req, res) => {
+export const postAdminCreateUser = async (req, res) => {
   const result = await userService.createUser(req.body, req.file, req.fileValidationError);
 
   if (!result.success) {
-    return res.status(400).json({ success: false, message: 'Failed to create user', errors: result.errors || {}, formData: result.formData || {} });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to create user', errors: result.errors || {}, formData: result.formData || {} });
   }
 
-  return res.status(201).json({ success: true, message: `User '${result.trimmedName}' created successfully.` });
+  return res.status(HTTP_STATUS_CODES.CREATED).json({ success: true, message: `User '${result.trimmedName}' created successfully.` });
 };
 
-exports.getAdminEditUser = async (req, res) => {
+export const getAdminEditUser = async (req, res) => {
   const result = await userService.getUserById(req.params.id);
 
   if (!result.success) {
@@ -69,27 +71,37 @@ exports.getAdminEditUser = async (req, res) => {
   });
 };
 
-exports.postAdminEditUser = async (req, res) => {
+export const postAdminEditUser = async (req, res) => {
   const result = await userService.updateUser(req.params.id, req.body, req.file, req.fileValidationError);
 
   if (!result.success) {
     if (result.error === "User not found") {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
-    
-    return res.status(400).json({ success: false, message: 'Failed to update user', errors: result.errors || {}, formData: result.formData || {} });
+
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to update user', errors: result.errors || {}, formData: result.formData || {} });
   }
 
-  return res.status(200).json({ success: true, message: `User '${result.trimmedName}' updated successfully.` });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: `User '${result.trimmedName}' updated successfully.` });
 };
 
-exports.deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
   const result = await userService.deleteUser(req.params.id);
 
   if (!result.success) {
     console.log(result.error);
-    return res.status(500).json({ success: false, message: 'Failed to delete user' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to delete user' });
   }
 
-  return res.status(200).json({ success: true, message: `User '${result.userName}' deleted successfully.` });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: `User '${result.userName}' deleted successfully.` });
+};
+
+
+export default {
+  getAdminUsers,
+  getAdminCreateUser,
+  postAdminCreateUser,
+  getAdminEditUser,
+  postAdminEditUser,
+  deleteUser
 };

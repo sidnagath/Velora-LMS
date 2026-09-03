@@ -1,47 +1,56 @@
-const lessonService = require('../../services/lessonService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import lessonService from '../../services/lessonService.js';
 
-exports.postAdminAddLesson = async (req, res) => {
+
+export const postAdminAddLesson = async (req, res) => {
   try {
     const { title, description, duration } = req.body;
     const result = await lessonService.addLesson(req.params.courseId, req.params.moduleId, title, description, duration, req.file, req.fileValidationError);
 
     if (!result.success) {
-      return res.status(400).json({ success: false, message: 'Failed to add lesson', errors: result.errors });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to add lesson', errors: result.errors });
     }
 
-    return res.status(201).json({ success: true, message: 'Lesson added successfully', lesson: result.lesson });
+    return res.status(HTTP_STATUS_CODES.CREATED).json({ success: true, message: 'Lesson added successfully', lesson: result.lesson });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ success: false, message: "Something went wrong" });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Something went wrong" });
   }
 };
 
-exports.postAdminEditLesson = async (req, res) => {
+export const postAdminEditLesson = async (req, res) => {
   try {
     const { title, description, duration } = req.body;
     const result = await lessonService.editLesson(req.params.courseId, req.params.moduleId, req.params.lessonId, title, description, duration, req.file, req.fileValidationError);
 
     if (!result.success) {
-      return res.status(400).json({ success: false, message: 'Failed to edit lesson', errors: result.errors });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to edit lesson', errors: result.errors });
     }
 
-    return res.status(200).json({ success: true, message: 'Lesson updated successfully', lesson: result.lesson });
+    return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: 'Lesson updated successfully', lesson: result.lesson });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ success: false, message: "Something went wrong" });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Something went wrong" });
   }
 };
 
-exports.postAdminDeleteLesson = async (req, res) => {
+export const postAdminDeleteLesson = async (req, res) => {
   try {
     const result = await lessonService.deleteLesson(req.params.courseId, req.params.moduleId, req.params.lessonId);
     if (!result.success) {
-      return res.status(400).json({ success: false, message: result.error });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.error });
     }
 
-    return res.status(200).json({ success: true, message: 'Lesson deleted successfully' });
+    return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: 'Lesson deleted successfully' });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ success: false, message: "Something went wrong" });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Something went wrong" });
   }
+};
+
+
+export default {
+  postAdminAddLesson,
+  postAdminEditLesson,
+  postAdminDeleteLesson
 };

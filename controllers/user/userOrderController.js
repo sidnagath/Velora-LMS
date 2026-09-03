@@ -1,7 +1,10 @@
-const orderService = require('../../services/orderService');
-const cartService = require('../../services/cartService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import orderService from '../../services/orderService.js';
+import cartService from '../../services/cartService.js';
+import PDFDocument from 'pdfkit';
 
-exports.getUserOrders = async (req, res) => {
+
+export const getUserOrders = async (req, res) => {
   try {
     const userId = req.session.user.id;
 
@@ -29,41 +32,41 @@ exports.getUserOrders = async (req, res) => {
   }
 };
 
-exports.cancelPayment = async (req, res) => {
+export const cancelPayment = async (req, res) => {
   try {
     const { dbOrderIds } = req.body;
     const userId = req.session.user.id;
 
     const result = await orderService.cancelPayment(dbOrderIds, userId);
     if (!result.success) {
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
 
     return res.json({ success: true });
   } catch (error) {
     console.error('Error cancelling payment:', error);
-    return res.status(500).json({ success: false });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
-exports.failPayment = async (req, res) => {
+export const failPayment = async (req, res) => {
   try {
     const { dbOrderIds, reason } = req.body;
     const userId = req.session.user.id;
 
     const result = await orderService.failPayment(dbOrderIds, userId, reason);
     if (!result.success) {
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
 
     return res.json({ success: true });
   } catch (error) {
     console.error('Error failing payment:', error);
-    return res.status(500).json({ success: false });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
 
-exports.retryPayment = async (req, res) => {
+export const retryPayment = async (req, res) => {
   try {
     const { dbOrderId } = req.body;
     const userId = req.session.user.id;
@@ -77,15 +80,15 @@ exports.retryPayment = async (req, res) => {
         dbOrderIds: result.data.dbOrderIds
       });
     } else {
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
   } catch (error) {
     console.error('Error retrying payment:', error);
-    return res.status(500).json({ success: false, message: 'Server error retrying payment.' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error retrying payment.' });
   }
 };
 
-exports.downloadInvoice = async (req, res) => {
+export const downloadInvoice = async (req, res) => {
   try {
     const orderId = req.params.id;
     const userId = req.session.user.id;
@@ -105,7 +108,6 @@ exports.downloadInvoice = async (req, res) => {
 
     const order = result.data;
 
-    const PDFDocument = require('pdfkit');
     const doc = new PDFDocument({ margin: 50 });
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -234,7 +236,7 @@ exports.downloadInvoice = async (req, res) => {
   }
 };
 
-exports.refund = async (req, res) => {
+export const refund = async (req, res) => {
 
   try {
     const orderId = req.params.id;
@@ -244,36 +246,47 @@ exports.refund = async (req, res) => {
     const result = await orderService.requestRefund(orderId, userId, reason);
 
     if (!result.success) {
-      return res.status(400).json(result);
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(result);
     }
 
     return res.json(result);
   } catch (error) {
     console.error('Error submitting refund:', error);
-    return res.status(500).json({ success: false, message: 'Server error while processing refund' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error while processing refund' });
   }
 
 };
 
-exports.cancelOrder = async (req, res) => {
+export const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
     const userId = req.session.user?.id;
     const reason = req.body.reason || "Cancelled by user";
 
     if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
     }
 
     const result = await orderService.cancelPendingOrder(orderId, userId, false, reason);
 
     if (!result.success) {
-      return res.status(400).json(result);
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json(result);
     }
 
     return res.json(result);
   } catch (error) {
     console.error('Error cancelling order:', error);
-    return res.status(500).json({ success: false, message: 'Server error while cancelling order' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Server error while cancelling order' });
   }
+};
+
+
+export default {
+  getUserOrders,
+  cancelPayment,
+  failPayment,
+  retryPayment,
+  downloadInvoice,
+  refund,
+  cancelOrder
 };

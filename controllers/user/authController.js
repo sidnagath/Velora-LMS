@@ -1,4 +1,4 @@
-exports.getUserLogout = (req, res) => {
+export const getUserLogout = (req, res) => {
   delete req.session.user;
 
   req.session.save((err) => {
@@ -14,4 +14,9 @@ exports.getUserLogout = (req, res) => {
     req.flash("success", "Logged out successfully.");
     res.redirect("/auth/login");
   });
+};
+
+
+export default {
+  getUserLogout
 };

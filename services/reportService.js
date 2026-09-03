@@ -1,13 +1,14 @@
-const Order = require('../models/orderModel');
-const User = require('../models/userModel');
-const Course = require('../models/courseModel');
-const Category = require('../models/categoryModel');
-const mongoose = require('mongoose');
+import Order from '../models/orderModel.js';
+import User from '../models/userModel.js';
+import Course from '../models/courseModel.js';
+import Category from '../models/categoryModel.js';
+import mongoose from 'mongoose';
 
-exports.getReportData = async (filters) => {
+
+export const getReportData = async (filters) => {
   try {
     const { dateRange, startDate: customStart, endDate: customEnd, categoryId, courseId } = filters;
-    
+
     // 1. Base Match Condition for Orders
     const orderMatch = {};
     const userMatch = {};
@@ -59,7 +60,7 @@ exports.getReportData = async (filters) => {
     if (categoryId && categoryId !== 'all') {
       const coursesInCategory = await Course.find({ category: categoryId }).select('_id').lean();
       validCourseIds = coursesInCategory.map(c => c._id);
-      
+
       if (orderMatch.courseId) {
         // If course is selected but it doesn't match the category, then zero results
         if (!validCourseIds.find(id => id.toString() === orderMatch.courseId.toString())) {
@@ -106,7 +107,7 @@ exports.getReportData = async (filters) => {
         cancelledCount += metric.count;
       }
     });
-    
+
     // Status Breakdown Percentages
     const allOrdersCount = totalOrders + refundCount + pendingCount + cancelledCount;
     const statusBreakdown = {
@@ -131,7 +132,7 @@ exports.getReportData = async (filters) => {
     const chartLabels = [];
     const chartRevenues = [];
     const chartOrders = [];
-    
+
     // Last 12 months by default
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     for (let i = 11; i >= 0; i--) {
@@ -140,9 +141,9 @@ exports.getReportData = async (filters) => {
       const yyyy = d.getFullYear();
       const mm = String(d.getMonth() + 1).padStart(2, '0');
       const dateStr = `${yyyy}-${mm}`;
-      
+
       chartLabels.push(monthNames[d.getMonth()]);
-      
+
       const sale = salesAgg.find(x => x._id === dateStr);
       chartRevenues.push(sale ? sale.totalRevenue : 0);
       chartOrders.push(sale ? sale.totalOrders : 0);
@@ -150,7 +151,7 @@ exports.getReportData = async (filters) => {
 
     const maxRev = Math.max(...chartRevenues) || 1;
     const chartRevenueHeights = chartRevenues.map(r => Math.max((r / maxRev) * 100, 5));
-    
+
     const maxOrd = Math.max(...chartOrders) || 1;
     const chartOrderHeights = chartOrders.map(o => Math.max((o / maxOrd) * 100, 5));
 
@@ -214,4 +215,9 @@ exports.getReportData = async (filters) => {
     console.error("Report Service Error:", error);
     return { success: false, message: "Failed to generate reports" };
   }
+};
+
+
+export default {
+  getReportData
 };

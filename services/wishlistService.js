@@ -1,5 +1,7 @@
-const User = require("../models/userModel");
-const Course = require("../models/courseModel");
+import User from '../models/userModel.js';
+import Course from '../models/courseModel.js';
+import Enrollment from '../models/enrollmentModel.js';
+
 
 class WishlistService {
   async getWishlist(userId, searchQuery = "") {
@@ -30,12 +32,11 @@ class WishlistService {
       return { success: false, message: "User not found" };
     }
 
-    const Enrollment = require("../models/enrollmentModel");
     const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
     if (isEnrolled) {
       return { success: false, message: "You are already enrolled in this course." };
     }
-    
+
     const course = await Course.findById(courseId);
     if (!course || course.isDeleted) {
       user.wishlist = user.wishlist.filter(id => id.toString() !== courseId.toString());
@@ -62,7 +63,6 @@ class WishlistService {
     return { success: true, isAdded, message };
   }
 
-
   async moveToCart(userId,courseId){
     const user=await User.findById(userId);
 
@@ -70,17 +70,16 @@ class WishlistService {
       return {success:false, message:"User not found"}
     }
 
-    const Enrollment = require("../models/enrollmentModel");
     const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
     if (isEnrolled) {
       return { success: false, message: "You are already enrolled in this course." };
     }
-    
+
     const course = await Course.findById(courseId);
 
     //Remove from Wishlist first
     user.wishlist=user.wishlist.filter(id=>id.toString()!==courseId.toString());
-    
+
     if (!course || course.isDeleted || course.status !== "published") {
       await user.save();
       return { success: false, message: "Course is no longer available for purchase and has been removed from your wishlist." };
@@ -125,4 +124,4 @@ class WishlistService {
   }
 }
 
-module.exports = new WishlistService();
+export default new WishlistService();

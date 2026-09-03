@@ -1,6 +1,8 @@
-const couponService = require('../../services/couponService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import couponService from '../../services/couponService.js';
 
-exports.getAdminCoupons = async (req, res) => {
+
+export const getAdminCoupons = async (req, res) => {
   const result = await couponService.getCoupons(req.query);
 
   if(!result.success){
@@ -33,14 +35,13 @@ exports.getAdminCoupons = async (req, res) => {
   });
 };
 
-
-exports.getAdminCreateCoupon = async (req, res) => {
+export const getAdminCreateCoupon = async (req, res) => {
   const result = await couponService.getCreateCouponData();
 
   if (!result.success) {
     return res.redirect("/admin/coupons?flashType=error&flashMsg=Could%20not%20load%20form");
   }
-  
+
   res.render("pages/admin/coupons/create-coupon", {
     title: "Velora Admin - Create Coupon",
     isLoggedIn: true,
@@ -53,20 +54,17 @@ exports.getAdminCreateCoupon = async (req, res) => {
   });
 };
 
-
-exports.postAdminCreateCoupon = async (req, res) => {
+export const postAdminCreateCoupon = async (req, res) => {
   const result = await couponService.postCreateCouponData(req.body);
 
   if (!result.success) {
-    return res.status(400).json({ success: false, message: result.errors.general || 'Failed to create coupon', errors: result.errors, formData: result.formData || req.body });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.errors.general || 'Failed to create coupon', errors: result.errors, formData: result.formData || req.body });
   }
 
-  return res.status(201).json({ success: true, message: result.message || "Coupon created successfully" });
+  return res.status(HTTP_STATUS_CODES.CREATED).json({ success: true, message: result.message || "Coupon created successfully" });
 };
 
-
-
-exports.getAdminEditCoupon = async (req, res) => {
+export const getAdminEditCoupon = async (req, res) => {
   const result = await couponService.getEditCouponData(req.params.couponId);
 
     if (!result.success) {
@@ -84,21 +82,30 @@ exports.getAdminEditCoupon = async (req, res) => {
   });
 };
 
-
-exports.postAdminEditCoupon = async (req, res) => {
+export const postAdminEditCoupon = async (req, res) => {
   const result = await couponService.postEditCouponData(req.params.couponId,req.body);
 
     if (!result.success) {
-      return res.status(400).json({ success: false, message: result.errors?.general || 'Failed to update coupon', errors: result.errors });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.errors?.general || 'Failed to update coupon', errors: result.errors });
   }
-  
-  return res.status(200).json({ success: true, message: result.message || "Coupon edited successfully" });
+
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: result.message || "Coupon edited successfully" });
 };
 
-exports.postAdminDeleteCoupon = async (req, res) => {
+export const postAdminDeleteCoupon = async (req, res) => {
   const result = await couponService.deleteCouponData(req.params.couponId);
   if (!result.success) {
-    return res.status(400).json({ success: false, message: result.message || "Failed to delete coupon" });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message || "Failed to delete coupon" });
   }
-  return res.status(200).json({ success: true, message: result.message || "Coupon deleted successfully" });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: result.message || "Coupon deleted successfully" });
+};
+
+
+export default {
+  getAdminCoupons,
+  getAdminCreateCoupon,
+  postAdminCreateCoupon,
+  getAdminEditCoupon,
+  postAdminEditCoupon,
+  postAdminDeleteCoupon
 };

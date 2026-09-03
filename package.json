@@ -2,7 +2,7 @@
   "name": "velora",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
@@ -10,7 +10,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "dependencies": {
     "@tailwindcss/cli": "^4.2.4",
     "autoprefixer": "^10.5.0",

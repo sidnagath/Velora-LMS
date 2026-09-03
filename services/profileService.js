@@ -1,13 +1,13 @@
-const User = require('../models/userModel');
-const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
-const createTransporter = require('../config/mail');
+import User from '../models/userModel.js';
+import bcrypt from 'bcrypt';
+import nodemailer from 'nodemailer';
+import createTransporter from '../config/mail.js';
+import cloudinaryUtil from '../config/cloudinary.js';
+
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
-
-const cloudinaryUtil = require('../config/cloudinary');
 
 class ProfileService {
   async getUserById(userId) {
@@ -20,12 +20,12 @@ class ProfileService {
     if (!user) {
       return { success: false, errors: { general: "User not found" } };
     }
-    
+
     let errors = {};
     if (fileValidationErrors) {
       Object.assign(errors, fileValidationErrors);
     }
-    
+
     if (!avatarFile && Object.keys(errors).length === 0) {
       errors.avatar = "Please select an image";
     }
@@ -43,7 +43,7 @@ class ProfileService {
   async updateProfileDetails(userId, profileData) {
     const { name, email, phone, currentPassword } = profileData;
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return { success: false, errors: { general: "User not found" } };
     }
@@ -62,15 +62,15 @@ class ProfileService {
 
     if (!trimmedName) errors.name = "Name is required";
     if (!trimmedEmail) errors.email = "Email is required";
-    
+
     if (trimmedName && !nameRegex.test(trimmedName)) {
       errors.name = "Name should contain only letters";
     }
-    
+
     if (trimmedEmail && !emailRegex.test(trimmedEmail)) {
       errors.email = "Invalid email format";
     }
-    
+
     if (trimmedPhone && !phoneRegex.test(trimmedPhone)) {
       errors.phone = "Please enter a valid phone number.";
     }
@@ -110,7 +110,7 @@ class ProfileService {
     if (trimmedEmail !== user.email) {
       const otp = generateOTP();
       const otpExpires = Date.now() + 60 * 1000;
-      
+
       const transporter = await createTransporter();
       const info = await transporter.sendMail({
         from: '"Velora" <no-reply@velora.com>',
@@ -118,7 +118,7 @@ class ProfileService {
         subject: "Verify Email Change",
         text: `Your OTP is ${otp}`
       });
-      
+
       console.log("Preview URL:", nodemailer.getTestMessageUrl(info));
 
       return {
@@ -268,4 +268,4 @@ class ProfileService {
   }
 }
 
-module.exports = new ProfileService();
+export default new ProfileService();

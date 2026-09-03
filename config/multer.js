@@ -1,6 +1,7 @@
-const multer = require("multer");
-const path = require("path");
-const os = require("os");
+import multer from 'multer';
+import path from 'path';
+import os from 'os';
+
 
 const storage = multer.diskStorage({
 
@@ -21,8 +22,6 @@ const storage = multer.diskStorage({
 
 });
 
-
-
 const fileFilter =
 (req, file, cb) => {
 
@@ -36,8 +35,6 @@ const fileFilter =
 
   ];
 
-
-
   // ALLOWED VIDEO MIME TYPES
 
   const allowedVideoTypes = [
@@ -46,8 +43,6 @@ const fileFilter =
     "video/quicktime"
 
   ];
-
-
 
   // =========================
   // THUMBNAIL / AVATAR
@@ -134,4 +129,4 @@ const upload = multer({
 
 });
 
-module.exports = upload;
+export default upload;

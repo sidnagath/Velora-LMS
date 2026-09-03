@@ -1,5 +1,6 @@
-const cartService = require("./cartService");
-const couponService = require("./couponService");
+import cartService from './cartService.js';
+import couponService from './couponService.js';
+
 
 class CheckoutService {
 
@@ -144,7 +145,7 @@ class CheckoutService {
 
     // Filter out unpublished or unavailable courses
     const validCart = cart.filter(course => course.status === 'published' && !course.isDeleted);
-    
+
     if (validCart.length === 0) {
       return {
         success: false,
@@ -172,4 +173,4 @@ class CheckoutService {
   }
 }
 
-module.exports = new CheckoutService();
+export default new CheckoutService();

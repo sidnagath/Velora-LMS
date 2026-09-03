@@ -1,14 +1,16 @@
-const checkoutService = require("../../services/checkoutService");
-const profileService = require("../../services/profileService"); 
-const cartService = require("../../services/cartService");
-const razorpayService = require("../../services/razorpayService");
-const orderService = require("../../services/orderService");
-const Wallet = require("../../models/walletModel");
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import checkoutService from '../../services/checkoutService.js';
+import profileService from '../../services/profileService.js';
+import cartService from '../../services/cartService.js';
+import razorpayService from '../../services/razorpayService.js';
+import orderService from '../../services/orderService.js';
+import Wallet from '../../models/walletModel.js';
 
-exports.getCheckoutPage = async (req, res) => {
+
+export const getCheckoutPage = async (req, res) => {
   try {
     const userId = req.session.user?.id;
-    
+
     // Fetch checkout data, cart count, and wallet concurrently
     const [checkoutResult, cartCount, wallet] = await Promise.all([
       checkoutService.getCheckoutData(userId),
@@ -39,23 +41,23 @@ exports.getCheckoutPage = async (req, res) => {
   }
 };
 
-exports.getPaymentSuccess = async (req, res) => {
+export const getPaymentSuccess = async (req, res) => {
   try {
     const userId = req.session.user?.id;
     // We now might receive one orderId from the array, or we just load it.
     const { orderId } = req.params;
-    
+
     // We can just fetch this single order for the success page display
     // Or we fetch all orders from the session, but passing one orderId is fine for a generic success page.
     const result = await orderService.getPaymentSuccessData(orderId, userId);
-    
+
     if (!result.success) {
       req.flash("error", result.message || "Order not found");
       return res.redirect("/");
     }
-    
+
     const cartCount = await cartService.getCartCount(userId);
-    
+
     res.render("pages/user/checkout/payment-success", {
       title: "Payment Success",
       isLoggedIn: true,
@@ -69,22 +71,20 @@ exports.getPaymentSuccess = async (req, res) => {
   }
 };
 
-
-
-exports.getPaymentFailure = async (req, res) => {
+export const getPaymentFailure = async (req, res) => {
   try {
     const userId = req.session.user?.id;
     const { orderId } = req.params;
-    
+
     const result = await orderService.getPaymentFailureData(orderId, userId);
-    
+
     if (!result.success) {
       req.flash("error", result.message || "Order not found");
       return res.redirect("/");
     }
-    
+
     const cartCount = await cartService.getCartCount(userId);
-    
+
     res.render("pages/user/checkout/payment-failure", {
       title: "Payment Failed",
       isLoggedIn: true,
@@ -98,11 +98,11 @@ exports.getPaymentFailure = async (req, res) => {
   }
 };
 
-exports.applyCoupon = async (req, res) => {
+export const applyCoupon = async (req, res) => {
   try {
     const { couponId, cartSubtotal } = req.body;
     const userId = req.session.user?.id;
-    
+
     const result = await orderService.applyCoupon(couponId, userId, cartSubtotal);
 
     if (result.success) {
@@ -121,17 +121,17 @@ exports.applyCoupon = async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Failed to apply coupon." });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to apply coupon." });
   }
 };
 
-exports.createRazorpayOrder = async (req, res) => {
+export const createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { appliedCouponId, expectedCourseIds } = req.body;
 
     const result = await orderService.createPendingOrderAndRazorpayOrder(userId, appliedCouponId, expectedCourseIds);
-    
+
     if (result.success) {
       if (result.data.bypassRazorpay) {
           return res.json({ 
@@ -147,21 +147,21 @@ exports.createRazorpayOrder = async (req, res) => {
       });
     } else {
       // It might be a bad request if cart is empty or enrolled
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
   } catch (error) {
     console.error("Create Order Error:", error);
-    return res.status(500).json({ success: false, message: "Server error creating order." });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error creating order." });
   }
 };
 
-exports.processWalletPayment = async (req, res) => {
+export const processWalletPayment = async (req, res) => {
   try {
     const userId = req.session.user.id;
     const { appliedCouponId, expectedCourseIds } = req.body;
 
     const result = await orderService.processWalletCheckout(userId, appliedCouponId, expectedCourseIds);
-    
+
     if (result.success) {
       return res.json({ 
         success: true, 
@@ -169,21 +169,21 @@ exports.processWalletPayment = async (req, res) => {
         orderId: result.data.orderIds[0] 
       });
     } else {
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
   } catch (error) {
     console.error("Wallet Checkout Error:", error);
-    return res.status(500).json({ success: false, message: "Server error during wallet checkout." });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error during wallet checkout." });
   }
 };
 
-exports.verifyPayment = async (req, res) => {
+export const verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, dbOrderIds } = req.body;
     const userId = req.session.user.id;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !dbOrderIds || !Array.isArray(dbOrderIds)) {
-      return res.status(400).json({ success: false, message: "Missing required payment fields." });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: "Missing required payment fields." });
     }
 
     const result = await orderService.verifyAndFulfillOrder(dbOrderIds, userId, razorpay_order_id, razorpay_payment_id, razorpay_signature);
@@ -192,10 +192,21 @@ exports.verifyPayment = async (req, res) => {
       // We can just return the first order ID for the success page redirect
       return res.json({ success: true, message: result.message, orderId: result.data.orderIds[0] });
     } else {
-      return res.status(400).json({ success: false, message: result.message });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.message });
     }
   } catch (error) {
     console.error("Verify Payment Error:", error);
-    return res.status(500).json({ success: false, message: "Server error verifying payment." });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error verifying payment." });
   }
+};
+
+
+export default {
+  getCheckoutPage,
+  getPaymentSuccess,
+  getPaymentFailure,
+  applyCoupon,
+  createRazorpayOrder,
+  processWalletPayment,
+  verifyPayment
 };

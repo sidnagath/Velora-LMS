@@ -1,5 +1,6 @@
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+
 
 class RazorpayService {
   constructor() {
@@ -14,7 +15,7 @@ class RazorpayService {
       // Amount must be in paise (smallest currency unit). E.g., ₹100 = 10000 paise.
       // Make sure amount is at least 100 paise (₹1).
       const amountInPaise = Math.round(amount * 100);
-      
+
       if (amountInPaise < 100) {
          return { success: false, message: "Order amount must be at least ₹1.00" };
       }
@@ -27,7 +28,7 @@ class RazorpayService {
       };
 
       const order = await this.razorpay.orders.create(options);
-      
+
       return {
         success: true,
         order_id: order.id,
@@ -60,7 +61,5 @@ class RazorpayService {
   }
 }
 
-module.exports = new RazorpayService();
-
-
+export default new RazorpayService();
 

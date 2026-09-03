@@ -1,7 +1,8 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
-const Course = require("../models/courseModel");
-const Category = require("../models/categoryModel");
+import mongoose from 'mongoose';
+import Course from '../models/courseModel.js';
+import Category from '../models/categoryModel.js';
+import 'dotenv/config.js';
+
 
 // Update these to match your DB connection string if needed
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/velora";
@@ -38,7 +39,7 @@ async function migrateCategories() {
         continue;
       }
       const categoryName = categoryNameRaw.toLowerCase();
-      
+
       let matchedCategoryId = categoryMap[categoryName];
 
       if (!matchedCategoryId) {

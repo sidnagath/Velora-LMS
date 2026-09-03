@@ -1,6 +1,7 @@
-const Admin = require("../models/adminModel");
+import Admin from '../models/adminModel.js';
 
-exports.isAdmin = async (req, res, next) => {
+
+export const isAdmin = async (req, res, next) => {
   try {
     if (!req.session.admin) {
       return res.redirect("/auth/admin-login");
@@ -13,10 +14,14 @@ exports.isAdmin = async (req, res, next) => {
       delete req.session.admin;
       return res.redirect("/auth/admin-login");
     }
-    
+
     next();
   } catch (err) {
     console.log(err);
     return res.redirect("/auth/admin-login");
   }
+};
+
+export default {
+  isAdmin
 };

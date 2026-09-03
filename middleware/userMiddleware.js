@@ -1,6 +1,5 @@
 
-exports.isUser =
-(req, res, next) => {
+export const isUser = (req, res, next) => {
 
   if (req.session.user) {
 
@@ -12,4 +11,8 @@ exports.isUser =
     "/auth/login"
   );
 
+};
+
+export default {
+  isUser
 };

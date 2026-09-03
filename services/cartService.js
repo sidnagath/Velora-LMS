@@ -1,6 +1,8 @@
-const User = require("../models/userModel");
-const Course = require("../models/courseModel");
-const Module = require("../models/moduleModel");
+import User from '../models/userModel.js';
+import Course from '../models/courseModel.js';
+import Module from '../models/moduleModel.js';
+import Enrollment from '../models/enrollmentModel.js';
+
 
 class CartService {
   async getCart(userId, searchQuery = "") {
@@ -37,7 +39,6 @@ class CartService {
       return { success: false, message: "User not found" };
     }
 
-    const Enrollment = require("../models/enrollmentModel");
     const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
     if (isEnrolled) {
       return { success: false, message: "You are already enrolled in this course." };
@@ -85,14 +86,13 @@ class CartService {
       return { success: false, message: "User not found" };
     }
 
-    const Enrollment = require("../models/enrollmentModel");
     const isEnrolled = await Enrollment.findOne({ userId, courseId, status: { $ne: 'cancelled' } });
     if (isEnrolled) {
       return { success: false, message: "You are already enrolled in this course." };
     }
 
     const course = await Course.findById(courseId);
-    
+
     // Remove from cart first
     user.cart = user.cart.filter(id => id.toString() !== courseId.toString());
 
@@ -116,16 +116,16 @@ class CartService {
     if (!user) {
       return { success: false, message: "User not found" };
     }
-    
+
     // Only count active/published courses in the cart
     const count = await Course.countDocuments({
       _id: { $in: user.cart },
       status: "published",
       isDeleted: false
     });
-    
+
     return { success: true, count };
   }
 }
 
-module.exports = new CartService();
+export default new CartService();

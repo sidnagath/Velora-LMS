@@ -1,18 +1,18 @@
-const mongoose = require("mongoose");
+import mongoose from 'mongoose';
+
 
 const courseSchema = new mongoose.Schema(
   {
-    
+
     title:{
       type:String,
       trim:true
     },
-  
+
     description:{
       type:String,
       trim:true
     },
-
 
     category:{
       type: mongoose.Schema.Types.ObjectId,
@@ -50,7 +50,7 @@ const courseSchema = new mongoose.Schema(
      ],
      default:"draft"
     },
-    
+
     pricingType:{
       type:String,
       enum:["free", "paid"],
@@ -86,7 +86,7 @@ const courseSchema = new mongoose.Schema(
       type:Boolean,
       default:true
     },
-    
+
     isDeleted:{
       type:Boolean,
       default:false
@@ -109,4 +109,4 @@ const courseSchema = new mongoose.Schema(
 
 );
 
-module.exports = mongoose.model("Course", courseSchema);
+export default mongoose.model("Course", courseSchema);

@@ -1,5 +1,4 @@
-exports.isUserGuest =
-(req, res, next) => {
+export const isUserGuest = (req, res, next) => {
 
   if (req.session.user) {
 
@@ -11,4 +10,8 @@ exports.isUserGuest =
 
   next();
 
+};
+
+export default {
+  isUserGuest
 };

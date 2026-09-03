@@ -1,6 +1,8 @@
-const categoryService = require('../../services/categoryService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import categoryService from '../../services/categoryService.js';
 
-exports.getAdminCategories = async (req, res) => {
+
+export const getAdminCategories = async (req, res) => {
   const result = await categoryService.getCategoriesData(req.query);
 
   if (result.success) {
@@ -53,7 +55,7 @@ exports.getAdminCategories = async (req, res) => {
   }
 };
 
-exports.getAdminAddCategory = (req, res) => {
+export const getAdminAddCategory = (req, res) => {
   res.render("pages/admin/categories/add-category", {
     title: "Velora - Add Category",
     isLoggedIn: true,
@@ -63,17 +65,17 @@ exports.getAdminAddCategory = (req, res) => {
   });
 };
 
-exports.postAdminAddCategory = async (req, res) => {
+export const postAdminAddCategory = async (req, res) => {
   const result = await categoryService.createCategory(req.body, req.file, req.fileValidationError);
 
   if (result.success) {
-    return res.status(201).json({ success: true, message: `Category '${result.name}' created successfully.` });
+    return res.status(HTTP_STATUS_CODES.CREATED).json({ success: true, message: `Category '${result.name}' created successfully.` });
   } else {
-    return res.status(400).json({ success: false, message: 'Failed to create category', errors: result.errors, formData: result.formData || req.body });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to create category', errors: result.errors, formData: result.formData || req.body });
   }
 };
 
-exports.getAdminEditCategory = async (req, res) => {
+export const getAdminEditCategory = async (req, res) => {
   const result = await categoryService.getCategoryById(req.params.categoryId);
 
   if (result.success) {
@@ -90,28 +92,38 @@ exports.getAdminEditCategory = async (req, res) => {
   }
 };
 
-exports.postAdminEditCategory = async (req, res) => {
+export const postAdminEditCategory = async (req, res) => {
   const result = await categoryService.updateCategory(req.params.categoryId, req.body, req.file, req.fileValidationError);
 
   if (result.success) {
-    return res.status(200).json({ success: true, message: `Category '${result.name}' updated successfully.` });
+    return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: `Category '${result.name}' updated successfully.` });
   } else if (result.notFound) {
-    return res.status(404).json({ success: false, message: 'Category not found' });
+    return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({ success: false, message: 'Category not found' });
   } else if (result.generalError) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error' });
   } else {
-    return res.status(400).json({ success: false, message: 'Failed to update category', errors: result.errors, formData: result.formData });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to update category', errors: result.errors, formData: result.formData });
   }
 };
 
-exports.postAdminDeleteCategory = async (req, res) => {
+export const postAdminDeleteCategory = async (req, res) => {
   const result = await categoryService.deleteCategory(req.params.categoryId);
 
   if (result.success) {
-    return res.status(200).json({ success: true, message: `Category '${result.categoryName}' deleted successfully.` });
+    return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: `Category '${result.categoryName}' deleted successfully.` });
   } else if (result.hasCourses) {
-    return res.status(400).json({ success: false, message: `Cannot delete '${result.categoryName}' — it is assigned to ${result.courseCount} course(s).` });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: `Cannot delete '${result.categoryName}' — it is assigned to ${result.courseCount} course(s).` });
   } else {
-    return res.status(500).json({ success: false, message: 'Failed to delete category.' });
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to delete category.' });
   }
+};
+
+
+export default {
+  getAdminCategories,
+  getAdminAddCategory,
+  postAdminAddCategory,
+  getAdminEditCategory,
+  postAdminEditCategory,
+  postAdminDeleteCategory
 };

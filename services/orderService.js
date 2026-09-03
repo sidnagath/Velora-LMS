@@ -1,15 +1,16 @@
-const Order = require('../models/orderModel');
-const User = require('../models/userModel');
-const Course = require('../models/courseModel');
-const Enrollment = require('../models/enrollmentModel');
-const Coupon = require('../models/couponModel');
-const Wallet = require('../models/walletModel');
-const mongoose = require('mongoose');
-const checkoutService = require('./checkoutService');
-const razorpayService = require('./razorpayService');
-const walletService = require('./walletService');
+import Order from '../models/orderModel.js';
+import User from '../models/userModel.js';
+import Course from '../models/courseModel.js';
+import Enrollment from '../models/enrollmentModel.js';
+import Coupon from '../models/couponModel.js';
+import Wallet from '../models/walletModel.js';
+import mongoose from 'mongoose';
+import checkoutService from './checkoutService.js';
+import razorpayService from './razorpayService.js';
+import walletService from './walletService.js';
 
-exports.getAdminOrdersData = async (queryObj) => {
+
+export const getAdminOrdersData = async (queryObj) => {
   try {
     const page = parseInt(queryObj.page) || 1;
     const limit = 5;
@@ -86,7 +87,7 @@ exports.getAdminOrdersData = async (queryObj) => {
   }
 };
 
-exports.getOrderById = async (orderId) => {
+export const getOrderById = async (orderId) => {
   try {
     const rawOrder = await Order.findById(orderId)
       .populate('userId', 'name avatar email phone')
@@ -110,7 +111,7 @@ exports.getOrderById = async (orderId) => {
   }
 };
 
-exports.updateOrderStatus = async (orderId, status) => {
+export const updateOrderStatus = async (orderId, status) => {
   try {
     const validStatuses = ['pending', 'paid', 'failed', 'cancelled', 'refunded'];
 
@@ -142,7 +143,7 @@ exports.updateOrderStatus = async (orderId, status) => {
   }
 };
 
-exports.getUserOrders = async (userId) => {
+export const getUserOrders = async (userId) => {
   try {
     const user = await User.findById(userId).lean();
     if (!user) {
@@ -178,7 +179,7 @@ exports.getUserOrders = async (userId) => {
   }
 };
 
-exports.cancelPayment = async (dbOrderIds, userId) => {
+export const cancelPayment = async (dbOrderIds, userId) => {
   try {
     if (dbOrderIds && Array.isArray(dbOrderIds)) {
       await Order.updateMany(
@@ -198,7 +199,7 @@ exports.cancelPayment = async (dbOrderIds, userId) => {
   }
 };
 
-exports.failPayment = async (dbOrderIds, userId, reason) => {
+export const failPayment = async (dbOrderIds, userId, reason) => {
   try {
     if (dbOrderIds && Array.isArray(dbOrderIds)) {
       await Order.updateMany(
@@ -218,7 +219,7 @@ exports.failPayment = async (dbOrderIds, userId, reason) => {
   }
 };
 
-exports.retryPayment = async (dbOrderIds, userId) => {
+export const retryPayment = async (dbOrderIds, userId) => {
   try {
     let orders = [];
     if (dbOrderIds && Array.isArray(dbOrderIds)) {
@@ -286,7 +287,7 @@ exports.retryPayment = async (dbOrderIds, userId) => {
   }
 };
 
-exports.getInvoiceData = async (orderId, userId) => {
+export const getInvoiceData = async (orderId, userId) => {
   try {
     // orderId here is the VEL- receipt ID, not the mongo _id
     const orders = await Order.find({ orderId: orderId, userId, paymentStatus: 'paid' })
@@ -360,7 +361,7 @@ exports.getInvoiceData = async (orderId, userId) => {
   }
 };
 
-exports.getCheckoutInvoiceData = async (orderId, userId) => {
+export const getCheckoutInvoiceData = async (orderId, userId) => {
   try {
     const primaryOrder = await Order.findOne({ _id: orderId, userId, paymentStatus: 'paid' });
     if (!primaryOrder) {
@@ -444,8 +445,7 @@ exports.getCheckoutInvoiceData = async (orderId, userId) => {
   }
 };
 
-
-exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId, expectedCourseIds) => {
+export const createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId, expectedCourseIds) => {
   try {
     // 1. Fetch user's cart
     const checkoutResult = await checkoutService.getCheckoutData(userId);
@@ -618,7 +618,7 @@ exports.createPendingOrderAndRazorpayOrder = async (userId, appliedCouponId, exp
   }
 };
 
-exports.processWalletCheckout = async (userId, appliedCouponId, expectedCourseIds) => {
+export const processWalletCheckout = async (userId, appliedCouponId, expectedCourseIds) => {
   try {
     const checkoutResult = await checkoutService.getCheckoutData(userId);
     if (!checkoutResult.success || checkoutResult.cart.length === 0) {
@@ -760,7 +760,7 @@ exports.processWalletCheckout = async (userId, appliedCouponId, expectedCourseId
   }
 };
 
-exports.verifyAndFulfillOrder = async (dbOrderIds, userId, razorpay_order_id, razorpay_payment_id, razorpay_signature) => {
+export const verifyAndFulfillOrder = async (dbOrderIds, userId, razorpay_order_id, razorpay_payment_id, razorpay_signature) => {
   try {
     const verification = razorpayService.verifySignature(
       razorpay_order_id,
@@ -853,7 +853,7 @@ exports.verifyAndFulfillOrder = async (dbOrderIds, userId, razorpay_order_id, ra
   }
 };
 
-exports.getPaymentSuccessData = async (orderId, userId) => {
+export const getPaymentSuccessData = async (orderId, userId) => {
   try {
     const primaryOrder = await Order.findOne({ _id: orderId, userId });
     if (!primaryOrder) {
@@ -920,7 +920,7 @@ exports.getPaymentSuccessData = async (orderId, userId) => {
   }
 };
 
-exports.getPaymentFailureData = async (orderId, userId) => {
+export const getPaymentFailureData = async (orderId, userId) => {
   try {
     const primaryOrder = await Order.findOne({ _id: orderId, userId });
     if (!primaryOrder) {
@@ -970,7 +970,7 @@ exports.getPaymentFailureData = async (orderId, userId) => {
   }
 };
 
-exports.applyCoupon = async (couponId, userId, cartSubtotal) => {
+export const applyCoupon = async (couponId, userId, cartSubtotal) => {
   try {
     const coupon = await Coupon.findById(couponId);
 
@@ -1017,8 +1017,7 @@ exports.applyCoupon = async (couponId, userId, cartSubtotal) => {
   }
 };
 
-
-exports.requestRefund = async (orderId, userId, reason) => {
+export const requestRefund = async (orderId, userId, reason) => {
 
   const order = await Order.findOne({ _id: orderId, userId: userId });
 
@@ -1061,7 +1060,6 @@ exports.requestRefund = async (orderId, userId, reason) => {
     return { success: false, message: "Refund request period has expired" }
   }
 
-  const Enrollment = require('../models/enrollmentModel');
   const enrollments = await Enrollment.find({ orderId: order._id, userId });
   for (const enrollment of enrollments) {
     if (enrollment.progress > 20) {
@@ -1074,8 +1072,6 @@ exports.requestRefund = async (orderId, userId, reason) => {
   if (!reason) {
     return { success: false, message: "Refund reason is required" }
   }
-
-
 
   if (reason.length < 10) {
     return {
@@ -1105,8 +1101,7 @@ exports.requestRefund = async (orderId, userId, reason) => {
 
 };
 
-
-exports.approveRefund = async (id) => {
+export const approveRefund = async (id) => {
   try {
     const order = await Order.findById(id);
 
@@ -1153,7 +1148,7 @@ exports.approveRefund = async (id) => {
   }
 };
 
-exports.rejectRefund = async (id) => {
+export const rejectRefund = async (id) => {
   try {
     const order = await Order.findById(id);
 
@@ -1181,7 +1176,7 @@ exports.rejectRefund = async (id) => {
   }
 };
 
-exports.cancelPendingOrder = async (orderId, userId, isAdmin, reason) => {
+export const cancelPendingOrder = async (orderId, userId, isAdmin, reason) => {
   try {
     const query = { _id: orderId };
     if (!isAdmin) {
@@ -1215,4 +1210,26 @@ exports.cancelPendingOrder = async (orderId, userId, isAdmin, reason) => {
     console.error("Cancel Order Error:", error);
     return { success: false, message: "Failed to cancel order." };
   }
+};
+
+export default {
+  getAdminOrdersData,
+  getOrderById,
+  updateOrderStatus,
+  getUserOrders,
+  cancelPayment,
+  failPayment,
+  retryPayment,
+  getInvoiceData,
+  getCheckoutInvoiceData,
+  createPendingOrderAndRazorpayOrder,
+  processWalletCheckout,
+  verifyAndFulfillOrder,
+  getPaymentSuccessData,
+  getPaymentFailureData,
+  applyCoupon,
+  requestRefund,
+  approveRefund,
+  rejectRefund,
+  cancelPendingOrder
 };

@@ -1,12 +1,12 @@
-const mongoose = require('mongoose');
-const Category = require('../models/categoryModel');
-const Course = require('../models/courseModel');
-const Module = require('../models/moduleModel');
-const Lesson = require('../models/lessonModel');
-const Resource = require('../models/resourceModel');
-const User = require('../models/userModel');
-const cloudinaryUtil = require('../config/cloudinary');
-const Enrollment = require('../models/enrollmentModel');
+import mongoose from 'mongoose';
+import Category from '../models/categoryModel.js';
+import Course from '../models/courseModel.js';
+import Module from '../models/moduleModel.js';
+import Lesson from '../models/lessonModel.js';
+import Resource from '../models/resourceModel.js';
+import User from '../models/userModel.js';
+import cloudinaryUtil from '../config/cloudinary.js';
+import Enrollment from '../models/enrollmentModel.js';
 
 
 const calculateTotalDuration = (lessons) => {
@@ -69,7 +69,7 @@ const formatLessonDurationAsMMSS = (durationRaw) => {
 
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
-exports.getAdminCoursesList = async (query) => {
+export const getAdminCoursesList = async (query) => {
   try {
     // SEARCH
     const search = query.search?.trim() || "";
@@ -154,7 +154,7 @@ exports.getAdminCoursesList = async (query) => {
   }
 };
 
-exports.getAdminCreateCourseData = async () => {
+export const getAdminCreateCourseData = async () => {
   try {
     const categories = await Category.find({ status: "active" }).sort({ name: 1 });
     return { success: true, data: { categories } };
@@ -164,7 +164,7 @@ exports.getAdminCreateCourseData = async () => {
   }
 };
 
-exports.createCourse = async (data, files, fileValidationErrors) => {
+export const createCourse = async (data, files, fileValidationErrors) => {
   try {
     let { title, description, category, instructor, level } = data;
 
@@ -249,7 +249,7 @@ exports.createCourse = async (data, files, fileValidationErrors) => {
   }
 };
 
-exports.getAdminEditCourseData = async (courseId) => {
+export const getAdminEditCourseData = async (courseId) => {
   try {
     const course = await Course.findById(courseId);
     if (!course) {
@@ -263,7 +263,7 @@ exports.getAdminEditCourseData = async (courseId) => {
   }
 };
 
-exports.updateCourse = async (courseId, data, files, fileValidationErrors) => {
+export const updateCourse = async (courseId, data, files, fileValidationErrors) => {
   try {
     let { title, description, category, instructor, level } = data;
 
@@ -367,7 +367,7 @@ exports.updateCourse = async (courseId, data, files, fileValidationErrors) => {
   }
 };
 
-exports.deleteCourse = async (courseId) => {
+export const deleteCourse = async (courseId) => {
   try {
     const course = await Course.findById(courseId);
     if (!course) {
@@ -392,7 +392,7 @@ exports.deleteCourse = async (courseId) => {
   }
 };
 
-exports.getAdminCoursePublishData = async (courseId) => {
+export const getAdminCoursePublishData = async (courseId) => {
   try {
     const course = await Course.findById(courseId);
     if (!course) {
@@ -419,7 +419,7 @@ exports.getAdminCoursePublishData = async (courseId) => {
   }
 };
 
-exports.publishCourse = async (courseId, data) => {
+export const publishCourse = async (courseId, data) => {
   try {
     const course = await Course.findById(courseId);
     if (!course) {
@@ -484,7 +484,7 @@ exports.publishCourse = async (courseId, data) => {
   }
 };
 
-exports.toggleCourseStatus = async (courseId) => {
+export const toggleCourseStatus = async (courseId) => {
   try {
     const course = await Course.findById(courseId);
     if (!course) return { success: false, errors: { general: "Course not found" } };
@@ -509,7 +509,7 @@ exports.toggleCourseStatus = async (courseId) => {
   }
 };
 
-exports.getPublishedCourses = async (query) => {
+export const getPublishedCourses = async (query) => {
   try {
     const { category, level, sortBy, search } = query;
     const page = Number(query.page) || 1;
@@ -582,7 +582,7 @@ exports.getPublishedCourses = async (query) => {
   }
 };
 
-exports.getCourseDetails = async (courseId, isAdmin = false) => {
+export const getCourseDetails = async (courseId, isAdmin = false) => {
   try {
     const query = {
       _id: courseId,
@@ -658,11 +658,8 @@ exports.getCourseDetails = async (courseId, isAdmin = false) => {
   }
 };
 
-exports.getMyCoursesData = async (userId) => {
+export const getMyCoursesData = async (userId) => {
   try {
-    const Enrollment = require('../models/enrollmentModel');
-    const Module = require('../models/moduleModel');
-    const Lesson = require('../models/lessonModel');
 
     let enrollments = await Enrollment.find({
       userId,
@@ -691,8 +688,7 @@ exports.getMyCoursesData = async (userId) => {
   }
 };
 
-
-exports.myCourseDetails = async (courseId, userId, lessonId) => {
+export const myCourseDetails = async (courseId, userId, lessonId) => {
   try {
     const enrollment = await Enrollment.findOne({ userId, courseId, status: { $in: ["active", "completed"] } }).lean();
 
@@ -707,7 +703,6 @@ exports.myCourseDetails = async (courseId, userId, lessonId) => {
       isDeleted: false,
       status: "published"
     }).populate("category").lean();
-
 
     if (!course) {
       return { success: false, errors: { general: "Course not found" } };
@@ -739,7 +734,6 @@ exports.myCourseDetails = async (courseId, userId, lessonId) => {
 
     // Flatten in correct sequence after Promise.all resolves
     const allLessons = modulesWithLessons.reduce((acc, module) => acc.concat(module.lessons), []);
-
 
     let activeLesson = null;
     let previousLesson = null;
@@ -780,9 +774,6 @@ exports.myCourseDetails = async (courseId, userId, lessonId) => {
       }
     };
 
-
-
-
   } catch (error) {
     console.log(error);
     return {
@@ -794,7 +785,7 @@ exports.myCourseDetails = async (courseId, userId, lessonId) => {
   }
 };
 
-exports.markLessonComplete = async (userId, courseId, lessonId) => {
+export const markLessonComplete = async (userId, courseId, lessonId) => {
   try {
 
     const enrollment = await Enrollment.findOne({ userId, courseId });
@@ -833,7 +824,7 @@ exports.markLessonComplete = async (userId, courseId, lessonId) => {
   }
 };
 
-exports.validateCertificateAccess = async (userId, courseId) => {
+export const validateCertificateAccess = async (userId, courseId) => {
   try {
     const course = await Course.findOne({
       _id: courseId,
@@ -871,7 +862,7 @@ exports.validateCertificateAccess = async (userId, courseId) => {
   }
 };
 
-exports.getAuthorizedVideoUrl = async (userId, courseId, lessonId) => {
+export const getAuthorizedVideoUrl = async (userId, courseId, lessonId) => {
   try {
     // 1. Verify user is enrolled and active
     // Accept either active or completed status so completed users can still view videos
@@ -913,4 +904,23 @@ exports.getAuthorizedVideoUrl = async (userId, courseId, lessonId) => {
     console.error("Authorized Video URL generation error:", error);
     throw error;
   }
+};
+
+export default {
+  getAdminCoursesList,
+  getAdminCreateCourseData,
+  createCourse,
+  getAdminEditCourseData,
+  updateCourse,
+  deleteCourse,
+  getAdminCoursePublishData,
+  publishCourse,
+  toggleCourseStatus,
+  getPublishedCourses,
+  getCourseDetails,
+  getMyCoursesData,
+  myCourseDetails,
+  markLessonComplete,
+  validateCertificateAccess,
+  getAuthorizedVideoUrl
 };

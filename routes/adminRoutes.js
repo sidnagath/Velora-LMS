@@ -1,20 +1,22 @@
-const express=require("express");
+import express from 'express';
+import dashboardController from '../controllers/admin/dashboardController.js';
+import userController from '../controllers/admin/userController.js';
+import categoryController from '../controllers/admin/categoryController.js';
+import courseController from '../controllers/admin/courseController.js';
+import moduleController from '../controllers/admin/moduleController.js';
+import lessonController from '../controllers/admin/lessonController.js';
+import resourceController from '../controllers/admin/resourceController.js';
+import couponController from '../controllers/admin/couponController.js';
+import reportController from '../controllers/admin/reportController.js';
+import authController from '../controllers/admin/authController.js';
+import orderController from '../controllers/admin/orderController.js';
+import { isAdmin } from '../middleware/adminMiddleware.js';
+import {noCache} from '../middleware/noCache.js';
+import {isAdminGuest} from '../middleware/adminGuestMiddleware.js';
+import upload from '../config/multer.js';
+
+
 const router=express.Router();
-const dashboardController = require('../controllers/admin/dashboardController');
-const userController = require('../controllers/admin/userController');
-const categoryController = require('../controllers/admin/categoryController');
-const courseController = require('../controllers/admin/courseController');
-const moduleController = require('../controllers/admin/moduleController');
-const lessonController = require('../controllers/admin/lessonController');
-const resourceController = require('../controllers/admin/resourceController');
-const couponController = require("../controllers/admin/couponController");
-const reportController = require("../controllers/admin/reportController");
-const authController = require('../controllers/admin/authController');
-const orderController = require("../controllers/admin/orderController");
-const { isAdmin } = require('../middleware/adminMiddleware');
-const {noCache} = require('../middleware/noCache');
-const {isAdminGuest}=require('../middleware/adminGuestMiddleware');
-const upload = require("../config/multer");
 
 // =======================
 // PAGE RENDER ROUTES
@@ -22,7 +24,6 @@ const upload = require("../config/multer");
 
 // Dashboard
 router.get("/admin/dashboard",noCache, isAdmin, dashboardController.getDashboard);
-
 
 // User Management
 router.get("/admin/users", noCache, isAdmin, userController.getAdminUsers);
@@ -106,7 +107,5 @@ router.post("/api/v1/admin/coupons", noCache, isAdmin, couponController.postAdmi
 router.patch("/api/v1/admin/coupons/:couponId", noCache, isAdmin, couponController.postAdminEditCoupon);
 router.delete("/api/v1/admin/coupons/:couponId", noCache, isAdmin, couponController.postAdminDeleteCoupon);
 
-module.exports=router;
-
-
+export default router;
 

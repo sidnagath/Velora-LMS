@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const Admin = require('./models/adminModel');
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/velora-trial")
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("DB connected"))
   .catch(err => console.log(err));
 
 async function createAdmin() {
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash('Velora@2026!', 10);
 
   await Admin.create({
     email: 'admin@velora.com',

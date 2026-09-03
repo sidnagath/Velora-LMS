@@ -1,5 +1,4 @@
-exports.isAdminGuest =
-(req, res, next) => {
+export const isAdminGuest = (req, res, next) => {
 
   if (req.session.admin) {
 
@@ -11,4 +10,8 @@ exports.isAdminGuest =
 
   next();
 
+};
+
+export default {
+  isAdminGuest
 };

@@ -1,6 +1,7 @@
-const PDFDocument = require('pdfkit');
+import PDFDocument from 'pdfkit';
 
-exports.generateReportPDF = (data, filters, res) => {
+
+export const generateReportPDF = (data, filters, res) => {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
@@ -57,7 +58,7 @@ exports.generateReportPDF = (data, filters, res) => {
       doc.text(`Pending: ${data.statusBreakdown?.pending?.count || 0} (${data.statusBreakdown?.pending?.percent || 0}%)`);
       doc.text(`Refunded: ${data.statusBreakdown?.refunded?.count || 0} (${data.statusBreakdown?.refunded?.percent || 0}%)`);
       doc.text(`Cancelled: ${data.statusBreakdown?.cancelled?.count || 0} (${data.statusBreakdown?.cancelled?.percent || 0}%)`);
-      
+
       doc.moveDown(2);
 
       // Top Performing Courses
@@ -71,7 +72,7 @@ exports.generateReportPDF = (data, filters, res) => {
       doc.text('Course Title', 60, tableY + 5);
       doc.text('Enrollments', 350, tableY + 5);
       doc.text('Revenue', 450, tableY + 5);
-      
+
       tableY += 20;
 
       // Table Rows - Courses
@@ -93,7 +94,7 @@ exports.generateReportPDF = (data, filters, res) => {
         doc.fillColor('#6B7280').text('No course data available for this period.', 60, tableY + 5);
         tableY += 20;
       }
-      
+
       doc.y = tableY + 20;
 
       // Top Coupons
@@ -107,7 +108,7 @@ exports.generateReportPDF = (data, filters, res) => {
       doc.text('Coupon Code', 60, tableY + 5);
       doc.text('Uses', 350, tableY + 5);
       doc.text('Total Discount', 450, tableY + 5);
-      
+
       tableY += 20;
 
       // Table Rows - Coupons
@@ -142,7 +143,7 @@ exports.generateReportPDF = (data, filters, res) => {
 
       // Finalize PDF file
       doc.end();
-      
+
       // Since it's piping, it's done asynchronously but we can resolve
       // when the doc end is called. The `res` will finish.
       resolve();
@@ -151,4 +152,9 @@ exports.generateReportPDF = (data, filters, res) => {
       reject(err);
     }
   });
+};
+
+
+export default {
+  generateReportPDF
 };

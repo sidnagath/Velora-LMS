@@ -1,8 +1,9 @@
-const Category = require('../models/categoryModel');
-const Course = require('../models/courseModel');
-const cloudinaryUtil = require('../config/cloudinary');
+import Category from '../models/categoryModel.js';
+import Course from '../models/courseModel.js';
+import cloudinaryUtil from '../config/cloudinary.js';
 
-exports.getCategoriesData = async (query) => {
+
+export const getCategoriesData = async (query) => {
   try {
     const search = query.search?.trim() || "";
     const filterStatus = query.status || "";
@@ -84,7 +85,7 @@ exports.getCategoriesData = async (query) => {
   }
 };
 
-exports.createCategory = async (body, file, fileValidationErrors) => {
+export const createCategory = async (body, file, fileValidationErrors) => {
   try {
     let { name, description, status } = body;
 
@@ -139,7 +140,7 @@ exports.createCategory = async (body, file, fileValidationErrors) => {
   }
 };
 
-exports.getCategoryById = async (categoryId) => {
+export const getCategoryById = async (categoryId) => {
   try {
     const category = await Category.findById(categoryId);
     if (!category) return { success: false };
@@ -150,7 +151,7 @@ exports.getCategoryById = async (categoryId) => {
   }
 };
 
-exports.updateCategory = async (categoryId, body, file, fileValidationErrors) => {
+export const updateCategory = async (categoryId, body, file, fileValidationErrors) => {
   try {
     let { name, description, status } = body;
 
@@ -213,7 +214,7 @@ exports.updateCategory = async (categoryId, body, file, fileValidationErrors) =>
   }
 };
 
-exports.deleteCategory = async (categoryId) => {
+export const deleteCategory = async (categoryId) => {
   try {
     const categoryToDelete = await Category.findById(categoryId);
     if (!categoryToDelete) {
@@ -235,4 +236,13 @@ exports.deleteCategory = async (categoryId) => {
     console.log(err);
     return { success: false, generalError: true };
   }
+};
+
+
+export default {
+  getCategoriesData,
+  createCategory,
+  getCategoryById,
+  updateCategory,
+  deleteCategory
 };

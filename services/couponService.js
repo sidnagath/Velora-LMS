@@ -1,5 +1,7 @@
-const mongoose = require('mongoose');
-const Coupon = require('../models/couponModel');
+import mongoose from 'mongoose';
+import Coupon from '../models/couponModel.js';
+import Order from '../models/orderModel.js';
+
 
 class CouponService{
 
@@ -19,7 +21,7 @@ class CouponService{
       if (search) {
         filter.code = { $regex: search, $options: "i" };
       }
-      
+
       if (filterStatus) {
         filter.status = filterStatus;
       }
@@ -34,7 +36,7 @@ class CouponService{
         expiryLast: { expiryDate: -1 }
       };
       const sort = sortMap[sortBy] || { createdAt: -1 }; 
-        
+
       // QUERY
       const [coupons, totalCoupons] = await Promise.all([
         Coupon.find(filter).sort(sort).skip(skip).limit(LIMIT).lean(),
@@ -51,7 +53,6 @@ class CouponService{
 
       const totalPages = Math.ceil(totalCoupons / LIMIT) || 1;
 
-      const Order = require('../models/orderModel');
       const [activeCouponsCount, redeemedAgg, revenueAgg] = await Promise.all([
         Coupon.countDocuments({ status: 'active', expiryDate: { $gt: now } }),
         Coupon.aggregate([{ $group: { _id: null, total: { $sum: "$usageCount" } } }]),
@@ -214,7 +215,7 @@ class CouponService{
           usageLimit = num;
         }
       }
-     
+
       if (Object.keys(errors).length > 0) {
         return { success: false, errors, formData };
       }
@@ -252,7 +253,6 @@ class CouponService{
       coupon:coupon
     }
   }
-  
 
     async postEditCouponData(id,body) {
      try {
@@ -289,7 +289,6 @@ class CouponService{
         status,
       };
 
-      
       const coupon=await Coupon.findById(id);
       if (!coupon) return { success: false, message: "Coupon is not found" };
 
@@ -312,7 +311,6 @@ class CouponService{
           errors.code = "Coupon code already exists";
         }
       }
-      
 
       if (!["percentage", "flat"].includes(discountType)) {
         errors.discountType = "Invalid discount type";
@@ -346,7 +344,7 @@ class CouponService{
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const expiry = new Date(expiryDate);
-        
+
         // Only validate if it's different from the existing date
         const existingExpiryStr = new Date(coupon.expiryDate).toISOString().split('T')[0];
         const newExpiryStr = expiry.toISOString().split('T')[0];
@@ -386,7 +384,7 @@ class CouponService{
        coupon.maxDiscount = maxDiscountAmount;
        coupon.expiryDate = expiryDate;
        coupon.usageLimit=usageLimit;
-       
+
        // Ensure status goes inactive if limit is reduced below current usage
        if (status === "active" && coupon.usageCount >= usageLimit) {
          coupon.status = "inactive";
@@ -409,9 +407,9 @@ class CouponService{
       if (!coupon) {
         return { success: false, message: "Coupon not found" };
       }
-      
+
       await Coupon.findByIdAndDelete(couponId);
-      
+
       return { success: true, message: "Coupon deleted successfully" };
     } catch (err) {
       console.error(err);
@@ -420,4 +418,4 @@ class CouponService{
   }
 }
 
-module.exports = new CouponService();
+export default new CouponService();

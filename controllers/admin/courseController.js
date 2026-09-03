@@ -1,6 +1,8 @@
-const courseService = require('../../services/courseService');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import courseService from '../../services/courseService.js';
 
-exports.getAdminCourses = async (req, res) => {
+
+export const getAdminCourses = async (req, res) => {
   const result = await courseService.getAdminCoursesList(req.query);
 
   if (!result.success) {
@@ -40,9 +42,9 @@ exports.getAdminCourses = async (req, res) => {
   });
 };
 
-exports.getAdminCreateCourse = async (req, res) => {
+export const getAdminCreateCourse = async (req, res) => {
   const result = await courseService.getAdminCreateCourseData();
-  
+
   if (!result.success) {
     return res.redirect("/admin/courses");
   }
@@ -59,17 +61,17 @@ exports.getAdminCreateCourse = async (req, res) => {
   });
 };
 
-exports.postAdminCreateCourse = async (req, res) => {
+export const postAdminCreateCourse = async (req, res) => {
   const result = await courseService.createCourse(req.body, req.files, req.fileValidationError);
 
   if (!result.success) {
-    return res.status(400).json({ success: false, message: 'Failed to create course.', errors: result.errors, formData: req.body });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to create course.', errors: result.errors, formData: req.body });
   }
 
-  return res.status(201).json({ success: true, message: `Course '${result.data.course.title}' created successfully`, courseId: result.data.course._id });
+  return res.status(HTTP_STATUS_CODES.CREATED).json({ success: true, message: `Course '${result.data.course.title}' created successfully`, courseId: result.data.course._id });
 };
 
-exports.getAdminEditCourse = async (req, res) => {
+export const getAdminEditCourse = async (req, res) => {
   const result = await courseService.getAdminEditCourseData(req.params.courseId);
 
   if (!result.success) {
@@ -98,7 +100,7 @@ exports.getAdminEditCourse = async (req, res) => {
   });
 };
 
-exports.getViewCourse = async (req, res) => {
+export const getViewCourse = async (req, res) => {
   const result = await courseService.getCourseDetails(req.params.courseId, true);
   if (!result.success) return res.redirect("/admin/courses");
 
@@ -110,30 +112,30 @@ exports.getViewCourse = async (req, res) => {
   });
 };
 
-exports.postAdminEditCourse = async (req, res) => {
+export const postAdminEditCourse = async (req, res) => {
   const result = await courseService.updateCourse(req.params.courseId, req.body, req.files, req.fileValidationError);
 
   if (!result.success) {
     if (result.errors.general === "Course not found") {
-      return res.status(404).json({ success: false, message: 'Course not found' });
+      return res.status(HTTP_STATUS_CODES.NOT_FOUND).json({ success: false, message: 'Course not found' });
     }
-    return res.status(400).json({ success: false, message: 'Failed to update course', errors: result.errors, formData: req.body });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Failed to update course', errors: result.errors, formData: req.body });
   }
 
-  return res.status(200).json({ success: true, message: `Course '${result.data.course.title}' updated successfully`, courseId: req.params.courseId });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: `Course '${result.data.course.title}' updated successfully`, courseId: req.params.courseId });
 };
 
-exports.postAdminDeleteCourse = async (req, res) => {
+export const postAdminDeleteCourse = async (req, res) => {
   const result = await courseService.deleteCourse(req.params.courseId);
 
   if (!result.success) {
-    return res.status(400).json({ success: false, message: result.errors.general || 'Failed to delete course' });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.errors.general || 'Failed to delete course' });
   }
 
-  return res.status(200).json({ success: true, message: `Course '${result.data.courseTitle}' deleted successfully` });
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: `Course '${result.data.courseTitle}' deleted successfully` });
 };
 
-exports.getAdminCoursePublish = async (req, res) => {
+export const getAdminCoursePublish = async (req, res) => {
   const result = await courseService.getAdminCoursePublishData(req.params.courseId);
 
   if (!result.success) {
@@ -154,39 +156,39 @@ exports.getAdminCoursePublish = async (req, res) => {
   });
 };
 
-exports.postAdminCoursePublish = async (req, res) => {
+export const postAdminCoursePublish = async (req, res) => {
   const result = await courseService.publishCourse(req.params.courseId, req.body);
 
   if (!result.success) {
     if (result.errors.general === "Course not found" || result.errors.general === "Failed to publish course") {
-      return res.status(400).json({ success: false, message: result.errors.general });
+      return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: result.errors.general });
     }
-    return res.status(400).json({ success: false, message: 'Validation failed', errors: result.errors, formData: req.body });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: 'Validation failed', errors: result.errors, formData: req.body });
   }
 
   const successMsg = result.data.isPublishing
     ? "Course '" + result.data.courseTitle + "' published successfully"
     : "Course '" + result.data.courseTitle + "' moved back to draft";
-    
-  return res.status(200).json({ success: true, message: successMsg });
+
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: successMsg });
 };
 
-exports.postAdminToggleCourseStatus = async (req, res) => {
+export const postAdminToggleCourseStatus = async (req, res) => {
   const result = await courseService.toggleCourseStatus(req.params.courseId);
 
   if (!result.success) {
     const errorMsg = Object.values(result.errors)[0] || "Failed to change course status";
-    return res.status(400).json({ success: false, message: errorMsg });
+    return res.status(HTTP_STATUS_CODES.BAD_REQUEST).json({ success: false, message: errorMsg });
   }
 
   const successMsg = result.data.isPublishing
     ? "Course '" + result.data.courseTitle + "' published successfully"
     : "Course '" + result.data.courseTitle + "' moved back to draft";
-    
-  return res.status(200).json({ success: true, message: successMsg });
+
+  return res.status(HTTP_STATUS_CODES.OK).json({ success: true, message: successMsg });
 };
 
-exports.getCourses=async(req,res)=>{
+export const getCourses = async(req,res)=>{
   const result=await courseService.getCourse(req.query);
 
   if(!result.success){
@@ -195,3 +197,17 @@ exports.getCourses=async(req,res)=>{
 
   return res.render("pages")
 }
+
+export default {
+  getAdminCourses,
+  getAdminCreateCourse,
+  postAdminCreateCourse,
+  getAdminEditCourse,
+  getViewCourse,
+  postAdminEditCourse,
+  postAdminDeleteCourse,
+  getAdminCoursePublish,
+  postAdminCoursePublish,
+  postAdminToggleCourseStatus,
+  getCourses
+};

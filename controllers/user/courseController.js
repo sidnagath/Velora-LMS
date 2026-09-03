@@ -1,19 +1,21 @@
-const courseService = require('../../services/courseService');
-const cartService = require('../../services/cartService');
-const User = require('../../models/userModel');
-const Enrollment = require('../../models/enrollmentModel');
+import HTTP_STATUS_CODES from '../../constants/statusCodes.js';
+import courseService from '../../services/courseService.js';
+import cartService from '../../services/cartService.js';
+import User from '../../models/userModel.js';
+import Enrollment from '../../models/enrollmentModel.js';
 
-exports.getCourses = async (req, res) => {
+
+export const getCourses = async (req, res) => {
   const result = await courseService.getPublishedCourses(req.query);
   if (!result.success) return res.redirect("/");
 
   const isLoggedIn = !!(req.session && req.session.user);
   const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
   const cartCount= isLoggedIn ? await cartService.getCartCount(req.session.user.id) : {success:false, count:0};
-  
+
   let enrolledCourseIds = [];
   if (isLoggedIn) {
-    const Enrollment = require('../../models/enrollmentModel');
+
     const enrollments = await Enrollment.find({ userId: req.session.user.id, status: { $ne: 'cancelled' } }).lean();
     enrolledCourseIds = enrollments.map(e => e.courseId.toString());
   }
@@ -30,14 +32,14 @@ exports.getCourses = async (req, res) => {
   });
 };
 
-exports.getCourseDetails = async (req, res) => {
+export const getCourseDetails = async (req, res) => {
   const result = await courseService.getCourseDetails(req.params.courseId);
   if (!result.success) return res.redirect("/user/courses");
 
   const isLoggedIn = !!(req.session && req.session.user);
   const user = isLoggedIn ? await User.findById(req.session.user.id).lean() : null;
   const cartCount= isLoggedIn ? await cartService.getCartCount(req.session.user.id) : {success:false, count:0};
-  
+
   let enrolledCourseIds = [];
   if (isLoggedIn) {
     const enrollments = await Enrollment.find({ userId: req.session.user.id, status: { $ne: 'cancelled' } }).lean();
@@ -56,14 +58,14 @@ exports.getCourseDetails = async (req, res) => {
   });
 };
 
-exports.getMyCourses = async (req, res) => {
+export const getMyCourses = async (req, res) => {
   try {
     const userId = req.session.user?.id;
     const user = await User.findById(userId).lean();
     const cartCount = await cartService.getCartCount(userId);
-    
+
     const result = await courseService.getMyCoursesData(userId);
-    
+
     res.render("pages/user/mycourses/my-courses", {
       title: "Velora - My Courses",
       isLoggedIn: true,
@@ -78,8 +80,7 @@ exports.getMyCourses = async (req, res) => {
   }
 };
 
-
-exports.getMyCourseDetails=async(req,res)=>{
+export const getMyCourseDetails = async(req,res)=>{
 
   try{
 
@@ -114,7 +115,7 @@ exports.getMyCourseDetails=async(req,res)=>{
 
 }
 
-exports.markLessonComplete = async (req, res) => {
+export const markLessonComplete = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
     const userId = req.session.user.id;
@@ -122,29 +123,29 @@ exports.markLessonComplete = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
   }
 };
 
-exports.getCourseCertificate = async (req, res) => {
+export const getCourseCertificate = async (req, res) => {
   try {
     const courseId = req.params.courseId;
     const userId = req.session.user.id;
-    
+
     const result = await courseService.validateCertificateAccess(userId, courseId);
-    
+
     if (!result.success) {
       req.flash('error', result.message || 'You are not eligible for this certificate.');
       return res.redirect('/user/my-courses');
     }
-    
+
     const user = await User.findById(userId).lean();
     const currentDate = new Date().toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
-    
+
     res.render('pages/user/mycourses/certificate', {
       title: `Certificate - ${result.data.course.title}`,
       course: result.data.course,
@@ -159,21 +160,32 @@ exports.getCourseCertificate = async (req, res) => {
   }
 };
 
-exports.streamLessonVideo = async (req, res) => {
+export const streamLessonVideo = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
     const userId = req.session.user.id;
-    
+
     const result = await courseService.getAuthorizedVideoUrl(userId, courseId, lessonId);
-    
+
     if (!result.success) {
-      return res.status(401).send("Unauthorized: " + result.message);
+      return res.status(HTTP_STATUS_CODES.UNAUTHORIZED).send("Unauthorized: " + result.message);
     }
-    
+
     // 302 Redirect to the short-lived Cloudinary signed URL
     return res.redirect(302, result.url);
   } catch (error) {
     console.error("Stream video error:", error);
-    return res.status(500).send("Server error");
+    return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).send("Server error");
   }
+};
+
+
+export default {
+  getCourses,
+  getCourseDetails,
+  getMyCourses,
+  getMyCourseDetails,
+  markLessonComplete,
+  getCourseCertificate,
+  streamLessonVideo
 };

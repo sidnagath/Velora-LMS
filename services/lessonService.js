@@ -1,9 +1,10 @@
-const Course = require('../models/courseModel');
-const Module = require('../models/moduleModel');
-const Lesson = require('../models/lessonModel');
-const cloudinaryUtil = require('../config/cloudinary');
+import Course from '../models/courseModel.js';
+import Module from '../models/moduleModel.js';
+import Lesson from '../models/lessonModel.js';
+import cloudinaryUtil from '../config/cloudinary.js';
 
-exports.addLesson = async (courseId, moduleId, title, description, duration, videoFile, fileValidationErrors) => {
+
+export const addLesson = async (courseId, moduleId, title, description, duration, videoFile, fileValidationErrors) => {
   const trimmedTitle = title?.trim();
   const trimmedDesc = description?.trim();
   const trimmedDuration = duration?.toString().trim();
@@ -30,7 +31,7 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
   }
 
   if (!videoFile && !errors.video) errors.video = "Upload lesson video";
-  
+
   if (videoFile) {
     const allowedVideoTypes = ["video/mp4", "video/quicktime"];
     if (!allowedVideoTypes.includes(videoFile.mimetype) && !errors.video) errors.video = "Video must be MP4 or MOV";
@@ -62,7 +63,7 @@ exports.addLesson = async (courseId, moduleId, title, description, duration, vid
   return { success: true, lesson: newLesson };
 };
 
-exports.editLesson = async (courseId, moduleId, lessonId, title, description, duration, videoFile, fileValidationErrors) => {
+export const editLesson = async (courseId, moduleId, lessonId, title, description, duration, videoFile, fileValidationErrors) => {
   const trimmedTitle = title?.trim();
   const trimmedDesc = description?.trim();
   const trimmedDuration = duration?.toString().trim();
@@ -103,7 +104,7 @@ exports.editLesson = async (courseId, moduleId, lessonId, title, description, du
   lesson.title = trimmedTitle;
   lesson.description = trimmedDesc;
   lesson.duration = trimmedDuration;
-  
+
   if (videoFile) {
     const uploadResult = await cloudinaryUtil.uploadToCloudinary(videoFile.path, 'lesson_videos', 'video');
     if (uploadResult) {
@@ -116,10 +117,17 @@ exports.editLesson = async (courseId, moduleId, lessonId, title, description, du
   return { success: true, lesson };
 };
 
-exports.deleteLesson = async (courseId, moduleId, lessonId) => {
+export const deleteLesson = async (courseId, moduleId, lessonId) => {
   const lesson = await Lesson.findOne({ _id: lessonId, moduleId });
   if (!lesson) return { success: false, error: "Lesson not found" };
 
   await Lesson.findByIdAndDelete(lessonId);
   return { success: true };
+};
+
+
+export default {
+  addLesson,
+  editLesson,
+  deleteLesson
 };

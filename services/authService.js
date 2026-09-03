@@ -1,14 +1,15 @@
-const User = require('../models/userModel');
-const Admin = require('../models/adminModel');
-const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
-const createTransporter = require('../config/mail');
+import User from '../models/userModel.js';
+import Admin from '../models/adminModel.js';
+import bcrypt from 'bcrypt';
+import nodemailer from 'nodemailer';
+import createTransporter from '../config/mail.js';
+
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-exports.login = async (email, password) => {
+export const login = async (email, password) => {
   const trimmedEmail = email?.trim();
   const trimmedPassword = password?.trim();
   let errors = {};
@@ -34,7 +35,7 @@ exports.login = async (email, password) => {
   return { success: true, user };
 };
 
-exports.signup = async (name, email, password, confirmPassword) => {
+export const signup = async (name, email, password, confirmPassword) => {
   const trimmedName = name?.trim();
   const trimmedEmail = email?.trim();
   const trimmedPassword = password?.trim();
@@ -82,7 +83,7 @@ exports.signup = async (name, email, password, confirmPassword) => {
   return { success: true, otp, otpExpires };
 };
 
-exports.verifySignupOtp = async (otp, sessionOtp, sessionExpires, signupData) => {
+export const verifySignupOtp = async (otp, sessionOtp, sessionExpires, signupData) => {
   let errors = {};
   if (!otp?.trim()) errors.otp = "OTP is required";
 
@@ -106,7 +107,7 @@ exports.verifySignupOtp = async (otp, sessionOtp, sessionExpires, signupData) =>
   return { success: true };
 };
 
-exports.resendSignupOtp = async (email) => {
+export const resendSignupOtp = async (email) => {
   const otp = generateOTP();
   const otpExpires = Date.now() + 60 * 1000;
 
@@ -126,7 +127,7 @@ exports.resendSignupOtp = async (email) => {
   }
 };
 
-exports.forgotPassword = async (email) => {
+export const forgotPassword = async (email) => {
   const trimmedEmail = email?.trim();
   let errors = {};
 
@@ -164,7 +165,7 @@ exports.forgotPassword = async (email) => {
   }
 };
 
-exports.verifyForgotOtp = async (otp, sessionOtp, sessionExpires) => {
+export const verifyForgotOtp = async (otp, sessionOtp, sessionExpires) => {
   let errors = {};
 
   if (!otp?.trim()) errors.otp = "OTP is required";
@@ -182,7 +183,7 @@ exports.verifyForgotOtp = async (otp, sessionOtp, sessionExpires) => {
   return { success: true };
 };
 
-exports.resetPassword = async (password, confirmPassword, email) => {
+export const resetPassword = async (password, confirmPassword, email) => {
   const trimmedPassword = password?.trim();
   const trimmedConfirmPassword = confirmPassword?.trim();
   const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9]).{6,}$/;
@@ -202,7 +203,7 @@ exports.resetPassword = async (password, confirmPassword, email) => {
   return { success: true };
 };
 
-exports.adminLogin = async (email, password) => {
+export const adminLogin = async (email, password) => {
   const trimmedEmail = email?.trim();
   const trimmedPassword = password?.trim();
   let errors = {};
@@ -218,4 +219,16 @@ exports.adminLogin = async (email, password) => {
   if (!isMatch) return { success: false, errors: { password: "Invalid admin credentials" } };
 
   return { success: true, admin };
+};
+
+
+export default {
+  login,
+  signup,
+  verifySignupOtp,
+  resendSignupOtp,
+  forgotPassword,
+  verifyForgotOtp,
+  resetPassword,
+  adminLogin
 };

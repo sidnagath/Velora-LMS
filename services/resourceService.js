@@ -1,7 +1,8 @@
-const Module = require('../models/moduleModel');
-const Lesson = require('../models/lessonModel');
-const Resource = require('../models/resourceModel');
-const cloudinaryUtil = require('../config/cloudinary');
+import Module from '../models/moduleModel.js';
+import Lesson from '../models/lessonModel.js';
+import Resource from '../models/resourceModel.js';
+import cloudinaryUtil from '../config/cloudinary.js';
+
 
 function formatBytes(bytes, decimals = 1) {
   if (bytes === 0) return '0 Bytes';
@@ -12,7 +13,7 @@ function formatBytes(bytes, decimals = 1) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-exports.uploadFile = async (courseId, moduleId, lessonId, file, fileValidationErrors) => {
+export const uploadFile = async (courseId, moduleId, lessonId, file, fileValidationErrors) => {
   if (fileValidationErrors && fileValidationErrors.resourceFile) return { success: false, error: fileValidationErrors.resourceFile, status: 400 };
   if (!moduleId || !lessonId) return { success: false, error: "Select a module and lesson", status: 400 };
   if (!file) return { success: false, error: "Please upload a file", status: 400 };
@@ -44,7 +45,7 @@ exports.uploadFile = async (courseId, moduleId, lessonId, file, fileValidationEr
   return { success: true, files: resource.files };
 };
 
-exports.deleteFile = async (courseId, moduleId, lessonId, fileId) => {
+export const deleteFile = async (courseId, moduleId, lessonId, fileId) => {
   if (!moduleId || !lessonId || !fileId) return { success: false, error: "Missing required parameters", status: 400 };
 
   const resource = await Resource.findOne({ courseId, moduleId, lessonId });
@@ -59,7 +60,7 @@ exports.deleteFile = async (courseId, moduleId, lessonId, fileId) => {
   return { success: true, files: resource.files };
 };
 
-exports.addLink = async (courseId, moduleId, lessonId, title, url, description) => {
+export const addLink = async (courseId, moduleId, lessonId, title, url, description) => {
   const trimmedTitle = title?.trim();
   const trimmedUrl = url?.trim();
   const trimmedDesc = description?.trim();
@@ -87,7 +88,7 @@ exports.addLink = async (courseId, moduleId, lessonId, title, url, description) 
   return { success: true, links: resource.links };
 };
 
-exports.deleteLink = async (courseId, moduleId, lessonId, linkId) => {
+export const deleteLink = async (courseId, moduleId, lessonId, linkId) => {
   if (!moduleId || !lessonId || !linkId) return { success: false, error: "Missing required parameters", status: 400 };
 
   const resource = await Resource.findOne({ courseId, moduleId, lessonId });
@@ -100,4 +101,12 @@ exports.deleteLink = async (courseId, moduleId, lessonId, linkId) => {
   await resource.save();
 
   return { success: true, links: resource.links };
+};
+
+
+export default {
+  uploadFile,
+  deleteFile,
+  addLink,
+  deleteLink
 };

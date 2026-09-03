@@ -1,8 +1,7 @@
+import dashboardService from '../../services/dashboardService.js';
 
-const dashboardService=require('../../services/dashboardService');
 
-
-exports.getDashboard= async (req, res) => {
+export const getDashboard = async (req, res) => {
 try{
 
   const result=await dashboardService.getDashboardData();
@@ -53,16 +52,16 @@ try{
         recentUsers: result.data.recentUsers
    });
 
-  
 }catch(error){
  console.error("Dashboard Controller Error:", error);
   req.flash("error", "Unable to load dashboard.");
   return res.redirect("/admin/dashboard");
 }
-  
+
 }
 
 
 
-
-
+export default {
+  getDashboard
+};

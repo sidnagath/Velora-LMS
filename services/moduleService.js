@@ -1,9 +1,10 @@
-const Course = require('../models/courseModel');
-const Module = require('../models/moduleModel');
-const Lesson = require('../models/lessonModel');
-const Resource = require('../models/resourceModel');
+import Course from '../models/courseModel.js';
+import Module from '../models/moduleModel.js';
+import Lesson from '../models/lessonModel.js';
+import Resource from '../models/resourceModel.js';
 
-exports.getCourseModules = async (courseId) => {
+
+export const getCourseModules = async (courseId) => {
   const course = await Course.findById(courseId);
   if (!course) return { success: false, error: "Course not found" };
 
@@ -14,7 +15,7 @@ exports.getCourseModules = async (courseId) => {
   return { success: true, course, modules, lessons, resources };
 };
 
-exports.addModule = async (courseId, title, description) => {
+export const addModule = async (courseId, title, description) => {
   const trimmedTitle = title?.trim();
   const trimmedDesc = description?.trim();
   let errors = {};
@@ -40,7 +41,7 @@ exports.addModule = async (courseId, title, description) => {
   return { success: true, module: newModule, course };
 };
 
-exports.editModule = async (courseId, moduleId, title, description) => {
+export const editModule = async (courseId, moduleId, title, description) => {
   const trimmedTitle = title?.trim();
   const trimmedDesc = description?.trim();
   let errors = {};
@@ -64,10 +65,18 @@ exports.editModule = async (courseId, moduleId, title, description) => {
   return { success: true, module, course };
 };
 
-exports.deleteModule = async (courseId, moduleId) => {
+export const deleteModule = async (courseId, moduleId) => {
   const module = await Module.findOne({ _id: moduleId, courseId });
   if (!module) return { success: false, error: "Module not found", status: 404 };
 
   await Module.findByIdAndDelete(moduleId);
   return { success: true };
+};
+
+
+export default {
+  getCourseModules,
+  addModule,
+  editModule,
+  deleteModule
 };

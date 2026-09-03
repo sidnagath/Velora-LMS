@@ -1,124 +1,113 @@
-const passport = require("passport");
-
-const GoogleStrategy =
-require("passport-google-oauth20")
-.Strategy;
-
-
-const User =
-require("../models/userModel");
-
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import User from '../models/userModel.js';
 
 passport.use(
 
-new GoogleStrategy(
+  new GoogleStrategy(
 
-{
-  clientID:
-    process.env.GOOGLE_CLIENT_ID,
-
-  clientSecret:
-    process.env.GOOGLE_CLIENT_SECRET,
-
-  callbackURL:
-    process.env.GOOGLE_CALLBACK_URL
-},
-
-async (
-  accessToken,
-  refreshToken,
-  profile,
-  done
-) => {
-
-  try {
-
-    const email =
-      profile.emails[0].value;
-
-
-    let user =
-      await User.findOne({
-        email
-      });
-
-// BLOCK INACTIVE USERS
-if (user && user.status === "inactive") {
-  return done(
-    null,
-    false,
     {
-      message:
-      "Account is inactive"
-    }
-  );
-}
+      clientID:
+        process.env.GOOGLE_CLIENT_ID,
 
-    // SIGNUP IF NEW
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET,
 
-    if(!user){
+      callbackURL:
+        process.env.GOOGLE_CALLBACK_URL
+    },
 
-      user =
-await User.create({
+    async (
+      accessToken,
+      refreshToken,
+      profile,
+      done
+    ) => {
 
-  name:
-    profile.displayName,
+      try {
 
-  email,
+        const email =
+          profile.emails[0].value;
 
-  avatar:
-    profile.photos[0].value,
+        let user =
+          await User.findOne({
+            email
+          });
 
-  password: "",
+        // BLOCK INACTIVE USERS
+        if (user && user.status === "inactive") {
+          return done(
+            null,
+            false,
+            {
+              message:
+                "Account is inactive"
+            }
+          );
+        }
 
-  authProvider:
-    "google",
+        // SIGNUP IF NEW
 
-  googleId:
-    profile.id
+        if (!user) {
 
-});
+          user =
+            await User.create({
 
-    }
+              name:
+                profile.displayName,
 
-    return done(null, user);
+              email,
 
-  }
+              avatar:
+                profile.photos[0].value,
 
-  catch(err){
+              password: "",
 
-    return done(err, null);
-  }
+              authProvider:
+                "google",
 
-}));
+              googleId:
+                profile.id
 
+            });
+
+        }
+
+        return done(null, user);
+
+      }
+
+      catch (err) {
+
+        return done(err, null);
+      }
+
+    }));
 
 passport.serializeUser(
-(user, done) => {
+  (user, done) => {
 
-  done(null, user.id);
+    done(null, user.id);
 
-});
-
-
+  });
 
 passport.deserializeUser(
-async (id, done) => {
+  async (id, done) => {
 
-  try {
+    try {
 
-    const user =
-      await User.findById(id);
+      const user =
+        await User.findById(id);
 
-    done(null, user);
+      done(null, user);
 
-  }
+    }
 
-  catch (err) {
+    catch (err) {
 
-    done(err, null);
+      done(err, null);
 
-  }
+    }
 
-});
+  });
 

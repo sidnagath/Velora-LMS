@@ -1,6 +1,5 @@
-const User = require("../models/userModel");
-const Wallet = require("../models/walletModel");
-
+import User from '../models/userModel.js';
+import Wallet from '../models/walletModel.js';
 
 
 class WalletService{
@@ -22,7 +21,6 @@ return {
     wallet
 };
 }
-
 
 async creditWallet(id, amount, description, orderId) {
     try {
@@ -54,4 +52,4 @@ async creditWallet(id, amount, description, orderId) {
 }
 }
 
-module.exports= new WalletService();
+export default new WalletService();

@@ -1,6 +1,7 @@
-const courseService = require('../../services/courseService');
+import courseService from '../../services/courseService.js';
 
-exports.getHome = async (req, res) => {
+
+export const getHome = async (req, res) => {
   const result = await courseService.getPublishedCourses({ limit: 4 });
   const featuredCourses = result.success ? result.data.courses : [];
 
@@ -11,7 +12,7 @@ exports.getHome = async (req, res) => {
   });
 };
 
-exports.getCourses = async (req, res) => {
+export const getCourses = async (req, res) => {
   const result = await courseService.getPublishedCourses(req.query);
   if (!result.success) return res.redirect("/");
 
@@ -24,7 +25,7 @@ exports.getCourses = async (req, res) => {
   });
 };
 
-exports.getCourseDetails = async (req, res) => {
+export const getCourseDetails = async (req, res) => {
   const result = await courseService.getCourseDetails(req.params.courseId);
   if (!result.success) return res.redirect("/courses");
 
@@ -33,4 +34,11 @@ exports.getCourseDetails = async (req, res) => {
     isLoggedIn: false,
     ...result.data
   });
+};
+
+
+export default {
+  getHome,
+  getCourses,
+  getCourseDetails
 };

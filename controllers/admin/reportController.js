@@ -1,8 +1,10 @@
-const reportService = require('../../services/reportService');
-const Category = require('../../models/categoryModel');
-const Course = require('../../models/courseModel');
+import reportService from '../../services/reportService.js';
+import Category from '../../models/categoryModel.js';
+import Course from '../../models/courseModel.js';
+import pdfService from '../../services/pdfService.js';
 
-exports.getReports = async (req, res) => {
+
+export const getReports = async (req, res) => {
   try {
     const filters = {
       dateRange: req.query.dateRange || 'last30',
@@ -42,9 +44,7 @@ exports.getReports = async (req, res) => {
   }
 };
 
-const pdfService = require('../../services/pdfService');
-
-exports.exportReportPDF = async (req, res) => {
+export const exportReportPDF = async (req, res) => {
   try {
     const filters = {
       dateRange: req.query.dateRange || 'last30',
@@ -71,4 +71,10 @@ exports.exportReportPDF = async (req, res) => {
     req.flash('error', 'Unable to generate PDF report');
     res.redirect('/admin/reports');
   }
+};
+
+
+export default {
+  getReports,
+  exportReportPDF
 };

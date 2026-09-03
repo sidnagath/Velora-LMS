@@ -1,21 +1,20 @@
-const express=require("express");
-const passport = require("passport");
+import express from 'express';
+import passport from 'passport';
+import authController from '../controllers/user/authController.js';
+import profileController from '../controllers/user/profileController.js';
+import courseController from '../controllers/user/courseController.js';
+import {isUser} from '../middleware/userMiddleware.js';
+import {noCache} from '../middleware/noCache.js';
+import {isUserGuest} from '../middleware/userGuestMiddleware.js';
+import {ensureActiveUser} from '../middleware/ensureActiveUser.js';
+import upload from '../config/multer.js';
+import wishlistController from '../controllers/user/wishlistController.js';
+import cartController from '../controllers/user/cartController.js';
+import checkoutController from '../controllers/user/checkoutController.js';
+import userOrderController from '../controllers/user/userOrderController.js';
+
+
 const router=express.Router();
-const authController = require('../controllers/user/authController');
-const profileController = require('../controllers/user/profileController');
-const courseController = require('../controllers/user/courseController');
-const {isUser}=require("../middleware/userMiddleware");
-const {noCache} = require('../middleware/noCache');
-const {isUserGuest}=require('../middleware/userGuestMiddleware');
-const {ensureActiveUser}=require('../middleware/ensureActiveUser');
-const upload = require("../config/multer");
-
-const wishlistController = require('../controllers/user/wishlistController');
-const cartController = require('../controllers/user/cartController');
-const checkoutController = require('../controllers/user/checkoutController');
-const userOrderController = require('../controllers/user/userOrderController');
-
-
 
 // PAGE ROUTES
 router.get("/user/dashboard", noCache, isUser, ensureActiveUser, profileController.getDashboard);
@@ -69,9 +68,7 @@ router.post("/api/v1/user/payment/cancel", isUser, ensureActiveUser, userOrderCo
 router.post("/api/v1/user/payment/failed", isUser, ensureActiveUser, userOrderController.failPayment);
 router.post("/api/v1/user/payment/retry", isUser, ensureActiveUser, userOrderController.retryPayment);
 
-
 router.post("/api/v1/user/mycourses/:courseId/lessons/:lessonId/complete", isUser, ensureActiveUser, courseController.markLessonComplete);
 
-module.exports=router;
-
+export default router;
 

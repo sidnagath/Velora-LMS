@@ -1,5 +1,5 @@
-const cloudinary = require('cloudinary').v2;
-const fs = require('fs').promises;
+import { v2 as cloudinary } from 'cloudinary';
+import { promises as fs } from 'fs';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -16,7 +16,7 @@ cloudinary.config({
  * @param {string} deliveryType - 'upload' (public) or 'authenticated' (private). Defaults to 'upload'.
  * @returns {Promise<Object>} - The complete Cloudinary upload response object.
  */
-exports.uploadToCloudinary = async (filePath, folder = 'velora', resourceType = 'auto', deleteLocal = true, deliveryType = 'upload') => {
+export const uploadToCloudinary = async (filePath, folder = 'velora', resourceType = 'auto', deleteLocal = true, deliveryType = 'upload') => {
   if (!filePath) return null;
 
   try {
@@ -25,19 +25,19 @@ exports.uploadToCloudinary = async (filePath, folder = 'velora', resourceType = 
       resource_type: resourceType,
       type: deliveryType
     });
-    
+
     // Delete local temp file asynchronously if requested
     if (deleteLocal) {
       await fs.unlink(filePath).catch(err => console.error("Failed to delete temp file:", err));
     }
-    
+
     return result;
   } catch (error) {
     // Delete local temp file even if upload fails
     if (deleteLocal) {
       await fs.unlink(filePath).catch(err => console.error("Failed to delete temp file after error:", err));
     }
-    
+
     console.error("Cloudinary Upload Error:", error);
     throw error;
   }
@@ -49,7 +49,7 @@ exports.uploadToCloudinary = async (filePath, folder = 'velora', resourceType = 
  * @param {string} resourceType - 'image', 'video', or 'raw'. Defaults to 'image'.
  * @returns {Promise<Object>} - The complete Cloudinary destroy response object.
  */
-exports.deleteFromCloudinary = async (publicId, resourceType = 'image') => {
+export const deleteFromCloudinary = async (publicId, resourceType = 'image') => {
   if (!publicId) return null;
   try {
     const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
@@ -60,19 +60,17 @@ exports.deleteFromCloudinary = async (publicId, resourceType = 'image') => {
   }
 };
 
-
-
 /**
  * Generates a signed, time-limited URL for an authenticated Cloudinary video.
  * @param {string} publicId - The public ID of the Cloudinary asset.
  * @param {number} expiryMinutes - How many minutes the URL should be valid for (default 15).
  * @returns {string} - The signed secure URL.
  */
-exports.generateSignedVideoUrl = (publicId, expiryMinutes = 15) => {
+export const generateSignedVideoUrl = (publicId, expiryMinutes = 15) => {
   if (!publicId) return "";
-  
+
   const expiresAt = Math.floor(Date.now() / 1000) + (expiryMinutes * 60);
-  
+
   return cloudinary.utils.url(publicId, {
     resource_type: 'video',
     type: 'authenticated',
@@ -80,4 +78,10 @@ exports.generateSignedVideoUrl = (publicId, expiryMinutes = 15) => {
     secure: true,
     expires_at: expiresAt
   });
+};
+
+export default {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+  generateSignedVideoUrl
 };
